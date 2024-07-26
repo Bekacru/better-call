@@ -1,0 +1,22 @@
+{
+  "name": "better-call",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "test": "vitest",
+    "build": "tsup"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "type-fest": "^4.23.0",
+    "tsup": "^8.2.3",
+    "vitest": "^2.0.4",
+    "zod": "^3.23.8"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "rou3": "^0.5.1"
+  }
+}
