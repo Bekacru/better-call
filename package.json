@@ -1,8 +1,10 @@
 {
   "name": "better-call",
-  "module": "index.ts",
   "version": "0.0.2-beta.1",
   "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "test": "vitest",
     "bump": "bumpp",
@@ -21,5 +23,15 @@
   "dependencies": {
     "bumpp": "^9.4.1",
     "rou3": "^0.5.1"
-  }
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ]
 }
