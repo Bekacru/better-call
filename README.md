@@ -40,11 +40,8 @@ const createItem = createEndpoint("/item", {
         }
     }
 })
-```
 
-Now you can call the endpoint just as a normal function.
-
-```ts
+// Now you can call the endpoint just as a normal function.
 const item = await createItem({
     body: {
         id: "123"
@@ -57,9 +54,6 @@ OR you can mount the endpoint to a router and serve it with any web standard com
 > The example below uses [Bun](https://bun.sh/)
 
 ```ts
-import { createEndpoint, createRouter } from "better-call"
-import { createItem } from "./item"
-
 const router = createRouter([
     createItem
 ])
@@ -114,6 +108,70 @@ const router = createRouter([
 ])
 ```
 Behind the scenes, the router uses [rou3](https://github.com/unjs/rou3) to match the endpoints and invoke the correct endpoint. You can look at the [rou3 documentation](https://github.com/unjs/rou3) for more information.
+
+
+### Returning non 200 responses
+
+To return a non 200 response, you will need to throw Better Call's `APIError` error. If the endpoint is called as a function, the error will be thrown but if it's mounted to a router, the error will be converted to a response object with the correct status code and headers.
+
+```ts
+const createItem = createEndpoint("/item", {
+    method: "POST",
+    body: z.object({
+        id: z.string()
+    })
+}, async (ctx) => {
+    if(ctx.body.id === "123") {
+        throw new APIError("Bad Request", {
+            message: "Id is not allowed"
+        })
+    }
+    return {
+        item: {
+            id: ctx.body.id
+        }
+    }
+})
+```
+
+### Headers and Cookies
+
+If you return a response object from an endpoint, the headers and cookies will be set on the response object. But You can  set headers and cookies for the context object.
+
+```ts
+const createItem = createEndpoint("/item", {
+    method: "POST",
+    body: z.object({
+        id: z.string()
+    })
+}, async (ctx) => {
+    ctx.setHeader("X-Custom-Header", "Hello World")
+    ctx.setCookie("my-cookie", "hello world")
+    return {
+        item: {
+            id: ctx.body.id
+        }
+    }
+})
+```
+ 
+You can also get cookies from the context object.
+
+```ts
+const createItem = createEndpoint("/item", {
+    method: "POST",
+    body: z.object({
+        id: z.string()
+    })
+}, async (ctx) => {
+    const cookie = ctx.getCookie("my-cookie")
+    return {
+        item: {
+            id: ctx.body.id
+        }
+    }
+})
+```
 
 ## API
 
