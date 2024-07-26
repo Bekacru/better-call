@@ -4,9 +4,9 @@ Better call is a tiny web framework for creating endpoints that can be invoked a
 
 Built for typescript and it comes with a very high performance router based on [rou3](https://github.com/unjs/rou3).
 
-### Use Case:
+### Motivation
 
-- Define an endpoint once and use it in different context. Like from different endpoint, in React Server Components (RSC), as a server action, or directly as api route in your Next.js app from a single function.
+I wanted to create a web framework that allows me to use endpoints in different contexts—such as React Server Components (RSC), server actions, or as API routes in a Next.js app—using just a single function. I wanted it to have good TypeScript support and be agnostic of the underlying server.
 
 > ⚠️ This project is still in development and not ready for production use. But feel free to try it out and give feedback.
 
