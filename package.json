@@ -1,9 +1,11 @@
 {
   "name": "better-call",
   "module": "index.ts",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "test": "vitest",
+    "bump": "bumpp",
     "build": "tsup"
   },
   "devDependencies": {
@@ -17,6 +19,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "bumpp": "^9.4.1",
     "rou3": "^0.5.1"
   }
 }
