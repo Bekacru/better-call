@@ -17,5 +17,7 @@ export class APIError extends Error {
         )
         this.status = status
         this.body = body ?? {}
+        this.stack = undefined
+        this.name = "BetterCallAPIError"
     }
 }
