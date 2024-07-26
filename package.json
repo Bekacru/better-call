@@ -1,7 +1,7 @@
 {
   "name": "better-call",
   "module": "index.ts",
-  "version": "0.0.2-beta.1",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "test": "vitest",
