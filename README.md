@@ -1,16 +1,12 @@
 # better-call
 
-Better call is a tiny web framework for creating endpoints that can be invoked as a function or mounted to a router and can be served by any web standard compatible server (like Bun, node, nextjs, sveltekit...). Built for typescript and it comes with a very high performance router based on [rou3](https://github.com/unjs/rou3).
+Better call is a tiny web framework for creating endpoints that can be invoked as a function or mounted to a router and can be served by any web standard compatible server (like Bun, node, nextjs, sveltekit...). 
 
-### Use cases:
+Built for typescript and it comes with a very high performance router based on [rou3](https://github.com/unjs/rou3).
 
-### Use Cases:
+### Use Case:
 
-- **Single Function Endpoint**: Define an endpoint once and use it in different context. Like in React Server Components (RSC), as a server action, or directly as api route in your Next.js app from a single function.
-
-- **Typed Endpoints**: Create endpoints with typed parameters and return types that can be invoked from other endpoints or used throughout your code.
-
-- **Library Integration**: Ideal for libraries that need to expose server endpoints. Export a function that can be mounted to a route and used as a function, for example an auth library with a `getSession` function.
+- Define an endpoint once and use it in different context. Like from different endpoint, in React Server Components (RSC), as a server action, or directly as api route in your Next.js app from a single function.
 
 > ⚠️ This project is still in development and not ready for production use. But feel free to try it out and give feedback.
 
