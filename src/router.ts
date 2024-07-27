@@ -16,6 +16,10 @@ interface RouterConfig {
      * Handle error
      */
     onError?: (e: unknown) => void | Promise<void> | Response | Promise<Response>
+    /**
+     * Base path for the router
+     */
+    basePath?: string
 }
 
 export const createRouter = <E extends Endpoint, Config extends RouterConfig>(endpoints: E[], config?: Config) => {
@@ -32,12 +36,14 @@ export const createRouter = <E extends Endpoint, Config extends RouterConfig>(en
 
     const handler = async (request: Request) => {
         const url = new URL(request.url);
-        const path = url.pathname;
+        let path = url.pathname
+        if (config?.basePath) {
+            path = path.split(config.basePath)[1]
+        }
         const method = request.method;
         const route = findRoute(router, method, path)
         const handler = route?.data as Endpoint
         const body = await getBody(request)
-        const responseHeaders = new Headers()
         const headers = request.headers
 
         //handler 404

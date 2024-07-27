@@ -88,8 +88,23 @@ describe("Router", () => {
         const re = await router.handler(request)
         const json = await re.json()
         expect(json.user.id).toBe("2")
+    })
 
-
+    it("should handle base path", async () => {
+        const getItem = createEndpoint("/item", {
+            method: "GET"
+        }, async (ctx) => {
+            return {
+                item: "item"
+            }
+        })
+        const router = createRouter([getItem], {
+            basePath: "/api"
+        })
+        const request = new Request("http://localhost:3000/api/item")
+        const re = await router.handler(request)
+        const json = await re.json()
+        expect(json.item).toBe("item")
     })
 })
 
