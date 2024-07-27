@@ -5,7 +5,7 @@ Better call is a tiny web framework for creating endpoints that can be invoked a
 Built for typescript and it comes with a very high performance router based on [rou3](https://github.com/unjs/rou3).
 
 
-> ⚠️ This project is still in development and not ready for production use. But feel free to try it out and give feedback.
+> ⚠️ This project early in development and not ready for production use. But feel free to try it out and give feedback.
 
 ## Install
 
