@@ -1,6 +1,6 @@
 # better-call
 
-Better call is a tiny web framework for creating endpoints that can be invoked as a function or mounted to a router and can be served by any web standard compatible server (like Bun, node, nextjs, sveltekit...). 
+Better call is a tiny web framework for creating endpoints that can be invoked as a normal function or mounted to a router and can be served by any web standard compatible server (like Bun, node, nextjs, sveltekit...). 
 
 Built for typescript and it comes with a very high performance router based on [rou3](https://github.com/unjs/rou3).
 
