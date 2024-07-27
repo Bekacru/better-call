@@ -102,12 +102,7 @@ type InferParam<Path extends string, ParamPath extends InferParamPath<Path> = In
 }
 
 
-export type EndpointResponse = Record<string, any> | string | boolean | number | {
-    status: string,
-    body: any,
-    headers: Headers | Record<string, any>
-    [key: string]: any
-} | void | undefined
+export type EndpointResponse = Record<string, any> | string | boolean | number | void | undefined
 
 export type Handler<Path extends string, Opts extends EndpointOptions, R extends EndpointResponse, Extra extends Record<string, any> = Record<string, any>> = (ctx: Context<Path, Opts, Extra>) => Promise<R>
 
