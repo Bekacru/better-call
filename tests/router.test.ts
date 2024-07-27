@@ -66,8 +66,10 @@ describe("Router", () => {
     it("with middleware", async () => {
         const createProtectedEndpoint = createMiddleware(async (ctx) => {
             return {
-                user: {
-                    id: "2"
+                context: {
+                    user: {
+                        id: "2"
+                    }
                 }
             }
         })

@@ -60,7 +60,7 @@ Bun.serve({
 
 You can create middleware by calling `createMiddleware` and passing it a function that will be invoked before the endpoint is called.
 
-If you return an object from the middleware, it will be merged with the context object on the endpoint.
+If you return a context object from the middleware, it will be merged with the context object on the endpoint.
 
 ```ts
 import { createMiddleware, createEndpoint } from "better-call"
@@ -70,9 +70,11 @@ const createProtectedEndpoint = createMiddleware(async (ctx) => {
         throw new Error("Unauthorized")
     }
     return {
-        session: {
-            id: "123",
-        }
+       context: {
+            session: {
+                id: "123",
+            }
+       }
     }
 })
 

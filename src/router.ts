@@ -57,7 +57,7 @@ export const createRouter = <E extends Endpoint, Config extends RouterConfig>(en
                     params: url.searchParams,
                     request: request.clone(),
                     body: body,
-                })
+                }) || {}
             }
             const handlerRes = await handler({
                 path: path,
@@ -66,7 +66,7 @@ export const createRouter = <E extends Endpoint, Config extends RouterConfig>(en
                 params: route?.params as any,
                 request: request,
                 body: body,
-                ...middleware,
+                ...middleware?.context,
             })
             if (handlerRes instanceof Response) {
                 return handlerRes
