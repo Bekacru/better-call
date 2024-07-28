@@ -1,24 +1,46 @@
-import type { HasRequiredKeys } from "type-fest"
-import { type Context, type EndpointOptions, type EndpointResponse, type Handler } from "./endpoint"
+import { z } from "zod"
+import type { ContextTools, Endpoint, EndpointOptions, EndpointResponse, Handler, InferBody, InferHeaders, InferRequest, Prettify } from "./types"
+import { createEndpoint } from "./endpoint"
 
+export type MiddlewareHandler<Opts extends EndpointOptions, R extends EndpointResponse> = (ctx: Prettify<InferBody<Opts> & InferRequest<Opts> & InferHeaders<Opts> & {
+    params?: Record<string, string>,
+    query?: Record<string, string>,
+} & ContextTools>) => Promise<R>
 
-export type Middleware<E extends Record<string, string>> = (ctx: Context<string, EndpointOptions, E>) => Promise<{
-    context: E
-} | void>
-
-export const createMiddleware = <E extends Record<string, any>, M extends Middleware<E>>(middleware: M) => {
-    type MiddlewareContext = Awaited<ReturnType<M>> extends {
-        context: infer C
-    } ? C extends Record<string, any> ? C : {} : {}
-    return <Path extends string, Opts extends EndpointOptions, R extends EndpointResponse>(path: Path, options: Opts, handler: Handler<Path, Opts, R, MiddlewareContext>) => {
-        type Ctx = Context<Path, Opts, MiddlewareContext>
-        const handle = async (...ctx: HasRequiredKeys<Ctx> extends true ? [Ctx] : [Ctx?]) => {
-            const res = await handler((ctx[0] || {}) as Ctx)
-            return res as ReturnType<Handler<Path, Opts, R>>
-        }
-        handle.path = path
-        handle.options = options
-        handle.middleware = middleware
-        return handle
+export function createMiddleware<Opts extends EndpointOptions, R extends EndpointResponse>(optionsOrHandler: MiddlewareHandler<Opts, R>): Endpoint<Handler<string, Opts, R>, Opts>
+export function createMiddleware<Opts extends Omit<EndpointOptions, "method">, R extends EndpointResponse>(optionsOrHandler: Opts, handler: MiddlewareHandler<Opts & {
+    method: "*"
+}, R>): Endpoint<Handler<string, Opts & {
+    method: "*"
+}, R>, Opts & {
+    method: "*"
+}>
+export function createMiddleware(optionsOrHandler: any, handler?: any) {
+    if (typeof optionsOrHandler === "function") {
+        return createEndpoint("*", {
+            method: "*"
+        }, optionsOrHandler)
     }
+    if (!handler) {
+        throw new Error("Middleware handler is required")
+    }
+    const endpoint = createEndpoint("*", {
+        ...optionsOrHandler,
+        method: "*"
+    }, handler)
+    return endpoint as any
 }
+
+export type Middleware<Opts extends EndpointOptions, R> = (opts: Opts, handler: (ctx: {
+    body?: InferBody<Opts>,
+    params?: Record<string, string>,
+    query?: Record<string, string>
+}) => Promise<R>) => Endpoint
+
+const m1 = createMiddleware({
+    body: z.object({
+        name: z.string()
+    }),
+}, async (ctx) => {
+    ctx
+})

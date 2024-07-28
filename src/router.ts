@@ -1,4 +1,3 @@
-import type { Endpoint } from "./endpoint";
 import {
     createRouter as createRou3Router,
     addRoute,
@@ -6,6 +5,8 @@ import {
 } from "rou3";
 import { getBody, shouldSerialize, statusCode } from "./utils";
 import { APIError } from "./better-call-error";
+import type { Middleware, MiddlewareHandler } from "./middleware";
+import type { Endpoint, Method } from "./types";
 
 interface RouterConfig {
     /**
@@ -20,6 +21,25 @@ interface RouterConfig {
      * Base path for the router
      */
     basePath?: string
+    /**
+     * Middlewares for the router
+     */
+    routerMiddleware?: ({
+        /**
+         * The path to match for the middleware to be called
+         */
+        path: string,
+        /**
+         * The method to match for the middleware to be called
+         * 
+         * @default "*"
+         */
+        method?: Method | Method[],
+        /**
+         * The middleware handler
+         */
+        handler: Endpoint
+    })[]
 }
 
 export const createRouter = <E extends Endpoint, Config extends RouterConfig>(endpoints: E[], config?: Config) => {
@@ -34,6 +54,14 @@ export const createRouter = <E extends Endpoint, Config extends RouterConfig>(en
         }
     }
 
+    const middlewareRouter = createRou3Router()
+    for (const route of (config?.routerMiddleware || [])) {
+        const methods = Array.isArray(route.method) ? route.method : [route.method]
+        for (const method of methods) {
+            addRoute(middlewareRouter, method, route.path, route.handler)
+        }
+    }
+
     const handler = async (request: Request) => {
         const url = new URL(request.url);
         let path = url.pathname
@@ -45,6 +73,8 @@ export const createRouter = <E extends Endpoint, Config extends RouterConfig>(en
         const handler = route?.data as Endpoint
         const body = await getBody(request)
         const headers = request.headers
+        const query = Object.fromEntries(url.searchParams)
+        const middleware = findRoute(middlewareRouter, method, path)?.data as Endpoint | undefined
 
         //handler 404
         if (!handler) {
@@ -54,16 +84,23 @@ export const createRouter = <E extends Endpoint, Config extends RouterConfig>(en
             })
         }
         try {
-            let middleware: Record<string, any> = {}
-            if (handler.middleware) {
-                middleware = await handler.middleware({
+            let middlewareContext: Record<string, any> = {}
+            if (middleware) {
+                const res = await middleware({
                     path: path,
-                    method: method,
+                    method: method as "GET",
                     headers,
-                    params: url.searchParams,
-                    request: request.clone(),
+                    params: route?.params as any,
+                    request: request,
                     body: body,
-                }) || {}
+                    query
+                })
+                if (res) {
+                    middlewareContext = {
+                        ...res,
+                        ...middlewareContext
+                    }
+                }
             }
             const handlerRes = await handler({
                 path: path,
@@ -72,7 +109,8 @@ export const createRouter = <E extends Endpoint, Config extends RouterConfig>(en
                 params: route?.params as any,
                 request: request,
                 body: body,
-                ...middleware?.context,
+                query,
+                ...middlewareContext,
             })
             if (handlerRes instanceof Response) {
                 return handlerRes

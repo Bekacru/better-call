@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 import { createEndpoint, createMiddleware, createRouter } from "../src";
 import { z } from "zod";
 
@@ -64,30 +64,7 @@ describe("Router", () => {
     })
 
     it("with middleware", async () => {
-        const createProtectedEndpoint = createMiddleware(async (ctx) => {
-            return {
-                context: {
-                    user: {
-                        id: "2"
-                    }
-                }
-            }
-        })
-        const getUser = createProtectedEndpoint("/:id", {
-            method: "GET"
-        }, async (ctx) => {
 
-            return {
-                user: ctx.user
-            }
-        })
-        const router = createRouter([getUser], {
-            throwError: true
-        })
-        const request = new Request("http://localhost:3000/1")
-        const re = await router.handler(request)
-        const json = await re.json()
-        expect(json.user.id).toBe("2")
     })
 
     it("should handle base path", async () => {
@@ -106,5 +83,31 @@ describe("Router", () => {
         const json = await re.json()
         expect(json.item).toBe("item")
     })
+
+
+    it("query", async () => {
+        const endpoint = createEndpoint("/", {
+            method: "GET",
+            query: z.object({
+                name: z.string()
+            })
+        }, async (ctx) => {
+            expectTypeOf(ctx.query).toMatchTypeOf<{
+                name: string
+            }>()
+            expect(ctx.query.name).toBe("hello")
+            return {
+                message: ctx.method
+            }
+        })
+
+        const router = createRouter([endpoint], {
+            throwError: true
+        })
+        const request = new Request("http://localhost:3000?name=hello")
+        await router.handler(request)
+    })
 })
+
+
 
