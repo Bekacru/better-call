@@ -144,5 +144,7 @@ export const createRouter = <E extends Endpoint, Config extends RouterConfig>(en
             })
         }
     }
-    return { handler }
+    return {
+        handler
+    }
 }

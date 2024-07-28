@@ -12,10 +12,11 @@
     "build": "tsup"
   },
   "devDependencies": {
+    "@better-fetch/fetch": "^1.1.4",
     "@types/bun": "latest",
-    "type-fest": "^4.23.0",
     "bumpp": "^9.4.1",
     "tsup": "^8.2.3",
+    "type-fest": "^4.23.0",
     "vitest": "^2.0.4",
     "zod": "^3.23.8"
   },

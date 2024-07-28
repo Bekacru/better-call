@@ -50,7 +50,7 @@ export function createEndpoint<Path extends string, Opts extends EndpointOptions
             }
         }
         try {
-            const body = options.body ? options.body.parse(internalCtx.body) : undefined
+            const body = options.body ? options.body.parse(internalCtx.body) : internalCtx.body
             internalCtx = {
                 ...internalCtx,
                 body: body ? {
@@ -58,11 +58,11 @@ export function createEndpoint<Path extends string, Opts extends EndpointOptions
                     ...internalCtx.body
                 } : internalCtx.body,
             }
-            internalCtx.query = options.query ? options.query.parse(internalCtx.query) : undefined
-            internalCtx.params = options.params ? options.params.parse(internalCtx.params) : undefined
+            internalCtx.query = options.query ? options.query.parse(internalCtx.query) : internalCtx.query
+            internalCtx.params = options.params ? options.params.parse(internalCtx.params) : internalCtx.params
         } catch (e) {
             if (e instanceof ZodError) {
-                throw new APIError("Bad Request", {
+                throw new APIError("BAD_REQUEST", {
                     message: e.message,
                     details: e.errors
                 })
@@ -70,12 +70,12 @@ export function createEndpoint<Path extends string, Opts extends EndpointOptions
             throw e
         }
         if (options.requireHeaders && !internalCtx.headers) {
-            throw new APIError("Bad Request", {
+            throw new APIError("BAD_REQUEST", {
                 message: "Headers are required"
             })
         }
         if (options.requireRequest && !internalCtx.request) {
-            throw new APIError("Bad Request", {
+            throw new APIError("BAD_REQUEST", {
                 message: "Request is required"
             })
         }
