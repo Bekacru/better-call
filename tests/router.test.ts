@@ -107,6 +107,30 @@ describe("Router", () => {
         const request = new Request("http://localhost:3000?name=hello")
         await router.handler(request)
     })
+
+    it("router middleware", async () => {
+        let isCalled = false
+        const middleware = createMiddleware(async (ctx) => {
+            isCalled = true
+            return {
+                name: "hello"
+            }
+        })
+        const endpoint = createEndpoint("/item", {
+            method: "GET",
+        }, async (ctx) => { })
+
+        const router = createRouter([endpoint], {
+            throwError: true,
+            routerMiddleware: [{
+                path: "/*",
+                handler: middleware
+            }]
+        })
+        const request = new Request("http://localhost:3000/item")
+        const res = await router.handler(request)
+        expect(isCalled).toBe(true)
+    })
 })
 
 

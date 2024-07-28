@@ -4,7 +4,6 @@ Better call is a tiny web framework for creating endpoints that can be invoked a
 
 Built for typescript and it comes with a very high performance router based on [rou3](https://github.com/unjs/rou3).
 
-
 > ⚠️ This project early in development and not ready for production use. But feel free to try it out and give feedback.
 
 ## Install
@@ -15,7 +14,7 @@ pnpm i better-call
 
 ## Usage
 
-The building blocks for better-call are endpoints. You can create an endpoint by calling `createEndpoint` and passing it a path, inputs that can be validated with zod (body, query) and a function that will be invoked when the endpoint is called.
+The building blocks for better-call are endpoints. You can create an endpoint by calling `createEndpoint` and passing it a path, [options](#endpointoptions) and a function that will be invoked when the endpoint is called.
 
 ```ts
 import { createEndpoint, createRouter } from "better-call"
@@ -58,35 +57,44 @@ Bun.serve({
 
 ### Middleware
 
-You can create middleware by calling `createMiddleware` and passing it a function that will be invoked before the endpoint is called.
+Endpoints can use middleware by passing the `use` option to the endpoint. To create a middleware, you can call `createMiddleware` and pass it a function or an options object and a handler function.
 
-If you return a context object from the middleware, it will be merged with the context object on the endpoint.
+If you return a context object from the middleware, it will be available in the endpoint context.
 
 ```ts
-import { createMiddleware, createEndpoint } from "better-call"
-
-const createProtectedEndpoint = createMiddleware(async (ctx) => {
-    if(ctx.headers.get("Authorization") !== "Bearer 123") {
-        throw new Error("Unauthorized")
-    }
+const middleware = createMiddleware(async (ctx) => {
     return {
-       context: {
-            session: {
-                id: "123",
-            }
-       }
+        name: "hello"
+    }
+})
+const endpoint = createEndpoint("/", {
+    method: "GET",
+    use: [middleware],
+}, async (ctx) => {
+   //this will be the context object returned by the middleware with the name property
+   ctx.context
+})
+```
+
+You can also pass an options object to the middleware and a handler function.
+
+```ts
+const middleware = createMiddleware({
+    body: z.object({
+        name: z.string()
+    })
+}, async (ctx) => {
+    return {
+        name: "hello"
     }
 })
 
-const getUser = createProtectedEndpoint("/:id", {
-    method: "GET"
-},
-async (ctx) => {
-    const user = await getUserFromDatabase(ctx.params.id)
-    // ctx.session is the session object
-    return {
-        user: ctx.session.user
-    }
+const endpoint = createEndpoint("/", {
+    method: "GET",
+    use: [middleware],  
+}, async (ctx) => {
+    //the body will also contain the middleware body
+    ctx.body
 })
 ```
 
@@ -102,7 +110,31 @@ const router = createRouter([
     createItem
 ])
 ```
+
 Behind the scenes, the router uses [rou3](https://github.com/unjs/rou3) to match the endpoints and invoke the correct endpoint. You can look at the [rou3 documentation](https://github.com/unjs/rou3) for more information.
+
+#### Router Options
+
+**routerMiddleware**: A router middleware is similar to an endpoint middleware but it's applied to any path that matches the route. It's like a traditional middleware you specify a path matcher and a handler function and it will be called before the endpoint. 
+
+```ts
+const router = createRouter([
+    createItem
+], {
+    routerMiddleware: [
+        {
+            path: "/api/**",
+            handler: middleware
+        }
+    ]
+})
+```
+
+**basePath**: The base path for the router. All paths will be relative to this path.
+
+**onError**: The router will call this function if an error occurs in the middleware or the endpoint.
+
+**throwError**: If true, the router will throw an error if an error occurs in the middleware or the endpoint.
 
 
 ### Returning non 200 responses
@@ -168,15 +200,7 @@ const createItem = createEndpoint("/item", {
 })
 ```
 
-## API
-
-### `createEndpoint`
-
-```ts
-createEndpoint(path: string, options: EndpointOptions, fn: EndpointFunction): Endpoint
-```
-
-Creates an endpoint. The `path` is the path that will be used to match the endpoint. The `options` are the options that will be used to validate the request. The `fn` is the function that will be invoked when the endpoint is called.
+### Endpoint Parameters
 
 ### `path`
 
@@ -205,6 +229,7 @@ type EndpointOptions = {
     params?: ZodSchema
     requireHeaders?: boolean
     requireRequest?: boolean
+    use?: Endpoint[]
 }
 ```
 
@@ -220,6 +245,7 @@ type EndpointOptions = {
 
 - **requireRequest**: if true, the endpoint will throw an error if the request doesn't have a request object. And even when you call the endpoint as a function, it will require a request to be passed in the context.
 
+- **use**: the use option accepts an array of endpoints and will be called before the endpoint is called.
 
 ### `EndpointFunction`
 
