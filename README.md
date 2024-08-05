@@ -115,18 +115,20 @@ Behind the scenes, the router uses [rou3](https://github.com/unjs/rou3) to match
 
 #### Router Options
 
-**routerMiddleware**: A router middleware is similar to an endpoint middleware but it's applied to any path that matches the route. It's like a traditional middleware you specify a path matcher and a handler function and it will be called before the endpoint. 
+**routerMiddleware**: A router middleware is similar to an endpoint middleware but it's applied to any path that matches the route. You have to pass endpoints to the router middleware as an array.
 
 ```ts
+const routeMiddleware = createEndpoint("/api/**", {
+    method: "GET",
+}, async (ctx) => {
+    return {
+        name: "hello"
+    }
+})
 const router = createRouter([
     createItem
 ], {
-    routerMiddleware: [
-        {
-            path: "/api/**",
-            handler: middleware
-        }
-    ]
+    routerMiddleware: [routeMiddleware]
 })
 ```
 

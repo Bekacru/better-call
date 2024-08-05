@@ -24,22 +24,7 @@ interface RouterConfig {
     /**
      * Middlewares for the router
      */
-    routerMiddleware?: ({
-        /**
-         * The path to match for the middleware to be called
-         */
-        path: string,
-        /**
-         * The method to match for the middleware to be called
-         * 
-         * @default "*"
-         */
-        method?: Method | Method[],
-        /**
-         * The middleware handler
-         */
-        handler: Endpoint
-    })[]
+    routerMiddleware?: Endpoint[]
 }
 
 export const createRouter = <E extends Endpoint, Config extends RouterConfig>(endpoints: E[], config?: Config) => {
@@ -56,9 +41,9 @@ export const createRouter = <E extends Endpoint, Config extends RouterConfig>(en
 
     const middlewareRouter = createRou3Router()
     for (const route of (config?.routerMiddleware || [])) {
-        const methods = Array.isArray(route.method) ? route.method : [route.method]
+        const methods = Array.isArray(route.options.method) ? route.options.method : [route.options.method]
         for (const method of methods) {
-            addRoute(middlewareRouter, method, route.path, route.handler)
+            addRoute(middlewareRouter, method, route.path, route)
         }
     }
 
