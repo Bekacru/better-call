@@ -24,7 +24,10 @@ interface RouterConfig {
     /**
      * Middlewares for the router
      */
-    routerMiddleware?: Endpoint[]
+    routerMiddleware?: {
+        path: string,
+        middleware: Endpoint
+    }[]
 }
 
 export const createRouter = <E extends Endpoint, Config extends RouterConfig>(endpoints: E[], config?: Config) => {
@@ -41,10 +44,7 @@ export const createRouter = <E extends Endpoint, Config extends RouterConfig>(en
 
     const middlewareRouter = createRou3Router()
     for (const route of (config?.routerMiddleware || [])) {
-        const methods = Array.isArray(route.options.method) ? route.options.method : [route.options.method]
-        for (const method of methods) {
-            addRoute(middlewareRouter, method, route.path, route)
-        }
+        addRoute(middlewareRouter, "*", route.path, route.middleware)
     }
 
     const handler = async (request: Request) => {
@@ -59,8 +59,7 @@ export const createRouter = <E extends Endpoint, Config extends RouterConfig>(en
         const body = await getBody(request)
         const headers = request.headers
         const query = Object.fromEntries(url.searchParams)
-        const middleware = findRoute(middlewareRouter, method, path)?.data as Endpoint | undefined
-
+        const middleware = findRoute(middlewareRouter, "*", path)?.data as Endpoint | undefined
         //handler 404
         if (!handler) {
             return new Response(null, {

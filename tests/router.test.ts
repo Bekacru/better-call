@@ -110,14 +110,19 @@ describe("Router", () => {
 
     it("router middleware", async () => {
         let isCalled = false
-        const endpoint = createEndpoint("/*", {
+        const endpoint = createEndpoint("/item", {
             method: "GET",
         }, async (ctx) => {
+        })
+        const middleware = createMiddleware(async (ctx) => {
             isCalled = true
         })
         const router = createRouter([endpoint], {
             throwError: true,
-            routerMiddleware: [endpoint]
+            routerMiddleware: [{
+                path: "/*",
+                middleware
+            }]
         })
         const request = new Request("http://localhost:3000/item")
         const res = await router.handler(request)

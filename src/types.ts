@@ -130,7 +130,7 @@ export type InferParam<Path extends string, ParamPath extends InferParamPath<Pat
 
 export type EndpointResponse = Record<string, any> | string | boolean | number | void | undefined
 
-export type Handler<Path extends string, Opts extends EndpointOptions, R extends EndpointResponse> = (ctx: Prettify<Context<Path, Opts> & InferUse<Opts> & ContextTools>) => Promise<R>
+export type Handler<Path extends string, Opts extends EndpointOptions, R extends EndpointResponse, Extra extends Record<string, any> = {}> = (ctx: Prettify<Context<Path, Opts> & InferUse<Opts> & ContextTools> & Extra) => Promise<R>
 
 export type Method = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "*"
 

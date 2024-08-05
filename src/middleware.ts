@@ -31,16 +31,8 @@ export function createMiddleware(optionsOrHandler: any, handler?: any) {
     return endpoint as any
 }
 
-export type Middleware<Opts extends EndpointOptions, R> = (opts: Opts, handler: (ctx: {
+export type Middleware<Opts extends EndpointOptions = EndpointOptions, R extends EndpointResponse = EndpointResponse> = (opts: Opts, handler: (ctx: {
     body?: InferBody<Opts>,
     params?: Record<string, string>,
     query?: Record<string, string>
 }) => Promise<R>) => Endpoint
-
-const m1 = createMiddleware({
-    body: z.object({
-        name: z.string()
-    }),
-}, async (ctx) => {
-    ctx
-})

@@ -1,5 +1,5 @@
 import { describe, it } from "vitest";
-import { createEndpoint } from "../src";
+import { createEndpoint, createEndpointCreator } from "../src";
 import { z } from "zod";
 
 
@@ -35,6 +35,22 @@ describe("Type", () => {
                 id: "123",
                 name: "hello"
             }
+        })
+    })
+
+    it("should infer extra", async () => {
+        const createEndpoint2 = createEndpointCreator<{
+            options: {
+                providers: string[]
+            }
+        }>()
+        createEndpoint2("/", {
+            method: "POST",
+            body: z.object({
+                name: z.string()
+            })
+        }, async (ctx) => {
+            ctx.options.providers
         })
     })
 })

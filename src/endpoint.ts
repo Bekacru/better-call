@@ -12,6 +12,13 @@ export interface EndpointConfig {
     throwOnError?: boolean
 }
 
+export function createEndpointCreator<T extends Record<string, any>>() {
+    return <Path extends string, Opts extends EndpointOptions, R extends EndpointResponse>(path: Path, options: Opts, handler: Handler<Path, Opts, R, T>) => {
+        //@ts-expect-error
+        return createEndpoint(path, options, handler)
+    }
+}
+
 export function createEndpoint<Path extends string, Opts extends EndpointOptions, R extends EndpointResponse>(path: Path, options: Opts, handler: Handler<Path, Opts, R>) {
     const responseHeader = new Headers()
     type Ctx = Context<Path, Opts>
