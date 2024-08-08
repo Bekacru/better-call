@@ -55,7 +55,7 @@ export const createMiddlewareCreator = <ExtraContext extends Record<string, any>
         }, handler)
         return endpoint as any
     }
-    return { createMiddleware: fn }
+    return fn
 }
 
 export type Middleware<Opts extends EndpointOptions = EndpointOptions, R extends EndpointResponse = EndpointResponse> = (opts: Opts, handler: (ctx: {
