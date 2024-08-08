@@ -1,5 +1,5 @@
 import { z, ZodError, type ZodOptional, type ZodSchema } from "zod"
-import type { Middleware } from "./middleware"
+import { createMiddleware, type Middleware } from "./middleware"
 import { APIError } from "./better-call-error";
 import type { HasRequiredKeys, UnionToIntersection } from "./helper";
 import type { Context, ContextTools, Endpoint, EndpointOptions, EndpointResponse, Handler } from "./types";
@@ -17,6 +17,7 @@ export function createEndpointCreator<T extends Record<string, any>>() {
         //@ts-expect-error
         return createEndpoint(path, options, handler)
     }
+
 }
 
 export function createEndpoint<Path extends string, Opts extends EndpointOptions, R extends EndpointResponse>(path: Path, options: Opts, handler: Handler<Path, Opts, R>) {
