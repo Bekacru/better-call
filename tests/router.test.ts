@@ -58,7 +58,7 @@ describe("Router", () => {
         const request2 = new Request("http://localhost:3000/item/1")
         const res2 = await router.handler(request2)
         expect(res2.status).toBe(200)
-        expect(res2.headers.get("Set-Cookie")).toBe("hello=world")
+        expect(res2.headers.get("Set-Cookie")).toBe("hello=world; Max-Age=0; Domain=; Path=/; Secure=false; HttpOnly=false; SameSite=none; Expires=;")
         const json2 = await res2.json()
         expect(json2.item.id).toBe("1")
     })
@@ -127,6 +127,26 @@ describe("Router", () => {
         const request = new Request("http://localhost:3000/item")
         const res = await router.handler(request)
         expect(isCalled).toBe(true)
+    })
+
+    it("should support extra context", async () => {
+        const endpoint = createEndpoint("/item", {
+            method: "GET",
+        }, async (ctx) => {
+            const options = (ctx as any).options
+            expect("name" in options).toBe(true)
+        })
+
+        const router = createRouter([endpoint], {
+            extraContext: {
+                options: {
+                    name: "test"
+                }
+            }
+
+        })
+        const request = new Request("http://localhost:3000/item")
+        await router.handler(request)
     })
 })
 

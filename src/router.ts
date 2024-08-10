@@ -27,7 +27,8 @@ interface RouterConfig {
     routerMiddleware?: {
         path: string,
         middleware: Endpoint
-    }[]
+    }[],
+    extraContext?: Record<string, any>
 }
 
 export const createRouter = <E extends Endpoint, Config extends RouterConfig>(endpoints: E[], config?: Config) => {
@@ -77,12 +78,13 @@ export const createRouter = <E extends Endpoint, Config extends RouterConfig>(en
                     params: route?.params as any,
                     request: request,
                     body: body,
-                    query
+                    query,
+                    ...config?.extraContext
                 })
                 if (res) {
                     middlewareContext = {
                         ...res,
-                        ...middlewareContext
+                        ...middlewareContext,
                     }
                 }
             }
@@ -95,6 +97,7 @@ export const createRouter = <E extends Endpoint, Config extends RouterConfig>(en
                 body: body,
                 query,
                 ...middlewareContext,
+                ...config?.extraContext
             })
             if (handlerRes instanceof Response) {
                 return handlerRes
