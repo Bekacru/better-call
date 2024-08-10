@@ -72,6 +72,15 @@ export interface CookieOptions {
      * HttpOnly
      */
     httpOnly?: boolean
+
+    /**
+     * SameSite
+     */
+    sameSite?: 'strict' | 'lax' | 'none'
+    /** 
+     * Expires
+     */
+    expires?: Date
 }
 
 export type ContextTools = {

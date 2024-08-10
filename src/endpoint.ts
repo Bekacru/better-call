@@ -30,7 +30,7 @@ export function createEndpoint<Path extends string, Opts extends EndpointOptions
             },
             setCookie(key: string, value: string, options?: CookieOptions) {
                 const cookieOptions = options || {}
-                responseHeader.append("Set-Cookie", `${key}=${value}; Max-Age=${cookieOptions.maxAge || 0}; Domain=${cookieOptions.domain || ""}; Path=${cookieOptions.path || "/"}; Secure=${cookieOptions.secure || false}; HttpOnly=${cookieOptions.httpOnly || false}`)
+                responseHeader.append("Set-Cookie", `${key}=${value}; Max-Age=${cookieOptions.maxAge || 0}; Domain=${cookieOptions.domain || ""}; Path=${cookieOptions.path || "/"}; Secure=${cookieOptions.secure || false}; HttpOnly=${cookieOptions.httpOnly || false}; SameSite=${cookieOptions.sameSite || "none"}; Expires=${cookieOptions.expires || ""};`)
             },
             getCookie(key: string) {
                 const header = ctx[0]?.headers
