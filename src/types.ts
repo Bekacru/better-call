@@ -50,6 +50,30 @@ export type Prettify<T> = {
     [key in keyof T]: T[key];
 } & {};
 
+
+export interface CookieOptions {
+    /**
+     * Max age in seconds
+     */
+    maxAge?: number
+    /**
+     * Domain
+     */
+    domain?: string
+    /**
+     * Path
+     */
+    path?: string
+    /**
+     * Secure
+     */
+    secure?: boolean
+    /**
+     * HttpOnly
+     */
+    httpOnly?: boolean
+}
+
 export type ContextTools = {
     /**
      * Set header
@@ -62,7 +86,7 @@ export type ContextTools = {
      * 
      * If it's called outside of a request it will just be ignored.
      */
-    setCookie: (key: string, value: string) => void
+    setCookie: (key: string, value: string, options?: CookieOptions) => void
     /**
      * Get cookie value
      * 

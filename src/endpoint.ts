@@ -2,7 +2,7 @@ import { z, ZodError, type ZodOptional, type ZodSchema } from "zod"
 import { createMiddleware, type Middleware } from "./middleware"
 import { APIError } from "./better-call-error";
 import type { HasRequiredKeys, UnionToIntersection } from "./helper";
-import type { Context, ContextTools, Endpoint, EndpointOptions, EndpointResponse, Handler } from "./types";
+import type { Context, ContextTools, CookieOptions, Endpoint, EndpointOptions, EndpointResponse, Handler } from "./types";
 
 
 export interface EndpointConfig {
@@ -28,8 +28,9 @@ export function createEndpoint<Path extends string, Opts extends EndpointOptions
             setHeader(key: string, value: string) {
                 responseHeader.set(key, value)
             },
-            setCookie(key: string, value: string) {
-                responseHeader.append("Set-Cookie", `${key}=${value}`)
+            setCookie(key: string, value: string, options?: CookieOptions) {
+                const cookieOptions = options || {}
+                responseHeader.append("Set-Cookie", `${key}=${value}; Max-Age=${cookieOptions.maxAge || 0}; Domain=${cookieOptions.domain || ""}; Path=${cookieOptions.path || "/"}; Secure=${cookieOptions.secure || false}; HttpOnly=${cookieOptions.httpOnly || false}`)
             },
             getCookie(key: string) {
                 const header = ctx[0]?.headers
