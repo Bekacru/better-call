@@ -1,5 +1,5 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
-import { createEndpoint, createMiddleware, createRouter } from "../src";
+import { APIError, createEndpoint, createMiddleware, createRouter } from "../src";
 import { z } from "zod";
 
 
@@ -147,6 +147,21 @@ describe("Router", () => {
         })
         const request = new Request("http://localhost:3000/item")
         await router.handler(request)
+    })
+
+    it("should include headers on throw", async () => {
+        const endpoint = createEndpoint("/item", {
+            method: "GET",
+        }, async (ctx) => {
+            ctx.setHeader("test", "test")
+            throw new APIError("FOUND")
+        })
+        const router = createRouter([endpoint], {
+            throwError: true
+        })
+        const request = new Request("http://localhost:3000/item")
+        const res = await router.handler(request)
+        expect(res.headers.get("test")).toBe("test")
     })
 })
 

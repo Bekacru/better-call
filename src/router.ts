@@ -117,10 +117,7 @@ export const createRouter = <E extends Endpoint, Config extends RouterConfig>(en
                 return new Response(e.body ? JSON.stringify(e.body) : null, {
                     status: statusCode[e.status],
                     statusText: e.status,
-                    headers: {
-                        "Content-Type": "application/json",
-                        ...headers
-                    }
+                    headers: handler.headers,
                 })
             }
             if (config?.throwError) {
