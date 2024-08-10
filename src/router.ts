@@ -119,6 +119,7 @@ export const createRouter = <E extends Endpoint, Config extends RouterConfig>(en
                     statusText: e.status,
                     headers: {
                         "Content-Type": "application/json",
+                        ...headers
                     }
                 })
             }
