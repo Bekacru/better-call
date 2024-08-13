@@ -24,6 +24,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@biomejs/biome": "^1.8.3",
     "rou3": "^0.5.1"
   },
   "exports": {
