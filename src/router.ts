@@ -1,6 +1,6 @@
 import { createRouter as createRou3Router, addRoute, findRoute } from "rou3";
 import { getBody, shouldSerialize, statusCode } from "./utils";
-import { APIError } from "./better-call-error";
+import { APIError } from "./error";
 import type { Middleware, MiddlewareHandler } from "./middleware";
 import type { Endpoint, Method } from "./types";
 

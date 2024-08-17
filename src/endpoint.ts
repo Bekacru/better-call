@@ -1,6 +1,6 @@
 import { z, ZodError, type ZodOptional, type ZodSchema } from "zod";
 import { createMiddleware, type Middleware } from "./middleware";
-import { APIError } from "./better-call-error";
+import { APIError } from "./error";
 import type { HasRequiredKeys, UnionToIntersection } from "./helper";
 import type {
 	Context,
