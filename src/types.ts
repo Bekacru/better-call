@@ -3,10 +3,18 @@ import type { UnionToIntersection } from "./helper";
 import type { CookiePrefixOptions } from "./cookie";
 
 export interface EndpointOptions {
+	/**
+	 * Request Method
+	 */
 	method: Method | Method[];
+	/**
+	 * Body Schema
+	 */
 	body?: ZodSchema;
+	/**
+	 * Query Schema
+	 */
 	query?: ZodSchema;
-	params?: ZodSchema<any>;
 	/**
 	 * If true headers will be required to be passed in the context
 	 */

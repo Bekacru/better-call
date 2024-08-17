@@ -1,6 +1,6 @@
 # better-call
 
-Better call is a tiny web framework for creating endpoints that can be invoked as a normal function or mounted to a router to be served by any web standard compatible server (like Bun, node, nextjs, sveltekit...) and cam can be invoked from a client using the typed rpc client.
+Better call is a tiny web framework for creating endpoints that can be invoked as a normal function or mounted to a router to be served by any web standard compatible server (like Bun, node, nextjs, sveltekit...) and also includes a typed RPC client for typesafe client-side invocation of these endpoints.
 
 Built for typescript and it comes with a very high performance router based on [rou3](https://github.com/unjs/rou3).
 
@@ -10,6 +10,12 @@ Built for typescript and it comes with a very high performance router based on [
 
 ```bash
 pnpm i better-call
+```
+
+make sure to install zod if you haven't
+
+```bash
+pnpm i zod
 ```
 
 ## Usage
@@ -92,6 +98,131 @@ const createItem = createEndpoint("/item", {
     }
 })
 ```
+
+### Endpoint
+
+Endpoints are building blocks of better-call. 
+
+#### Path
+
+The path is the URL path that the endpoint will respond to. It can be a direct path or a path with parameters and wildcards.
+
+```ts
+//direct path
+const endpoint = createEndpoint("/item", {
+    method: "GET",
+}, async (ctx) => {})
+
+//path with parameters
+const endpoint = createEndpoint("/item/:id", {
+    method: "GET",
+}, async (ctx) => {
+    return {
+        item: {
+            id: ctx.params.id
+        }
+    }
+})
+
+//path with wildcards
+const endpoint = createEndpoint("/item/**:name", {
+    method: "GET",  
+}, async (ctx) => {
+    //the name will be the remaining path
+    ctx.params.name
+})
+```
+#### Body Schema
+
+The `body` option accepts a zod schema and will validate the request body. If the request body doesn't match the schema, the endpoint will throw an error. If it's mounted to a router, it'll return a 400 error.
+
+```ts
+const createItem = createEndpoint("/item", {
+    method: "POST",
+    body: z.object({
+        id: z.string()
+    })
+}, async (ctx) => {
+    return {
+        item: {
+            id: ctx.body.id
+        }
+    }
+})
+```
+
+#### Query Schema
+
+The `query` option accepts a zod schema and will validate the request query. If the request query doesn't match the schema, the endpoint will throw an error. If it's mounted to a router, it'll return a 400 error.
+
+```ts
+const createItem = createEndpoint("/item", {
+    method: "GET",
+    query: z.object({
+        id: z.string()
+    })
+}, async (ctx) => {
+    return {
+        item: {
+            id: ctx.query.id
+        }
+    }
+})
+```
+
+#### Require Headers
+
+The `requireHeaders` option is used to require the request to have headers. If the request doesn't have headers, the endpoint will throw an error. And even when you call the endpoint as a function, it will require headers to be passed in the context.
+
+```ts
+const createItem = createEndpoint("/item", {
+    method: "GET",
+    requireHeaders: true
+}, async (ctx) => {
+    return {
+        item: {
+            id: ctx.headers.get("id")
+        }
+    }
+})
+createItem({
+    headers: new Headers()
+})
+```
+
+#### Require Request
+
+The `requireRequest` option is used to require the request to have a request object. If the request doesn't have a request object, the endpoint will throw an error. And even when you call the endpoint as a function, it will require a request to be passed in the context.
+
+```ts
+const createItem = createEndpoint("/item", {
+    method: "GET",
+    requireRequest: true
+}, async (ctx) => {
+    return {
+        item: {
+            id: ctx.request.id
+        }
+    }
+})
+
+createItem({
+    request: new Request()
+})
+```
+
+
+### Handler
+
+this is the function that will be invoked when the endpoint is called. It accepts a context object that contains the request, headers, body, query, params and other information. 
+
+It can return a response object, a string, a boolean, a number, an object with a status, body, headers and other properties or undefined.
+
+If you return a response object, it will be returned as is even when it's mounted to a router.
+
+It can also throw an error and if it throws APIError, it will be converted to a response object with the correct status code and headers.
+
+- **Context**: the context object contains the request, headers, body, query, params and a helper function to set headers, cookies and get cookies. If there is a middleware, the context will be extended with the middleware context.
 
 ### Middleware
 
@@ -249,65 +380,6 @@ const createItem = createEndpoint("/item", {
 ```
 
 > other than normal cookies the ctx object also exposes signed cookies.
-
-
-### Endpoint Parameters
-
-### `path`
-
-The path defines how the framework matches requests to endpoints. It can include parameters and wildcards that are extracted from the request and passed to the endpoint function.
-
-1. **Path Parameters**: 
-   - Use `:` to define a parameter in the path. For example, `/item/:id` will extract the `id` from the request URL and pass it to the endpoint function as part of the `params` object.
-     - Example: For a request to `/item/123`, the endpoint function will receive `{ id: '123' }`.
-
-2. **Wildcards**:
-   - Use `*` or `**` to match any part of the path. When using a wildcard, the remaining path will be captured in the `params` object under the `_` property.
-     - Example: For a path `/item/*`, a request to `/item/abc/def` will pass `{ _: 'abc/def' }` to the endpoint function.
-
-3. **Named Wildcards**:
-   - To capture the remaining path with a specific name, use `*:` followed by the desired name. The remaining path will be assigned to this named property.
-     - Example: For a path `/item/*:name`, a request to `/item/abc/def` will pass `{ name: 'abc/def' }` to the endpoint function.
-
-
-### `EndpointOptions`
-
-```ts
-type EndpointOptions = {
-    method?: METHOD | METHOD[]
-    body?: ZodSchema
-    query?: ZodSchema
-    params?: ZodSchema
-    requireHeaders?: boolean
-    requireRequest?: boolean
-    use?: Endpoint[]
-}
-```
-
-- **method**: the endpoint options accept method which can be a method or an array of methods. If you pass an array of methods, the endpoint will match if the request method is one of the methods in the array. And method will be required when calling the endpoint even as a function.
-
-- **body**: the body option accepts a zod schema and will validate the request body. If the request body doesn't match the schema, the endpoint will throw an error. If it's mounted to a router, it'll return a 400 error.
-
-- **query**: the query option accepts a zod schema and will validate the request query. If the request query doesn't match the schema, the endpoint will throw an error. If it's mounted to a router, it'll return a 400 error.
-
-- **params**: the params option accepts a zod schema and will validate the request params. The params are defined in the path and will be extracted from the request.
-
-- **requireHeaders**: if true, the endpoint will throw an error if the request doesn't have headers. And even when you call the endpoint as a function, it will require headers to be passed in the context.
-
-- **requireRequest**: if true, the endpoint will throw an error if the request doesn't have a request object. And even when you call the endpoint as a function, it will require a request to be passed in the context.
-
-- **use**: the use option accepts an array of endpoints and will be called before the endpoint is called.
-
-### `EndpointFunction`
-
-this is the function that will be invoked when the endpoint is called. It accepts a context object that contains the request, headers, body, query, params and other information. 
-
-It can return a response object, a string, a boolean, a number, an object with a status, body, headers and other properties or undefined.
-
-If you return a response object, it will be returned as is even when it's mounted to a router.
-
-
-- **Context**: the context object contains the request, headers, body, query, params and a helper function to set headers, cookies and get cookies. If there is a middleware, the context will be extended with the middleware context.
 
 ## License
 MIT
