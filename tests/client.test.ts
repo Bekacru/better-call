@@ -45,8 +45,8 @@ describe("client", () => {
 			{
 				method: "GET",
 				query: z.object({
-					hello: z.string().optional()
-				})
+					hello: z.string().optional(),
+				}),
 			},
 			async (ctx) => {
 				return {
@@ -68,7 +68,9 @@ describe("client", () => {
 			baseURL: "http://localhost:3000",
 		});
 
-		expectTypeOf<Parameters<typeof client>[0]>().toMatchTypeOf<"@post/test" | "/test2" | "/test3">();
+		expectTypeOf<Parameters<typeof client>[0]>().toMatchTypeOf<
+			"@post/test" | "/test2" | "/test3"
+		>();
 
 		client("@post/test", {
 			body: {
@@ -83,7 +85,7 @@ describe("client", () => {
 				hello: 2,
 			},
 		});
-		client("/test3")
+		client("/test3");
 	});
 
 	it("should call endpoint n", async () => {
