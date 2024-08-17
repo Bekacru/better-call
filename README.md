@@ -1,10 +1,10 @@
 # better-call
 
-Better call is a tiny web framework for creating endpoints that can be invoked as a normal function or mounted to a router to  be served by any web standard compatible server (like Bun, node, nextjs, sveltekit...) and also can be invoked from a client using the typed rpc client.
+Better call is a tiny web framework for creating endpoints that can be invoked as a normal function or mounted to a router to be served by any web standard compatible server (like Bun, node, nextjs, sveltekit...) and cam can be invoked from a client using the typed rpc client.
 
 Built for typescript and it comes with a very high performance router based on [rou3](https://github.com/unjs/rou3).
 
-> ⚠️ This project early in development and not ready for production use. But feel free to try it out and give feedback.
+> ⚠️ This project in development and not ready for production use. But feel free to try it out and give feedback.
 
 ## Install
 
@@ -15,11 +15,6 @@ pnpm i better-call
 ## Usage
 
 The building blocks for better-call are endpoints. You can create an endpoint by calling `createEndpoint` and passing it a path, [options](#endpointoptions) and a handler that will be invoked when the endpoint is called.
-
- Then 
- 1. you can mount the endpoint to a router and serve it with any web standard compatible server 
- 2. call it as a normal function on the server.
- 3. use typed RPC client to call it on the client.
 
 ```ts
 import { createEndpoint, createRouter } from "better-call"
@@ -44,8 +39,26 @@ const item = await createItem({
         id: "123"
     }
 })
+```
 
-// You cam also infer it on a client
+OR you can mount the endpoint to a router and serve it with any web standard compatible server. 
+
+> The example below uses [Bun](https://bun.sh/)
+
+```ts
+const router = createRouter({
+    createItem
+})
+
+Bun.serve({
+    fetch: router.handler
+})
+```
+
+Then you can use the rpc client to call the endpoints on client.
+
+```ts
+//client.ts
 import { createClient } from "better-call/client";
 
 const client = createClient<typeof router>();
@@ -56,17 +69,27 @@ const items = await client("/item", {
 });
 ```
 
-OR you can mount the endpoint to a router and serve it with any web standard compatible server. 
+### Returning non 200 responses
 
-> The example below uses [Bun](https://bun.sh/)
+To return a non 200 response, you will need to throw Better Call's `APIError` error. If the endpoint is called as a function, the error will be thrown but if it's mounted to a router, the error will be converted to a response object with the correct status code and headers.
 
 ```ts
-const router = createRouter([
-    createItem
-])
-
-Bun.serve({
-    fetch: router.handler
+const createItem = createEndpoint("/item", {
+    method: "POST",
+    body: z.object({
+        id: z.string()
+    })
+}, async (ctx) => {
+    if(ctx.body.id === "123") {
+        throw new APIError("Bad Request", {
+            message: "Id is not allowed"
+        })
+    }
+    return {
+        item: {
+            id: ctx.body.id
+        }
+    }
 })
 ```
 
@@ -121,16 +144,22 @@ You can create a router by calling `createRouter` and passing it an array of end
 import { createRouter } from "better-call"
 import { createItem } from "./item"
 
-const router = createRouter([
+const router = createRouter({
     createItem
-])
+})
+
+Bun.serve({
+    fetch: router.handler
+})
 ```
 
 Behind the scenes, the router uses [rou3](https://github.com/unjs/rou3) to match the endpoints and invoke the correct endpoint. You can look at the [rou3 documentation](https://github.com/unjs/rou3) for more information.
 
 #### Router Options
 
-**routerMiddleware**: A router middleware is similar to an endpoint middleware but it's applied to any path that matches the route. You have to pass endpoints to the router middleware as an array.
+**routerMiddleware:**
+
+A router middleware is similar to an endpoint middleware but it's applied to any path that matches the route. It's like any traditional middleware. You have to pass endpoints to the router middleware as an array.
 
 ```ts
 const routeMiddleware = createEndpoint("/api/**", {
@@ -140,10 +169,13 @@ const routeMiddleware = createEndpoint("/api/**", {
         name: "hello"
     }
 })
-const router = createRouter([
+const router = createRouter({
     createItem
-], {
-    routerMiddleware: [routeMiddleware]
+}, {
+    routerMiddleware: [{
+        path: "/api/**",
+        middleware:routeMiddleware
+    }]
 })
 ```
 
@@ -153,30 +185,29 @@ const router = createRouter([
 
 **throwError**: If true, the router will throw an error if an error occurs in the middleware or the endpoint.
 
+### RPC Client
 
-### Returning non 200 responses
-
-To return a non 200 response, you will need to throw Better Call's `APIError` error. If the endpoint is called as a function, the error will be thrown but if it's mounted to a router, the error will be converted to a response object with the correct status code and headers.
+better-call comes with a rpc client that can be used to call endpoints from the client. The client wraps over better-fetch so you can pass any options that are supported by better-fetch.
 
 ```ts
-const createItem = createEndpoint("/item", {
-    method: "POST",
-    body: z.object({
-        id: z.string()
-    })
-}, async (ctx) => {
-    if(ctx.body.id === "123") {
-        throw new APIError("Bad Request", {
-            message: "Id is not allowed"
-        })
+import { createClient } from "better-call/client";
+import { router } from "@serve/router";
+
+const client = createClient<typeof router>({
+    /**
+     * if you add custom path like `http://
+     * localhost:3000/api` make sure to add the 
+     * custom path on the router config as well.
+    */
+    baseURL: "http://localhost:3000"
+});
+const items = await client("/item", {
+    body: {
+        id: "123"
     }
-    return {
-        item: {
-            id: ctx.body.id
-        }
-    }
-})
+});
 ```
+> You can also pass object that contains endpoints as a generic type to create client.
 
 ### Headers and Cookies
 
@@ -216,6 +247,9 @@ const createItem = createEndpoint("/item", {
     }
 })
 ```
+
+> other than normal cookies the ctx object also exposes signed cookies.
+
 
 ### Endpoint Parameters
 
@@ -274,9 +308,6 @@ If you return a response object, it will be returned as is even when it's mounte
 
 
 - **Context**: the context object contains the request, headers, body, query, params and a helper function to set headers, cookies and get cookies. If there is a middleware, the context will be extended with the middleware context.
-
-
-
 
 ## License
 MIT
