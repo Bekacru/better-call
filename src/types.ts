@@ -1,5 +1,4 @@
 import { z, type ZodOptional, type ZodSchema } from "zod";
-import type { Middleware } from "./middleware";
 import type { UnionToIntersection } from "./helper";
 import type { CookiePrefixOptions } from "./cookie";
 
