@@ -27,8 +27,8 @@ interface RouterConfig {
 	extraContext?: Record<string, any>;
 }
 
-export const createRouter = <E extends Endpoint, Config extends RouterConfig>(
-	endpoints: Record<string, E>,
+export const createRouter = <E extends Record<string, Endpoint>, Config extends RouterConfig>(
+	endpoints: E,
 	config?: Config,
 ) => {
 	const _endpoints = Object.values(endpoints);

@@ -1,5 +1,5 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
-import { createEndpoint, createRouter } from "../src";
+import { createEndpoint, createEndpointCreator, createRouter } from "../src";
 import { createClient } from "../src/client";
 import { z } from "zod";
 
@@ -124,5 +124,35 @@ describe("client", () => {
 				return new Response(null);
 			},
 		});
+	});
+
+	it("should infer from custom creator", () => {
+		const cr2 = createEndpointCreator<{
+			otherProp: string;
+			context: {
+				hello: string;
+			};
+		}>();
+		const endpoint = cr2(
+			"/test",
+			{
+				method: "POST",
+			},
+			async (ctx) => {
+				return {
+					status: 200,
+					body: {
+						hello: "world",
+					},
+				};
+			},
+		);
+		const endpoints = {
+			endpoint,
+		};
+		const client = createClient<typeof endpoints>({
+			baseURL: "http://localhost:3000",
+		});
+		client("@post/test");
 	});
 });
