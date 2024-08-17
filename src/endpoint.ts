@@ -108,9 +108,6 @@ export function createEndpoint<
 			internalCtx.query = options.query
 				? options.query.parse(internalCtx.query)
 				: internalCtx.query;
-			internalCtx.params = options.params
-				? options.params.parse(internalCtx.params)
-				: internalCtx.params;
 		} catch (e) {
 			if (e instanceof ZodError) {
 				throw new APIError("BAD_REQUEST", {
