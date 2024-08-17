@@ -12,7 +12,7 @@
     "build": "tsup"
   },
   "devDependencies": {
-    "@better-fetch/fetch": "^1.1.4",
+    "@biomejs/biome": "^1.8.3",
     "@types/bun": "latest",
     "bumpp": "^9.4.1",
     "tsup": "^8.2.3",
@@ -24,7 +24,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@biomejs/biome": "^1.8.3",
+    "@better-fetch/fetch": "^1.1.4",
     "rou3": "^0.5.1"
   },
   "exports": {

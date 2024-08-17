@@ -1,6 +1,6 @@
 # better-call
 
-Better call is a tiny web framework for creating endpoints that can be invoked as a normal function or mounted to a router and can be served by any web standard compatible server (like Bun, node, nextjs, sveltekit...). 
+Better call is a tiny web framework for creating endpoints that can be invoked as a normal function or mounted to a router to  be served by any web standard compatible server (like Bun, node, nextjs, sveltekit...) and also can be invoked from a client using the typed rpc client.
 
 Built for typescript and it comes with a very high performance router based on [rou3](https://github.com/unjs/rou3).
 
@@ -14,7 +14,12 @@ pnpm i better-call
 
 ## Usage
 
-The building blocks for better-call are endpoints. You can create an endpoint by calling `createEndpoint` and passing it a path, [options](#endpointoptions) and a function that will be invoked when the endpoint is called.
+The building blocks for better-call are endpoints. You can create an endpoint by calling `createEndpoint` and passing it a path, [options](#endpointoptions) and a handler that will be invoked when the endpoint is called.
+
+ Then 
+ 1. you can mount the endpoint to a router and serve it with any web standard compatible server 
+ 2. call it as a normal function on the server.
+ 3. use typed RPC client to call it on the client.
 
 ```ts
 import { createEndpoint, createRouter } from "better-call"
@@ -39,6 +44,16 @@ const item = await createItem({
         id: "123"
     }
 })
+
+// You cam also infer it on a client
+import { createClient } from "better-call/client";
+
+const client = createClient<typeof router>();
+const items = await client("/item", {
+    body: {
+        id: "123"
+    }  
+});
 ```
 
 OR you can mount the endpoint to a router and serve it with any web standard compatible server. 
