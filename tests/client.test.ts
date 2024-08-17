@@ -39,8 +39,28 @@ describe("client", () => {
 				};
 			},
 		);
+
+		const endpoint2 = createEndpoint(
+			"/test3",
+			{
+				method: "GET",
+				query: z.object({
+					hello: z.string().optional()
+				})
+			},
+			async (ctx) => {
+				return {
+					status: 200,
+					body: {
+						hello: "world",
+					},
+				};
+			},
+		);
+
 		const router = createRouter({
 			endpoint,
+			endpoint2,
 			getEndpoint,
 		});
 
@@ -48,7 +68,7 @@ describe("client", () => {
 			baseURL: "http://localhost:3000",
 		});
 
-		expectTypeOf<Parameters<typeof client>[0]>().toMatchTypeOf<"@post/test" | "/test2">();
+		expectTypeOf<Parameters<typeof client>[0]>().toMatchTypeOf<"@post/test" | "/test2" | "/test3">();
 
 		client("@post/test", {
 			body: {
@@ -63,6 +83,7 @@ describe("client", () => {
 				hello: 2,
 			},
 		});
+		client("/test3")
 	});
 
 	it("should call endpoint n", async () => {
@@ -153,6 +174,6 @@ describe("client", () => {
 		const client = createClient<typeof endpoints>({
 			baseURL: "http://localhost:3000",
 		});
-		client("@post/test");
+		expectTypeOf<Parameters<typeof client>[0]>().toMatchTypeOf<"@post/test">();
 	});
 });

@@ -3,10 +3,17 @@ import type { HasRequiredKeys, UnionToIntersection } from "type-fest";
 import { type BetterFetchOption, type BetterFetchResponse, createFetch } from "@better-fetch/fetch";
 import type { Router } from "./router";
 
+
+type HasRequired<T extends {
+	body?: any;
+	query?: any;
+	params?: any;
+}> = HasRequiredKeys<T> extends true ? HasRequiredKeys<T["body"]> extends false ? HasRequiredKeys<T["query"]> extends false ? HasRequiredKeys<T["params"]> extends false ? false : true : true : true : true
+
 type InferContext<T> = T extends (ctx: infer Ctx) => any
 	? Ctx extends object
-		? Ctx
-		: never
+	? Ctx
+	: never
 	: never;
 
 export interface ClientOptions extends BetterFetchOption {
@@ -26,18 +33,18 @@ export type RequiredOptionKeys<
 > = (undefined extends C["body"]
 	? {}
 	: {
-			body: true;
-		}) &
+		body: true;
+	}) &
 	(undefined extends C["query"]
 		? {}
 		: {
-				query: true;
-			}) &
+			query: true;
+		}) &
 	(undefined extends C["params"]
 		? {}
 		: {
-				params: true;
-			});
+			params: true;
+		});
 
 export const createClient = <R extends Router | Router["endpoints"]>(options: ClientOptions) => {
 	const fetch = createFetch(options);
@@ -46,24 +53,24 @@ export const createClient = <R extends Router | Router["endpoints"]>(options: Cl
 		[key: string]: infer T;
 	}
 		? T extends Endpoint
-			? {
-					[key in T["options"]["method"] extends "GET"
-						? T["path"]
-						: `@${T["options"]["method"] extends string ? Lowercase<T["options"]["method"]> : never}${T["path"]}`]: T;
-				}
-			: {}
+		? {
+			[key in T["options"]["method"] extends "GET"
+			? T["path"]
+			: `@${T["options"]["method"] extends string ? Lowercase<T["options"]["method"]> : never}${T["path"]}`]: T;
+		}
+		: {}
 		: {};
 
 	type O = Prettify<UnionToIntersection<Options>>;
 	return async <OPT extends O, K extends keyof OPT, C extends InferContext<OPT[K]>>(
 		path: K,
-		...options: HasRequiredKeys<C> extends true
+		...options: HasRequired<C> extends true
 			? [
-					WithRequired<
-						BetterFetchOption<C["body"], C["query"], C["params"]>,
-						keyof RequiredOptionKeys<C>
-					>,
-				]
+				WithRequired<
+					BetterFetchOption<C["body"], C["query"], C["params"]>,
+					keyof RequiredOptionKeys<C>
+				>,
+			]
 			: [BetterFetchOption<C["body"], C["query"], C["params"]>?]
 	): Promise<
 		BetterFetchResponse<Awaited<ReturnType<OPT[K] extends Endpoint ? OPT[K] : never>>>
