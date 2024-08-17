@@ -47,9 +47,15 @@ describe("Router", () => {
 			},
 		);
 
-		const router = createRouter([createItem, getItem], {
-			throwError: true,
-		});
+		const router = createRouter(
+			{
+				createItem,
+				getItem,
+			},
+			{
+				throwError: true,
+			},
+		);
 		const request = new Request("http://localhost:3000", {
 			method: "POST",
 			headers: {
@@ -85,9 +91,14 @@ describe("Router", () => {
 				};
 			},
 		);
-		const router = createRouter([getItem], {
-			basePath: "/api",
-		});
+		const router = createRouter(
+			{
+				getItem,
+			},
+			{
+				basePath: "/api",
+			},
+		);
 		const request = new Request("http://localhost:3000/api/item");
 		const re = await router.handler(request);
 		const json = await re.json();
@@ -114,9 +125,14 @@ describe("Router", () => {
 			},
 		);
 
-		const router = createRouter([endpoint], {
-			throwError: true,
-		});
+		const router = createRouter(
+			{
+				endpoint,
+			},
+			{
+				throwError: true,
+			},
+		);
 		const request = new Request("http://localhost:3000?name=hello");
 		await router.handler(request);
 	});
@@ -133,15 +149,20 @@ describe("Router", () => {
 		const middleware = createMiddleware(async (ctx) => {
 			isCalled = true;
 		});
-		const router = createRouter([endpoint], {
-			throwError: true,
-			routerMiddleware: [
-				{
-					path: "/*",
-					middleware,
-				},
-			],
-		});
+		const router = createRouter(
+			{
+				endpoint,
+			},
+			{
+				throwError: true,
+				routerMiddleware: [
+					{
+						path: "/*",
+						middleware,
+					},
+				],
+			},
+		);
 		const request = new Request("http://localhost:3000/item");
 		const res = await router.handler(request);
 		expect(isCalled).toBe(true);
@@ -159,13 +180,18 @@ describe("Router", () => {
 			},
 		);
 
-		const router = createRouter([endpoint], {
-			extraContext: {
-				options: {
-					name: "test",
+		const router = createRouter(
+			{
+				endpoint,
+			},
+			{
+				extraContext: {
+					options: {
+						name: "test",
+					},
 				},
 			},
-		});
+		);
 		const request = new Request("http://localhost:3000/item");
 		await router.handler(request);
 	});
@@ -181,9 +207,14 @@ describe("Router", () => {
 				throw new APIError("FOUND");
 			},
 		);
-		const router = createRouter([endpoint], {
-			throwError: true,
-		});
+		const router = createRouter(
+			{
+				endpoint,
+			},
+			{
+				throwError: true,
+			},
+		);
 		const request = new Request("http://localhost:3000/item");
 		const res = await router.handler(request);
 		expect(res.headers.get("test")).toBe("test");
@@ -204,9 +235,14 @@ describe("Cookie", () => {
 				};
 			},
 		);
-		const router = createRouter([endpoint], {
-			throwError: true,
-		});
+		const router = createRouter(
+			{
+				endpoint,
+			},
+			{
+				throwError: true,
+			},
+		);
 		const request = new Request("http://localhost:3000/test");
 		const res = await router.handler(request);
 		const cookie = await parseSigned(res.headers.get("Set-Cookie") || "", "secret");

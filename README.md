@@ -52,7 +52,7 @@ const client = createClient<typeof router>();
 const items = await client("/item", {
     body: {
         id: "123"
-    }  
+    }
 });
 ```
 

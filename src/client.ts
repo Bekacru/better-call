@@ -68,14 +68,8 @@ export const createClient = <R extends Router | Router["endpoints"]>(options: Cl
 	): Promise<
 		BetterFetchResponse<Awaited<ReturnType<OPT[K] extends Endpoint ? OPT[K] : never>>>
 	> => {
-		const opts = options[0] as {
-			params?: Record<string, any>;
-			body?: Record<string, any>;
-		};
 		return (await fetch(path as string, {
 			...options[0],
-			body: opts.body,
-			params: opts.params,
 		})) as any;
 	};
 };
