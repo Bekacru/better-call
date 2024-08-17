@@ -4,29 +4,40 @@ import { type BetterFetchOption, type BetterFetchResponse, createFetch } from "@
 import type { Router } from "./router";
 
 type InferContext<T> = T extends (ctx: infer Ctx) => any
-	? Ctx extends
-			| {
-					body: infer Body;
-			  }
-			| {
-					params: infer Param;
-			  }
-		? (Body extends undefined
-				? {}
-				: {
-						body: Body;
-					}) &
-				(Param extends undefined
-					? {}
-					: {
-							params: Param;
-						})
+	? Ctx extends object
+		? Ctx
 		: never
 	: never;
 
 export interface ClientOptions extends BetterFetchOption {
 	baseURL: string;
 }
+
+type WithRequired<T, K> = T & {
+	[P in K extends string ? K : never]-?: T[P extends keyof T ? P : never];
+};
+
+export type RequiredOptionKeys<
+	C extends {
+		body?: any;
+		query?: any;
+		params?: any;
+	},
+> = (undefined extends C["body"]
+	? {}
+	: {
+			body: true;
+		}) &
+	(undefined extends C["query"]
+		? {}
+		: {
+				query: true;
+			}) &
+	(undefined extends C["params"]
+		? {}
+		: {
+				params: true;
+			});
 
 export const createClient = <R extends Router>(options: ClientOptions) => {
 	const fetch = createFetch(options);
@@ -44,11 +55,16 @@ export const createClient = <R extends Router>(options: ClientOptions) => {
 		: {};
 
 	type O = Prettify<UnionToIntersection<Options>>;
-	return async <OPT extends O, K extends keyof OPT>(
+	return async <OPT extends O, K extends keyof OPT, C extends InferContext<OPT[K]>>(
 		path: K,
-		...options: HasRequiredKeys<InferContext<OPT[K]>> extends true
-			? [BetterFetchOption<InferContext<OPT[K]>["body"], any, InferContext<OPT[K]>["params"]>]
-			: [BetterFetchOption<InferContext<OPT[K]>["body"], InferContext<OPT[K]>["params"]>?]
+		...options: HasRequiredKeys<C> extends true
+			? [
+					WithRequired<
+						BetterFetchOption<C["body"], C["query"], C["params"]>,
+						keyof RequiredOptionKeys<C>
+					>,
+				]
+			: [BetterFetchOption<C["body"], C["query"], C["params"]>?]
 	): Promise<
 		BetterFetchResponse<Awaited<ReturnType<OPT[K] extends Endpoint ? OPT[K] : never>>>
 	> => {

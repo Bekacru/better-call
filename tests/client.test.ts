@@ -9,6 +9,9 @@ describe("client", () => {
 			"/test2",
 			{
 				method: "GET",
+				query: z.object({
+					hello: z.string(),
+				}),
 			},
 			async (ctx) => {
 				return {
@@ -51,6 +54,13 @@ describe("client", () => {
 			body: {
 				//@ts-expect-error
 				hello: 1,
+			},
+		});
+
+		client("/test2", {
+			query: {
+				//@ts-expect-error
+				hello: 2,
 			},
 		});
 	});
