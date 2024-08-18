@@ -227,7 +227,7 @@ describe("Router", () => {
 				method: "GET",
 			},
 			async (ctx) => {
-				throw ctx.redirect("http://localhost:3000/item");
+				ctx.redirect("http://localhost:3000/item");
 			},
 		);
 		const router = createRouter({

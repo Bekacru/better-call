@@ -111,7 +111,7 @@ export type ContextTools = {
 	 *
 	 * If it's called outside of a request it will just be ignored.
 	 */
-	getCookie: (key: string, value: string, options?: CookieOptions) => string | undefined;
+	getCookie: (key: string, prefix?: CookiePrefixOptions) => string | undefined;
 	/**
 	 * Set signed cookie
 	 */
