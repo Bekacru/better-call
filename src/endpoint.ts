@@ -49,7 +49,8 @@ export function createEndpoint<
 			},
 			getCookie(key: string, prefix?: CookiePrefixOptions) {
 				const header = ctx[0]?.headers;
-				const cookie = getCookie(header?.get("Cookie") || "", key, prefix);
+				const cookieH = header?.get("cookie");
+				const cookie = getCookie(cookieH || "", key, prefix);
 				return cookie;
 			},
 			getSignedCookie(key: string, secret: string, prefix?: CookiePrefixOptions) {

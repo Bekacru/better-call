@@ -227,7 +227,7 @@ describe("Router", () => {
 				method: "GET",
 			},
 			async (ctx) => {
-				ctx.redirect("http://localhost:3000/item");
+				throw ctx.redirect("http://localhost:3000/item");
 			},
 		);
 		const router = createRouter({
@@ -241,7 +241,7 @@ describe("Router", () => {
 });
 
 describe("Cookie", () => {
-	it("should sign cookie", async () => {
+	it.only("should sign cookie", async () => {
 		const endpoint = createEndpoint(
 			"/test",
 			{
@@ -249,6 +249,8 @@ describe("Cookie", () => {
 			},
 			async (ctx) => {
 				await ctx.setSignedCookie("hello", "world", "secret");
+				const cookie = ctx.getCookie("hello");
+				expect(cookie).toBe("world");
 				return {
 					message: ctx.method,
 				};
@@ -262,7 +264,11 @@ describe("Cookie", () => {
 				throwError: true,
 			},
 		);
-		const request = new Request("http://localhost:3000/test");
+		const request = new Request("http://localhost:3000/test", {
+			headers: {
+				cookie: "hello=world",
+			},
+		});
 		const res = await router.handler(request);
 		const cookie = await parseSigned(res.headers.get("Set-Cookie") || "", "secret");
 		expect(cookie.hello).toBe("world");

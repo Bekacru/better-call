@@ -9,17 +9,19 @@ import {
 	type CookiePrefixOptions,
 } from "./cookie";
 
-export const getCookie = (cookie?: string, key?: string, prefix?: CookiePrefixOptions) => {
+export const getCookie = (cookie: string, key: string, prefix?: CookiePrefixOptions) => {
 	if (!cookie) {
 		return undefined;
 	}
 	let finalKey = key;
-	if (prefix === "secure") {
-		finalKey = "__Secure-" + key;
-	} else if (prefix === "host") {
-		finalKey = "__Host-" + key;
-	} else {
-		return undefined;
+	if (prefix) {
+		if (prefix === "secure") {
+			finalKey = "__Secure-" + key;
+		} else if (prefix === "host") {
+			finalKey = "__Host-" + key;
+		} else {
+			return undefined;
+		}
 	}
 	const obj = parse(cookie, finalKey);
 	return obj[finalKey];
@@ -84,15 +86,17 @@ export const getSignedCookie = async (
 	key: string,
 	prefix?: CookiePrefixOptions,
 ) => {
-	const cookie = header.get("Cookie");
+	const cookie = header.get("cookie");
 	if (!cookie) {
 		return undefined;
 	}
 	let finalKey = key;
-	if (prefix === "secure") {
-		finalKey = "__Secure-" + key;
-	} else if (prefix === "host") {
-		finalKey = "__Host-" + key;
+	if (prefix) {
+		if (prefix === "secure") {
+			finalKey = "__Secure-" + key;
+		} else if (prefix === "host") {
+			finalKey = "__Host-" + key;
+		}
 	}
 	const obj = await parseSigned(cookie, secret, finalKey);
 	return obj[finalKey];
