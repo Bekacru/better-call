@@ -129,6 +129,10 @@ export type ContextTools = {
 		secret: string,
 		prefix?: CookiePrefixOptions,
 	) => Promise<string | undefined>;
+	/**
+	 * Redirect
+	 */
+	redirect: (url: string) => void;
 };
 
 export type Context<Path extends string, Opts extends EndpointOptions> = InferBody<Opts> &
