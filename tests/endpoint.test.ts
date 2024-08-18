@@ -1,6 +1,7 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
-import { createEndpoint } from "../src";
+import { createEndpoint, createRouter } from "../src";
 import { z } from "zod";
+import { json } from "../src/helper";
 
 describe("Endpoint", () => {
 	it("should return handler response", async () => {
@@ -144,5 +145,31 @@ describe("Endpoint", () => {
 		expectTypeOf(endpoint).parameter(0).toMatchTypeOf<{
 			method: "GET";
 		}>();
+	});
+
+	it("should work with json", async () => {
+		const endpoint = createEndpoint(
+			"/test",
+			{
+				method: "GET",
+			},
+			async (ctx) => {
+				return json({
+					hello: "world",
+				});
+			},
+		);
+		const res = await endpoint();
+		expect(res).toMatchObject({
+			hello: "world",
+		});
+		const router = createRouter({
+			endpoint,
+		});
+		const response = await router.handler(new Request("http://localhost/test"));
+		const j = await response.json();
+		expect(j).toMatchObject({
+			hello: "world",
+		});
 	});
 });

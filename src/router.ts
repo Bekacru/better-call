@@ -96,6 +96,7 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 				request: request,
 				body: body,
 				query,
+				_flag: "router",
 				...middlewareContext,
 				...config?.extraContext,
 			});

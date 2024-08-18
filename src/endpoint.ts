@@ -1,7 +1,7 @@
 import { z, ZodError, type ZodOptional, type ZodSchema } from "zod";
 import { createMiddleware, type Middleware } from "./middleware";
 import { APIError } from "./error";
-import type { HasRequiredKeys, UnionToIntersection } from "./helper";
+import { json, type HasRequiredKeys, type UnionToIntersection } from "./helper";
 import type {
 	Context,
 	ContextTools,
@@ -73,8 +73,10 @@ export function createEndpoint<
 				responseHeader.set("Location", url);
 				return new APIError("FOUND");
 			},
+			json,
 			...(ctx[0] || {}),
 			context: {},
+			_flag: (ctx[0] as any)?._flag as string,
 		};
 		if (options.use?.length) {
 			for (const middleware of options.use) {
@@ -133,8 +135,26 @@ export function createEndpoint<
 			});
 		}
 		//@ts-expect-error
-		const res = await handler(internalCtx);
-		return res as ReturnType<Handler<Path, Opts, R>>;
+		let res = await handler(internalCtx);
+
+		let actualResponse: any = res;
+
+		if (res && "_flag" in res) {
+			if (res._flag === "json" && internalCtx._flag === "router") {
+				actualResponse = res.response;
+			} else {
+				actualResponse = res.body;
+			}
+		}
+
+		type ReturnT = ReturnType<Handler<Path, Opts, R>>;
+		return actualResponse as R extends {
+			_flag: "json";
+		}
+			? R extends { body: infer B }
+				? B
+				: null
+			: ReturnT;
 	};
 	handle.path = path;
 	handle.options = options;

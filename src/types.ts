@@ -1,5 +1,5 @@
 import { z, type ZodOptional, type ZodSchema } from "zod";
-import type { UnionToIntersection } from "./helper";
+import type { json, UnionToIntersection } from "./helper";
 import type { CookiePrefixOptions } from "./cookie";
 import type { APIError } from "./error";
 
@@ -134,6 +134,14 @@ export type ContextTools = {
 	 * Redirect to url
 	 */
 	redirect: (url: string) => APIError;
+	/**
+	 * json response helper
+	 */
+	json: typeof json;
+	/**
+	 * internal flags
+	 */
+	_flag?: string;
 };
 
 export type Context<Path extends string, Opts extends EndpointOptions> = InferBody<Opts> &
@@ -231,7 +239,7 @@ export type InferParam<
 			params: Prettify<ParamPath & (WildCard extends undefined ? {} : WildCard)>;
 		};
 
-export type EndpointResponse =
+export type EndpointBody =
 	| Record<string, any>
 	| string
 	| boolean
@@ -240,12 +248,22 @@ export type EndpointResponse =
 	| undefined
 	| null;
 
+export type EndpointResponse =
+	| {
+			response: Response;
+			body: EndpointBody;
+			_flag: "json";
+	  }
+	| EndpointBody;
+
 export type Handler<
 	Path extends string,
 	Opts extends EndpointOptions,
 	R extends EndpointResponse,
 	Extra extends Record<string, any> = {},
-> = (ctx: Prettify<Context<Path, Opts> & InferUse<Opts> & ContextTools> & Extra) => Promise<R>;
+> = (
+	ctx: Prettify<Context<Path, Opts> & InferUse<Opts> & Omit<ContextTools, "_flag">> & Extra,
+) => Promise<R>;
 
 export type Method = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "*";
 

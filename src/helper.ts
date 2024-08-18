@@ -16,3 +16,26 @@ export type RequiredKeysOf<BaseType extends object> = Exclude<
 export type HasRequiredKeys<BaseType extends object> = RequiredKeysOf<BaseType> extends never
 	? false
 	: true;
+
+/**
+ * this function will return a json response and
+ * infers the type of the body
+ */
+export const json = <T>(
+	body: T,
+	option?: {
+		status?: number;
+		statusText?: string;
+		headers?: Record<string, string>;
+	},
+) => {
+	return {
+		response: new Response(JSON.stringify(body), {
+			status: option?.status ?? 200,
+			statusText: option?.statusText ?? "OK",
+			headers: option?.headers,
+		}),
+		body,
+		_flag: "json" as const,
+	};
+};
