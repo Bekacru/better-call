@@ -231,7 +231,14 @@ export type InferParam<
 			params: Prettify<ParamPath & (WildCard extends undefined ? {} : WildCard)>;
 		};
 
-export type EndpointResponse = Record<string, any> | string | boolean | number | void | undefined;
+export type EndpointResponse =
+	| Record<string, any>
+	| string
+	| boolean
+	| number
+	| void
+	| undefined
+	| null;
 
 export type Handler<
 	Path extends string,
