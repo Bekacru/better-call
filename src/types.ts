@@ -1,6 +1,7 @@
 import { z, type ZodOptional, type ZodSchema } from "zod";
 import type { UnionToIntersection } from "./helper";
 import type { CookiePrefixOptions } from "./cookie";
+import type { APIError } from "./error";
 
 export interface EndpointOptions {
 	/**
@@ -130,9 +131,9 @@ export type ContextTools = {
 		prefix?: CookiePrefixOptions,
 	) => Promise<string | undefined>;
 	/**
-	 * Redirect
+	 * Redirect to url
 	 */
-	redirect: (url: string) => void;
+	redirect: (url: string) => APIError;
 };
 
 export type Context<Path extends string, Opts extends EndpointOptions> = InferBody<Opts> &

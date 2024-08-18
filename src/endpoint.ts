@@ -68,9 +68,9 @@ export function createEndpoint<
 			) {
 				await setSignedCookie(responseHeader, key, value, secret, options);
 			},
-			async redirect(url: string) {
+			redirect(url: string) {
 				responseHeader.set("Location", url);
-				throw new APIError("FOUND");
+				return new APIError("FOUND");
 			},
 			...(ctx[0] || {}),
 			context: {},

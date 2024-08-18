@@ -219,6 +219,25 @@ describe("Router", () => {
 		const res = await router.handler(request);
 		expect(res.headers.get("test")).toBe("test");
 	});
+
+	it("should redirect", async () => {
+		const endpoint = createEndpoint(
+			"/item",
+			{
+				method: "GET",
+			},
+			async (ctx) => {
+				throw ctx.redirect("http://localhost:3000/item");
+			},
+		);
+		const router = createRouter({
+			endpoint,
+		});
+		const request = new Request("http://localhost:3000/item");
+		const res = await router.handler(request);
+		expect(res.status).toBe(302);
+		expect(res.headers.get("Location")).toBe("http://localhost:3000/item");
+	});
 });
 
 describe("Cookie", () => {
