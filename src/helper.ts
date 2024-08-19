@@ -27,6 +27,11 @@ export const json = <T>(
 		status?: number;
 		statusText?: string;
 		headers?: Record<string, string>;
+		/**
+		 * this body will take precedence over the body in the options if both are provided.
+		 * This is useful if you want to return body without inferring the type.
+		 */
+		body?: T;
 	},
 ) => {
 	return {
@@ -35,7 +40,7 @@ export const json = <T>(
 			statusText: option?.statusText ?? "OK",
 			headers: option?.headers,
 		}),
-		body,
+		body: option?.body ?? body,
 		_flag: "json" as const,
 	};
 };
