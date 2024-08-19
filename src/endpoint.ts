@@ -94,31 +94,39 @@ export function createEndpoint<
 			},
 			json,
 			...(ctx[0] || {}),
-			context: {},
+			context: ctx[0]?.context || {},
 			_flag: (ctx[0] as any)?._flag as string,
 		};
 		if (options.use?.length) {
+			let middlewareContexts = {};
+			let middlewareBody = {};
 			for (const middleware of options.use) {
 				const res = (await middleware(internalCtx)) as Endpoint;
 				const body = res.options?.body
 					? res.options.body.parse(internalCtx.body)
 					: undefined;
 				if (res) {
-					internalCtx = {
-						...internalCtx,
-						body: body
-							? {
-									...body,
-									...internalCtx.body,
-								}
-							: internalCtx.body,
-						context: {
-							...(internalCtx.context || {}),
-							...res,
-						},
+					middlewareContexts = {
+						...middlewareContexts,
+						...res,
+					};
+					middlewareBody = {
+						...middlewareBody,
+						...body,
 					};
 				}
 			}
+			internalCtx = {
+				...internalCtx,
+				body: {
+					...middlewareBody,
+					...internalCtx.body,
+				},
+				context: {
+					...(internalCtx.context || {}),
+					...middlewareContexts,
+				},
+			};
 		}
 		try {
 			const body = options.body ? options.body.parse(internalCtx.body) : internalCtx.body;
