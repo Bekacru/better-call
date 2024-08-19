@@ -167,8 +167,9 @@ export function createEndpoint<
 
 		if (res && "_flag" in res) {
 			if (res._flag === "json" && internalCtx._flag === "router") {
-				Object.fromEntries(res.response.headers).map(([key, value]) => {
-					responseHeader.set(key, value);
+				const h = res.response.headers as Record<string, string>;
+				Object.keys(h).forEach((key) => {
+					responseHeader.set(key, h[key as keyof typeof h]);
 				});
 				actualResponse = new Response(JSON.stringify(res.response.body), {
 					status: res.response.status ?? 200,
