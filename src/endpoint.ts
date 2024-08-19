@@ -11,6 +11,7 @@ import type {
 	EndpointResponse,
 	Handler,
 	InferUse,
+	Prettify,
 } from "./types";
 import { getCookie, getSignedCookie, setCookie, setSignedCookie } from "./cookie-utils";
 import type { CookiePrefixOptions } from "./cookie";
@@ -22,22 +23,22 @@ export interface EndpointConfig {
 	throwOnError?: boolean;
 }
 
-export function createEndpointCreator<T extends Record<string, any>, E extends Endpoint>(opts?: {
-	use?: E[];
-}) {
+export function createEndpointCreator<
+	E extends {
+		use?: Endpoint[];
+	},
+>(opts?: E) {
 	return <Path extends string, Opts extends EndpointOptions, R extends EndpointResponse>(
 		path: Path,
 		options: Opts,
-		handler: Handler<
-			Path,
-			Opts,
-			R,
-			T &
-				InferUse<{
-					use: E[];
-					method: "*";
-				}>
-		>,
+		handler: (
+			ctx: Prettify<
+				Context<Path, Opts> &
+					InferUse<Opts["use"]> &
+					InferUse<E["use"]> &
+					Omit<ContextTools, "_flag">
+			>,
+		) => Promise<R>,
 	) => {
 		return createEndpoint(
 			path,
@@ -45,7 +46,6 @@ export function createEndpointCreator<T extends Record<string, any>, E extends E
 				...options,
 				use: [options?.use, ...(opts?.use || [])],
 			},
-			//@ts-expect-error
 			handler,
 		);
 	};

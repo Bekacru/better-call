@@ -241,7 +241,7 @@ describe("Router", () => {
 });
 
 describe("Cookie", () => {
-	it.only("should sign cookie", async () => {
+	it("should sign cookie", async () => {
 		const endpoint = createEndpoint(
 			"/test",
 			{

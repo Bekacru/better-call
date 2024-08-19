@@ -1,5 +1,5 @@
 import { describe, it } from "vitest";
-import { createEndpoint, createEndpointCreator } from "../src";
+import { createEndpoint, createEndpointCreator, createMiddleware } from "../src";
 import { z } from "zod";
 
 describe("Type", () => {
@@ -42,11 +42,15 @@ describe("Type", () => {
 	});
 
 	it("should infer extra", async () => {
-		const createEndpoint2 = createEndpointCreator<{
-			options: {
-				providers: string[];
-			};
-		}>();
+		const createEndpoint2 = createEndpointCreator({
+			use: [
+				createMiddleware(async (ctx) => {
+					return {
+						hello: "world",
+					};
+				}),
+			],
+		});
 		createEndpoint2(
 			"/",
 			{
@@ -56,7 +60,7 @@ describe("Type", () => {
 				}),
 			},
 			async (ctx) => {
-				ctx.options.providers;
+				ctx;
 			},
 		);
 	});

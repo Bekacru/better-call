@@ -151,9 +151,9 @@ export type Context<Path extends string, Opts extends EndpointOptions> = InferBo
 	InferRequest<Opts> &
 	InferQuery<Opts["query"]>;
 
-export type InferUse<Opts extends EndpointOptions> = Opts["use"] extends Endpoint[]
+export type InferUse<Opts extends EndpointOptions["use"]> = Opts extends Endpoint[]
 	? {
-			context: UnionToIntersection<Awaited<ReturnType<Opts["use"][number]>>>;
+			context: UnionToIntersection<Awaited<ReturnType<Opts[number]>>>;
 		}
 	: {};
 
@@ -260,9 +260,8 @@ export type Handler<
 	Path extends string,
 	Opts extends EndpointOptions,
 	R extends EndpointResponse,
-	Extra extends Record<string, any> = {},
 > = (
-	ctx: Prettify<Context<Path, Opts> & InferUse<Opts> & Omit<ContextTools, "_flag">> & Extra,
+	ctx: Prettify<Context<Path, Opts> & InferUse<Opts["use"]> & Omit<ContextTools, "_flag">>,
 ) => Promise<R>;
 
 export type Method = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "*";
