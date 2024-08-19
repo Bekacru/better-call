@@ -26,7 +26,9 @@
   },
   "dependencies": {
     "@better-fetch/fetch": "^1.1.4",
-    "rou3": "^0.5.1"
+    "@types/set-cookie-parser": "^2.4.10",
+    "rou3": "^0.5.1",
+    "set-cookie-parser": "^2.7.0"
   },
   "exports": {
     ".": {

@@ -4,3 +4,4 @@ export * from "./middleware";
 export * from "./error";
 export * from "./utils";
 export * from "./types";
+export * from "./adapter";
