@@ -44,7 +44,7 @@ export function createEndpointCreator<
 			path,
 			{
 				...options,
-				use: [options?.use, ...(opts?.use || [])],
+				use: [...(options?.use || []), ...(opts?.use || [])],
 			},
 			handler,
 		);
