@@ -79,7 +79,9 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 					request: request,
 					body: body,
 					query,
-					...config?.extraContext,
+					context: {
+						...config?.extraContext,
+					},
 				});
 				if (res) {
 					middlewareContext = {
@@ -97,8 +99,10 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 				body: body,
 				query,
 				_flag: "router",
-				...middlewareContext,
-				...config?.extraContext,
+				context: {
+					...middlewareContext,
+					...config?.extraContext,
+				},
 			});
 			if (handlerRes instanceof Response) {
 				return handlerRes;
