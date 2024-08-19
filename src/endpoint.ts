@@ -10,6 +10,7 @@ import type {
 	EndpointOptions,
 	EndpointResponse,
 	Handler,
+	InferUse,
 } from "./types";
 import { getCookie, getSignedCookie, setCookie, setSignedCookie } from "./cookie-utils";
 import type { CookiePrefixOptions } from "./cookie";
@@ -21,14 +22,32 @@ export interface EndpointConfig {
 	throwOnError?: boolean;
 }
 
-export function createEndpointCreator<T extends Record<string, any>>() {
+export function createEndpointCreator<T extends Record<string, any>, E extends Endpoint>(opts?: {
+	use?: E[];
+}) {
 	return <Path extends string, Opts extends EndpointOptions, R extends EndpointResponse>(
 		path: Path,
 		options: Opts,
-		handler: Handler<Path, Opts, R, T>,
+		handler: Handler<
+			Path,
+			Opts,
+			R,
+			T &
+				InferUse<{
+					use: E[];
+					method: "*";
+				}>
+		>,
 	) => {
-		//@ts-expect-error
-		return createEndpoint(path, options, handler);
+		return createEndpoint(
+			path,
+			{
+				...options,
+				use: [options?.use, ...(opts?.use || [])],
+			},
+			//@ts-expect-error
+			handler,
+		);
 	};
 }
 

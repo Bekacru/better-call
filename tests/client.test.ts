@@ -1,5 +1,5 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
-import { createEndpoint, createEndpointCreator, createRouter } from "../src";
+import { createEndpoint, createEndpointCreator, createMiddleware, createRouter } from "../src";
 import { createClient } from "../src/client";
 import { z } from "zod";
 
@@ -150,12 +150,16 @@ describe("client", () => {
 	});
 
 	it("should infer from custom creator", () => {
-		const cr2 = createEndpointCreator<{
-			otherProp: string;
-			context: {
-				hello: string;
-			};
-		}>();
+		const cr2 = createEndpointCreator({
+			use: [
+				createMiddleware(async (ctx) => {
+					return {
+						something: "",
+					};
+				}),
+			],
+		});
+
 		const endpoint = cr2(
 			"/test",
 			{
