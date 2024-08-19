@@ -31,7 +31,7 @@ export const json = <T>(
 		 * this body will take precedence over the body in the options if both are provided.
 		 * This is useful if you want to return body without inferring the type.
 		 */
-		body?: T;
+		body?: any;
 	},
 ) => {
 	return {
