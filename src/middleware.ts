@@ -8,6 +8,7 @@ import type {
 	InferBody,
 	InferHeaders,
 	InferRequest,
+	InferUse,
 	Prettify,
 } from "./types";
 import { createEndpoint } from "./endpoint";
@@ -78,18 +79,34 @@ export function createMiddleware(optionsOrHandler: any, handler?: any) {
 	return endpoint as any;
 }
 
-export const createMiddlewareCreator = <ExtraContext extends Record<string, any> = {}>() => {
+export const createMiddlewareCreator = <
+	E extends {
+		use?: Endpoint[];
+	},
+>(
+	opts?: E,
+) => {
+	type H<Opts extends EndpointOptions, R extends EndpointResponse> = (
+		ctx: Prettify<
+			InferBody<Opts> &
+				InferUse<E["use"]> &
+				InferRequest<Opts> &
+				InferHeaders<Opts> & {
+					params?: Record<string, string>;
+					query?: Record<string, string>;
+				} & ContextTools
+		>,
+	) => Promise<R>;
 	function fn<Opts extends EndpointOptions, R extends EndpointResponse>(
-		optionsOrHandler: MiddlewareHandler<Opts, R, ExtraContext>,
+		optionsOrHandler: H<Opts, R>,
 	): Endpoint<Handler<string, Opts, R>, Opts>;
 	function fn<Opts extends Omit<EndpointOptions, "method">, R extends EndpointResponse>(
 		optionsOrHandler: Opts,
-		handler: MiddlewareHandler<
+		handler: H<
 			Opts & {
 				method: "*";
 			},
-			R,
-			ExtraContext
+			R
 		>,
 	): Endpoint<
 		Handler<
