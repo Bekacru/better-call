@@ -167,7 +167,14 @@ export function createEndpoint<
 
 		if (res && "_flag" in res) {
 			if (res._flag === "json" && internalCtx._flag === "router") {
-				actualResponse = res.response;
+				Object.fromEntries(res.response.headers).map(([key, value]) => {
+					responseHeader.set(key, value);
+				});
+				actualResponse = new Response(JSON.stringify(res.response.body), {
+					status: res.response.status ?? 200,
+					statusText: res.response.statusText,
+					headers: responseHeader,
+				});
 			} else {
 				actualResponse = res.body;
 			}

@@ -250,7 +250,12 @@ export type EndpointBody =
 
 export type EndpointResponse =
 	| {
-			response: Response;
+			response: {
+				status?: number;
+				statusText?: string;
+				headers?: Headers;
+				body: any;
+			};
 			body: EndpointBody;
 			_flag: "json";
 	  }
