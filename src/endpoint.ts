@@ -94,7 +94,7 @@ export function createEndpoint<
 			},
 			json,
 			...(ctx[0] || {}),
-			context: ctx[0]?.context || {},
+			context: (ctx[0] as any)?.context || {},
 			_flag: (ctx[0] as any)?._flag as string,
 		};
 		if (options.use?.length) {
