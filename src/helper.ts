@@ -35,12 +35,12 @@ export const json = <T>(
 	},
 ) => {
 	return {
-		response: new Response(JSON.stringify(body), {
+		response: new Response(JSON.stringify(option?.body ?? body), {
 			status: option?.status ?? 200,
 			statusText: option?.statusText ?? "OK",
 			headers: option?.headers,
 		}),
-		body: option?.body ?? body,
+		body,
 		_flag: "json" as const,
 	};
 };
