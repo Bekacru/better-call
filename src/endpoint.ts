@@ -188,7 +188,7 @@ export function createEndpoint<
 			? R extends { body: infer B }
 				? B
 				: null
-			: ReturnT;
+			: Awaited<ReturnT>;
 	};
 	handle.path = path;
 	handle.options = options;

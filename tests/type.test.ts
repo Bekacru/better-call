@@ -51,7 +51,7 @@ describe("Type", () => {
 				}),
 			],
 		});
-		createEndpoint2(
+		const e = createEndpoint2(
 			"/",
 			{
 				method: "POST",
@@ -60,7 +60,9 @@ describe("Type", () => {
 				}),
 			},
 			async (ctx) => {
-				ctx;
+				return {
+					status: true,
+				};
 			},
 		);
 	});
