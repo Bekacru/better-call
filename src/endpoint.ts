@@ -181,7 +181,7 @@ export function createEndpoint<
 			}
 		}
 
-		type ReturnT = ReturnType<Handler<Path, Opts, R>>;
+		type ReturnT = Awaited<ReturnType<Handler<Path, Opts, R>>>;
 		return actualResponse as R extends {
 			_flag: "json";
 		}
