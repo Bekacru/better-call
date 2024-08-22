@@ -86,6 +86,11 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 				if (res instanceof Response) {
 					return res;
 				}
+				if (res?._flag === "json") {
+					return new Response(JSON.stringify(res), {
+						headers: res.headers,
+					});
+				}
 				if (res) {
 					middlewareContext = {
 						...res,
