@@ -95,6 +95,7 @@ export function createEndpoint<
 			...(ctx[0] || {}),
 			context: (ctx[0] as any)?.context || {},
 			_flag: (ctx[0] as any)?._flag as string,
+			responseHeader,
 		};
 		if (options.use?.length) {
 			let middlewareContexts = {};

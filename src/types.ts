@@ -142,6 +142,10 @@ export type ContextTools = {
 	 * internal flags
 	 */
 	_flag?: string;
+	/**
+	 * response header
+	 */
+	responseHeader: Headers;
 };
 
 export type Context<Path extends string, Opts extends EndpointOptions> = InferBody<Opts> &
