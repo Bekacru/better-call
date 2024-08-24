@@ -162,11 +162,11 @@ export function createEndpoint<
 			});
 		}
 		//@ts-expect-error
-		let res = await handler(internalCtx);
+		let res = (await handler(internalCtx)) as any;
 
 		let actualResponse: any = res;
 
-		if (res && "_flag" in res) {
+		if (res && typeof res === "object" && "_flag" in res) {
 			if (res._flag === "json" && internalCtx._flag === "router") {
 				const h = res.response.headers as Record<string, string>;
 				Object.keys(h || {}).forEach((key) => {
