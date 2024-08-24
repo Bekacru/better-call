@@ -26,6 +26,7 @@ interface RouterConfig {
 	}[];
 	extraContext?: Record<string, any>;
 	transformResponse?: (res: EndpointResponse) => Response;
+	transformRequest?: (req: Request) => Request;
 }
 
 export const createRouter = <E extends Record<string, Endpoint>, Config extends RouterConfig>(
@@ -145,7 +146,8 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 	};
 	return {
 		handler: async (request: Request) => {
-			const res = await handler(request);
+			const req = config?.transformRequest ? config.transformRequest(request) : request;
+			const res = await handler(req);
 			if (config?.transformResponse) {
 				return config.transformResponse(res);
 			}
