@@ -25,8 +25,8 @@ interface RouterConfig {
 		middleware: Endpoint;
 	}[];
 	extraContext?: Record<string, any>;
-	transformResponse?: (res: Response) => Response;
-	transformRequest?: (req: Request) => Request;
+	transformResponse?: (res: Response) => Response | Promise<Response>;
+	transformRequest?: (req: Request) => Request | Promise<Request>;
 }
 
 export const createRouter = <E extends Record<string, Endpoint>, Config extends RouterConfig>(
@@ -146,10 +146,10 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 	};
 	return {
 		handler: async (request: Request) => {
-			const req = config?.transformRequest ? config.transformRequest(request) : request;
+			const req = config?.transformRequest ? await config.transformRequest(request) : request;
 			const res = await handler(req);
 			if (config?.transformResponse) {
-				return config.transformResponse(res);
+				return await config.transformResponse(res);
 			}
 			return res;
 		},
