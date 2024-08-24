@@ -2,7 +2,7 @@ import { createRouter as createRou3Router, addRoute, findRoute } from "rou3";
 import { getBody, shouldSerialize, statusCode } from "./utils";
 import { APIError } from "./error";
 import type { Middleware, MiddlewareHandler } from "./middleware";
-import type { Endpoint, Method } from "./types";
+import type { Endpoint, EndpointResponse, Method } from "./types";
 
 interface RouterConfig {
 	/**
@@ -25,6 +25,7 @@ interface RouterConfig {
 		middleware: Endpoint;
 	}[];
 	extraContext?: Record<string, any>;
+	transformResponse?: (res: EndpointResponse) => Response;
 }
 
 export const createRouter = <E extends Record<string, Endpoint>, Config extends RouterConfig>(
@@ -143,7 +144,13 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 		}
 	};
 	return {
-		handler,
+		handler: async (request: Request) => {
+			const res = await handler(request);
+			if (config?.transformResponse) {
+				return config.transformResponse(res);
+			}
+			return res;
+		},
 		endpoints,
 	};
 };
