@@ -250,7 +250,8 @@ export type EndpointBody =
 	| number
 	| void
 	| undefined
-	| null;
+	| null
+	| unknown;
 
 export type EndpointResponse =
 	| {
