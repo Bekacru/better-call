@@ -25,7 +25,7 @@ interface RouterConfig {
 		middleware: Endpoint;
 	}[];
 	extraContext?: Record<string, any>;
-	transformResponse?: (res: EndpointResponse) => Response;
+	transformResponse?: (res: Response) => Response;
 	transformRequest?: (req: Request) => Request;
 }
 
