@@ -28,6 +28,10 @@ export interface EndpointOptions {
 	 * List of endpoints that will be called before this endpoint
 	 */
 	use?: Endpoint[];
+	/**
+	 * Endpoint metadata
+	 */
+	metadata?: Record<string, any>;
 }
 
 export type Endpoint<
