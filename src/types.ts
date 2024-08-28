@@ -99,6 +99,10 @@ export interface CookieOptions {
 
 export type ContextTools = {
 	/**
+	 * the current path
+	 */
+	path: string;
+	/**
 	 * Set header
 	 *
 	 * If it's called outside of a request it will just be ignored.

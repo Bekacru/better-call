@@ -1,8 +1,7 @@
 import { createRouter as createRou3Router, addRoute, findRoute } from "rou3";
 import { getBody, shouldSerialize, statusCode } from "./utils";
 import { APIError } from "./error";
-import type { Middleware, MiddlewareHandler } from "./middleware";
-import type { Endpoint, EndpointResponse, Method } from "./types";
+import type { Endpoint } from "./types";
 
 interface RouterConfig {
 	/**
