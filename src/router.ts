@@ -1,4 +1,4 @@
-import { createRouter as createRou3Router, addRoute, findRoute } from "rou3";
+import { createRouter as createRou3Router, addRoute, findRoute, findAllRoutes } from "rou3";
 import { getBody, shouldSerialize, statusCode } from "./utils";
 import { APIError } from "./error";
 import type { Endpoint } from "./types";
@@ -61,7 +61,7 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 		const body = await getBody(request);
 		const headers = request.headers;
 		const query = Object.fromEntries(url.searchParams);
-		const middleware = findRoute(middlewareRouter, "*", path)?.data as Endpoint | undefined;
+		const routerMiddleware = findAllRoutes(middlewareRouter, "*", path);
 		//handler 404
 		if (!handler) {
 			return new Response(null, {
@@ -71,32 +71,35 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 		}
 		try {
 			let middlewareContext: Record<string, any> = {};
-			if (middleware) {
-				const res = await middleware({
-					path: path,
-					method: method as "GET",
-					headers,
-					params: route?.params as any,
-					request: request,
-					body: body,
-					query,
-					context: {
-						...config?.extraContext,
-					},
-				});
-				if (res instanceof Response) {
-					return res;
-				}
-				if (res?._flag === "json") {
-					return new Response(JSON.stringify(res), {
-						headers: res.headers,
+			if (routerMiddleware?.length) {
+				for (const route of routerMiddleware) {
+					const middleware = route.data as Endpoint;
+					const res = await middleware({
+						path: path,
+						method: method as "GET",
+						headers,
+						params: route?.params as any,
+						request: request,
+						body: body,
+						query,
+						context: {
+							...config?.extraContext,
+						},
 					});
-				}
-				if (res) {
-					middlewareContext = {
-						...res,
-						...middlewareContext,
-					};
+					if (res instanceof Response) {
+						return res;
+					}
+					if (res?._flag === "json") {
+						return new Response(JSON.stringify(res), {
+							headers: res.headers,
+						});
+					}
+					if (res) {
+						middlewareContext = {
+							...res,
+							...middlewareContext,
+						};
+					}
 				}
 			}
 			const handlerRes = await handler({

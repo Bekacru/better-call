@@ -7,7 +7,6 @@
 		"moduleDetection": "force",
 		"jsx": "react-jsx",
 		"allowJs": true,
-		"disableReferencedProjectLoad": true,
 
 		// Bundler mode
 		"moduleResolution": "bundler",
@@ -19,6 +18,7 @@
 		"strict": true,
 		"skipLibCheck": true,
 		"noFallthroughCasesInSwitch": true,
+		"disableReferencedProjectLoad": true,
 
 		// Some stricter flags (disabled by default)
 		"noUnusedLocals": false,
@@ -26,5 +26,5 @@
 		"noPropertyAccessFromIndexSignature": false
 	},
 	"include": ["src", "tests"],
-	"exclude": ["node_modules"]
+	"exclude": ["node_modules", "dist"]
 }
