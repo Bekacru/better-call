@@ -92,11 +92,11 @@ export function createEndpoint<
 				return new APIError("FOUND");
 			},
 			json,
-			...(ctx[0] || {}),
 			context: (ctx[0] as any)?.context || {},
 			_flag: (ctx[0] as any)?._flag as string,
 			responseHeader,
 			path: path,
+			...(ctx[0] || {}),
 		};
 		if (options.use?.length) {
 			let middlewareContexts = {};
