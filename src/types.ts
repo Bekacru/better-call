@@ -1,6 +1,6 @@
 import { z, type ZodOptional, type ZodSchema } from "zod";
 import type { json, UnionToIntersection } from "./helper";
-import type { CookiePrefixOptions } from "./cookie";
+import type { CookieOptions, CookiePrefixOptions } from "./cookie";
 import type { APIError } from "./error";
 
 export interface EndpointOptions {
@@ -64,38 +64,6 @@ export type InferParamWildCard<Path> = Path extends
 export type Prettify<T> = {
 	[key in keyof T]: T[key];
 } & {};
-
-export interface CookieOptions {
-	/**
-	 * Max age in seconds
-	 */
-	maxAge?: number;
-	/**
-	 * Domain
-	 */
-	domain?: string;
-	/**
-	 * Path
-	 */
-	path?: string;
-	/**
-	 * Secure
-	 */
-	secure?: boolean;
-	/**
-	 * HttpOnly
-	 */
-	httpOnly?: boolean;
-
-	/**
-	 * SameSite
-	 */
-	sameSite?: "strict" | "lax" | "none";
-	/**
-	 * Expires
-	 */
-	expires?: Date;
-}
 
 export type ContextTools = {
 	/**
