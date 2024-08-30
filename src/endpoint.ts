@@ -4,7 +4,6 @@ import { json, type HasRequiredKeys } from "./helper";
 import type {
 	Context,
 	ContextTools,
-	CookieOptions,
 	Endpoint,
 	EndpointOptions,
 	EndpointResponse,
@@ -13,7 +12,7 @@ import type {
 	Prettify,
 } from "./types";
 import { getCookie, getSignedCookie, setCookie, setSignedCookie } from "./cookie-utils";
-import type { CookiePrefixOptions } from "./cookie";
+import type { CookiePrefixOptions, CookieOptions } from "./cookie";
 
 export interface EndpointConfig {
 	/**
