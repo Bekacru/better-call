@@ -137,22 +137,21 @@ const _serialize = (name: string, value: string, opt: CookieOptions = {}): strin
 	let cookie = `${name}=${value}`;
 
 	if (name.startsWith("__Secure-") && !opt.secure) {
-		// https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis-13#section-4.1.3.1
-		throw new Error("__Secure- Cookie must have Secure attributes");
+		opt.secure = true;
 	}
 
 	if (name.startsWith("__Host-")) {
 		// https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis-13#section-4.1.3.2
 		if (!opt.secure) {
-			throw new Error("__Host- Cookie must have Secure attributes");
+			opt.secure = true;
 		}
 
 		if (opt.path !== "/") {
-			throw new Error('__Host- Cookie must have Path attributes with "/"');
+			opt.path = "/";
 		}
 
 		if (opt.domain) {
-			throw new Error("__Host- Cookie must not have Domain attributes");
+			opt.domain = undefined;
 		}
 	}
 
