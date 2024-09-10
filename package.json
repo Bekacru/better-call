@@ -21,13 +21,11 @@
     "vitest": "^2.0.4",
     "zod": "^3.23.8"
   },
-  "peerDependencies": {
-    "typescript": "^5.6.0-beta"
-  },
   "dependencies": {
     "@better-fetch/fetch": "^1.1.4",
     "@types/set-cookie-parser": "^2.4.10",
     "rou3": "^0.5.1",
+    "typescript": "^5.6.0-beta",
     "set-cookie-parser": "^2.7.0"
   },
   "exports": {
