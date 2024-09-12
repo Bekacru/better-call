@@ -1,3 +1,4 @@
+"use server";
 import { ZodError } from "zod";
 import { APIError } from "./error";
 import { json, type HasRequiredKeys } from "./helper";
