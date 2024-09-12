@@ -238,6 +238,27 @@ describe("Router", () => {
 		expect(res.status).toBe(302);
 		expect(res.headers.get("Location")).toBe("http://localhost:3000/item");
 	});
+
+	it("should return 404", async () => {
+		const endpoint = createEndpoint(
+			"/item",
+			{
+				method: "GET",
+			},
+			async () => {},
+		);
+		const router = createRouter(
+			{
+				endpoint,
+			},
+			{
+				basePath: "/path",
+			},
+		);
+		const request = new Request("http://localhost:3000/item");
+		const res = await router.handler(request);
+		expect(res.status).toBe(404);
+	});
 });
 
 describe("Cookie", () => {

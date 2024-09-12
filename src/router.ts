@@ -55,7 +55,11 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 		if (config?.basePath) {
 			path = path.split(config.basePath)[1];
 		}
-		if (!path.length) {
+		if (!path?.length) {
+			config?.onError?.(new APIError("NOT_FOUND"));
+			console.warn(
+				`[better-call]: Make sure the URL has the basePath (${config?.basePath}).`,
+			);
 			return new Response(null, {
 				status: 404,
 				statusText: "Not Found",
