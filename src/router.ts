@@ -55,6 +55,12 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 		if (config?.basePath) {
 			path = path.split(config.basePath)[1];
 		}
+		if (!path.length) {
+			return new Response(null, {
+				status: 404,
+				statusText: "Not Found",
+			});
+		}
 		const method = request.method;
 		const route = findRoute(router, method, path);
 		const handler = route?.data as Endpoint;
