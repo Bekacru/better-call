@@ -7,7 +7,8 @@
 		"moduleDetection": "force",
 		"jsx": "react-jsx",
 		"allowJs": true,
-
+		"tsBuildInfoFile": ".tsbuildinfo",
+		"incremental": true,
 		// Bundler mode
 		"moduleResolution": "bundler",
 		"allowImportingTsExtensions": true,
@@ -17,6 +18,7 @@
 		// Best practices
 		"strict": true,
 		"skipLibCheck": true,
+		"skipDefaultLibCheck": true,
 		"noFallthroughCasesInSwitch": true,
 		"disableReferencedProjectLoad": true,
 
