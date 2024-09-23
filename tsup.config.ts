@@ -11,7 +11,6 @@ export default defineConfig({
 	dts: true,
 	format: ["esm", "cjs"],
 	target: "es2020",
-	minify: true,
 	bundle: true,
 	external: ["zod"],
 });
