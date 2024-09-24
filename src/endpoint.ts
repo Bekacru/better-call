@@ -103,7 +103,7 @@ export function createEndpoint<
 			let middlewareBody = {};
 			for (const middleware of options.use) {
 				if (typeof middleware !== "function") {
-					continue;
+					console.warn("Middleware is not a function");
 				}
 				const res = (await middleware(internalCtx)) as Endpoint;
 				if (res) {
