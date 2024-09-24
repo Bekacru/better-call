@@ -102,6 +102,9 @@ export function createEndpoint<
 			let middlewareContexts = {};
 			let middlewareBody = {};
 			for (const middleware of options.use) {
+				if (typeof middleware !== "function") {
+					continue;
+				}
 				const res = (await middleware(internalCtx)) as Endpoint;
 				if (res) {
 					const body = res.options?.body
