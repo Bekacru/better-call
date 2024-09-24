@@ -24,10 +24,20 @@ interface RouterConfig {
 		middleware: Endpoint;
 	}[];
 	extraContext?: Record<string, any>;
-	onResponse?: (res: Response) => Response | Promise<Response> | void | Promise<void>;
+	onResponse?: (
+		res: Response,
+	) => Response | Promise<Response> | void | Promise<void> | undefined | Promise<undefined>;
 	onRequest?: (
 		req: Request,
-	) => Request | Promise<Request> | void | Promise<void> | Response | Promise<Response>;
+	) =>
+		| Request
+		| Promise<Request>
+		| void
+		| Promise<void>
+		| Response
+		| Promise<Response>
+		| undefined
+		| Promise<undefined>;
 }
 
 export const createRouter = <E extends Record<string, Endpoint>, Config extends RouterConfig>(
