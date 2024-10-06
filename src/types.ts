@@ -127,9 +127,21 @@ export type Context<Path extends string, Opts extends EndpointOptions> = InferBo
 	InferRequest<Opts> &
 	InferQuery<Opts["query"]> & {
 		/**
-		 * change the response form
+		 * This is used internally.
+		 * But you can use it to change the response form.
+		 *
+		 * - `json` will be set only when using `ctx.json` helper.
+		 * - `router` will be set when the handler is called from the router.
+		 * You can use this to change the response form to be a `Response` object.
+		 * - `default` will be used normally when the handler is called as a normal function.
+		 *
+		 * @internal
 		 */
-		flag?: "json" | "router";
+		_flag?: "json" | "router" | "default";
+		/**
+		 * Force the response to be a `Response` object.
+		 */
+		asResponse?: boolean;
 	};
 
 export type InferUse<Opts extends EndpointOptions["use"]> = Opts extends Endpoint[]
@@ -239,7 +251,7 @@ export type EndpointResponse =
 				body: any;
 			};
 			body: EndpointBody;
-			flag: "json";
+			_flag: "json";
 	  }
 	| EndpointBody;
 

@@ -42,6 +42,6 @@ export const json = <T>(
 			headers: option?.headers,
 		},
 		body,
-		flag: "json" as const,
+		_flag: "json" as const,
 	};
 };

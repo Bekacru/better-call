@@ -180,14 +180,18 @@ describe("Endpoint", () => {
 				method: "GET",
 			},
 			async (ctx) => {
+				ctx.setHeader("X-Test", "test");
 				return ctx.json({
 					message: "hello world",
 				});
 			},
 		);
 		const res = await endpoint({
-			flag: "router",
+			asResponse: true,
 		});
 		expect(res).toBeInstanceOf(Response);
+		const headers = res.headers;
+		expect(headers.get("X-Test")).toBe("test");
+		expectTypeOf(res).toMatchTypeOf<Response>();
 	});
 });

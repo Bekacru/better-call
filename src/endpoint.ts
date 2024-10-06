@@ -35,7 +35,7 @@ export function createEndpointCreator<
 				Context<Path, Opts> &
 					InferUse<Opts["use"]> &
 					InferUse<E["use"]> &
-					Omit<ContextTools, "flag">
+					Omit<ContextTools, "_flag">
 			>,
 		) => Promise<R>,
 	) => {
@@ -95,7 +95,7 @@ export function createEndpoint<
 			},
 			json,
 			context: (ctx[0] as any)?.context || {},
-			flag: (ctx[0] as any)?.flag,
+			_flag: (ctx[0] as any)?.asResponse ? "router" : (ctx[0] as any)?._flag,
 			responseHeader,
 			path: path,
 			...(ctx[0] || {}),
@@ -173,8 +173,8 @@ export function createEndpoint<
 		let res = (await handler(internalCtx as any)) as any;
 		let actualResponse: any = res;
 
-		if (res && typeof res === "object" && "flag" in res) {
-			if (res.flag === "json" && internalCtx.flag === "router") {
+		if (res && typeof res === "object" && "_flag" in res) {
+			if (res._flag === "json" && internalCtx._flag === "router") {
 				const h = res.response.headers as Record<string, string>;
 				Object.keys(h || {}).forEach((key) => {
 					responseHeader.set(key, h[key as keyof typeof h]);
@@ -190,10 +190,10 @@ export function createEndpoint<
 		}
 
 		type ReturnT = Awaited<ReturnType<Handler<Path, Opts, R>>>;
-		return actualResponse as C extends [{ flag: "router" }]
+		return actualResponse as C extends [{ asResponse: true }]
 			? Response
 			: R extends {
-						flag: "json";
+						_flag: "json";
 					}
 				? R extends { body: infer B }
 					? B
