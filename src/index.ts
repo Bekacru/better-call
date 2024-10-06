@@ -7,3 +7,4 @@ export * from "./types";
 export * from "./adapter";
 export * from "./cookie";
 export * from "./cookie-utils";
+export * from "./router";

@@ -129,7 +129,12 @@ export type Context<Path extends string, Opts extends EndpointOptions> = InferBo
 	InferMethod<Opts["method"]> &
 	InferHeaders<Opts> &
 	InferRequest<Opts> &
-	InferQuery<Opts["query"]>;
+	InferQuery<Opts["query"]> & {
+		/**
+		 * return the Response object
+		 */
+		asResponse?: boolean;
+	};
 
 export type InferUse<Opts extends EndpointOptions["use"]> = Opts extends Endpoint[]
 	? {

@@ -57,7 +57,9 @@ export function createEndpoint<
 >(path: Path, options: Opts, handler: Handler<Path, Opts, R>) {
 	const responseHeader = new Headers();
 	type Ctx = Context<Path, Opts>;
-	const handle = async (...ctx: HasRequiredKeys<Ctx> extends true ? [Ctx] : [Ctx?]) => {
+	const handle = async <C extends HasRequiredKeys<Ctx> extends true ? [Ctx] : [Ctx?]>(
+		...ctx: C
+	) => {
 		let internalCtx = {
 			setHeader(key: string, value: string) {
 				responseHeader.set(key, value);
@@ -93,7 +95,7 @@ export function createEndpoint<
 			},
 			json,
 			context: (ctx[0] as any)?.context || {},
-			_flag: (ctx[0] as any)?._flag as string,
+			_flag: (ctx[0] as any)?.asResponse ? "router" : ((ctx[0] as any)?._flag as string),
 			responseHeader,
 			path: path,
 			...(ctx[0] || {}),
@@ -190,13 +192,15 @@ export function createEndpoint<
 		}
 
 		type ReturnT = Awaited<ReturnType<Handler<Path, Opts, R>>>;
-		return actualResponse as R extends {
-			_flag: "json";
-		}
-			? R extends { body: infer B }
-				? B
-				: null
-			: Awaited<ReturnT>;
+		return actualResponse as C extends [{ asResponse: true }]
+			? Response
+			: R extends {
+						_flag: "json";
+					}
+				? R extends { body: infer B }
+					? B
+					: null
+				: ReturnT;
 	};
 	handle.path = path;
 	handle.options = options;

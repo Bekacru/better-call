@@ -172,4 +172,22 @@ describe("Endpoint", () => {
 			hello: "world",
 		});
 	});
+
+	it("should return response object from handler", async () => {
+		const endpoint = createEndpoint(
+			"/",
+			{
+				method: "GET",
+			},
+			async (ctx) => {
+				return ctx.json({
+					message: "hello world",
+				});
+			},
+		);
+		const res = await endpoint({
+			asResponse: true,
+		});
+		expect(res).toBeInstanceOf(Response);
+	});
 });
