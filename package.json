@@ -1,6 +1,6 @@
 {
   "name": "better-call",
-  "version": "0.2.4",
+  "version": "0.2.5-beta.1",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
