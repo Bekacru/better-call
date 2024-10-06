@@ -66,6 +66,9 @@ describe("client", () => {
 
 		const client = createClient<typeof router>({
 			baseURL: "http://localhost:3000",
+			customFetchImpl: async (url, init) => {
+				return new Response(null);
+			},
 		});
 
 		expectTypeOf<Parameters<typeof client>[0]>().toMatchTypeOf<

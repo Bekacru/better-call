@@ -99,7 +99,7 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 					if (res instanceof Response) {
 						return res;
 					}
-					if (res?._flag === "json") {
+					if (res?.flag === "json") {
 						return new Response(JSON.stringify(res), {
 							headers: res.headers,
 						});
@@ -120,7 +120,7 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 				request: request,
 				body: body,
 				query,
-				_flag: "router",
+				flag: "router",
 				context: {
 					...middlewareContext,
 					...config?.extraContext,

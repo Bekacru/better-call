@@ -115,10 +115,6 @@ export type ContextTools = {
 	 */
 	json: typeof json;
 	/**
-	 * internal flags
-	 */
-	_flag?: string;
-	/**
 	 * response header
 	 */
 	responseHeader: Headers;
@@ -131,9 +127,9 @@ export type Context<Path extends string, Opts extends EndpointOptions> = InferBo
 	InferRequest<Opts> &
 	InferQuery<Opts["query"]> & {
 		/**
-		 * return the Response object
+		 * change the response form
 		 */
-		asResponse?: boolean;
+		flag?: "json" | "router";
 	};
 
 export type InferUse<Opts extends EndpointOptions["use"]> = Opts extends Endpoint[]
@@ -243,7 +239,7 @@ export type EndpointResponse =
 				body: any;
 			};
 			body: EndpointBody;
-			_flag: "json";
+			flag: "json";
 	  }
 	| EndpointBody;
 
@@ -251,9 +247,7 @@ export type Handler<
 	Path extends string,
 	Opts extends EndpointOptions,
 	R extends EndpointResponse,
-> = (
-	ctx: Prettify<Context<Path, Opts> & InferUse<Opts["use"]> & Omit<ContextTools, "_flag">>,
-) => Promise<R>;
+> = (ctx: Prettify<Context<Path, Opts> & InferUse<Opts["use"]> & ContextTools>) => Promise<R>;
 
 export type Method = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "*";
 

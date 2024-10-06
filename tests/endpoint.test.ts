@@ -186,7 +186,7 @@ describe("Endpoint", () => {
 			},
 		);
 		const res = await endpoint({
-			asResponse: true,
+			flag: "router",
 		});
 		expect(res).toBeInstanceOf(Response);
 	});
