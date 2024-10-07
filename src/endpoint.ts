@@ -179,6 +179,7 @@ export function createEndpoint<
 				Object.keys(h || {}).forEach((key) => {
 					responseHeader.set(key, h[key as keyof typeof h]);
 				});
+				responseHeader.set("Content-Type", "application/json");
 				actualResponse = new Response(JSON.stringify(res.response.body), {
 					status: res.response.status ?? 200,
 					statusText: res.response.statusText,
