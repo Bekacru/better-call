@@ -55,11 +55,12 @@ export function createEndpoint<
 	Opts extends EndpointOptions,
 	R extends EndpointResponse,
 >(path: Path, options: Opts, handler: Handler<Path, Opts, R>) {
-	const responseHeader = new Headers();
+	let responseHeader = new Headers();
 	type Ctx = Context<Path, Opts>;
 	const handle = async <C extends HasRequiredKeys<Ctx> extends true ? [Ctx] : [Ctx?]>(
 		...ctx: C
 	) => {
+		responseHeader = new Headers();
 		let internalCtx = {
 			setHeader(key: string, value: string) {
 				responseHeader.set(key, value);
