@@ -1,6 +1,6 @@
 {
   "name": "better-call",
-  "version": "0.2.5-beta.5",
+  "version": "0.2.5-beta.6",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -10,7 +10,9 @@
     "format": "biome format --write",
     "typecheck": "tsc --noEmit",
     "bump": "bumpp",
-    "build": "tsup"
+    "build": "tsup --dts --clean",
+    "dev": "tsup --watch",
+    "dev:dts": "tsup --watch --dts"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.8.3",
