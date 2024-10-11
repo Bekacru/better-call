@@ -57,10 +57,10 @@ export function createEndpoint<
 >(path: Path, options: Opts, handler: Handler<Path, Opts, R>) {
 	let responseHeader = new Headers();
 	type Ctx = Context<Path, Opts>;
+
 	const handle = async <C extends HasRequiredKeys<Ctx> extends true ? [Ctx] : [Ctx?]>(
 		...ctx: C
 	) => {
-		responseHeader = new Headers();
 		let internalCtx = {
 			setHeader(key: string, value: string) {
 				responseHeader.set(key, value);
@@ -186,6 +186,7 @@ export function createEndpoint<
 					statusText: res.response.statusText,
 					headers: responseHeader,
 				});
+				responseHeader = new Headers();
 			} else {
 				actualResponse = res.body;
 			}
