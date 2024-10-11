@@ -186,11 +186,12 @@ export function createEndpoint<
 					statusText: res.response.statusText,
 					headers: responseHeader,
 				});
-				responseHeader = new Headers();
 			} else {
 				actualResponse = res.body;
 			}
 		}
+
+		responseHeader = new Headers();
 
 		type ReturnT = Awaited<ReturnType<Handler<Path, Opts, R>>>;
 		return actualResponse as C extends [{ asResponse: true }]
