@@ -33,10 +33,14 @@ export const setCookie = (
 	value: string,
 	opt?: CookieOptions,
 ): void => {
-	// Cookie names prefixed with __Secure- can be used only if they are set with the secure attribute.
-	// Cookie names prefixed with __Host- can be used only if they are set with the secure attribute, must have a path of / (meaning any path at the host)
-	// and must not have a Domain attribute.
-	// Read more at https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#cookie_prefixes'
+	const existingCookies = header.get("Set-Cookie");
+	if (existingCookies) {
+		const cookies = existingCookies.split(", ");
+		const updatedCookies = cookies.filter((cookie) => !cookie.startsWith(`${name}=`));
+		header.delete("Set-Cookie");
+		updatedCookies.forEach((cookie) => header.append("Set-Cookie", cookie));
+	}
+
 	let cookie;
 	if (opt?.prefix === "secure") {
 		cookie = serialize("__Secure-" + name, value, { path: "/", ...opt, secure: true });
