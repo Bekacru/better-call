@@ -171,38 +171,47 @@ export function createEndpoint<
 				message: "Request is required",
 			});
 		}
-		let res = (await handler(internalCtx as any)) as any;
-		let actualResponse: any = res;
+		try {
+			let res = (await handler(internalCtx as any)) as any;
+			let actualResponse: any = res;
 
-		if (res && typeof res === "object" && "_flag" in res) {
-			if (res._flag === "json" && internalCtx._flag === "router") {
-				const h = res.response.headers as Record<string, string>;
-				Object.keys(h || {}).forEach((key) => {
-					responseHeader.set(key, h[key as keyof typeof h]);
-				});
-				responseHeader.set("Content-Type", "application/json");
-				actualResponse = new Response(JSON.stringify(res.response.body), {
-					status: res.response.status ?? 200,
-					statusText: res.response.statusText,
-					headers: responseHeader,
-				});
-			} else {
-				actualResponse = res.body;
+			if (res && typeof res === "object" && "_flag" in res) {
+				if (res._flag === "json" && internalCtx._flag === "router") {
+					const h = res.response.headers as Record<string, string>;
+					Object.keys(h || {}).forEach((key) => {
+						responseHeader.set(key, h[key as keyof typeof h]);
+					});
+					responseHeader.set("Content-Type", "application/json");
+					actualResponse = new Response(JSON.stringify(res.response.body), {
+						status: res.response.status ?? 200,
+						statusText: res.response.statusText,
+						headers: responseHeader,
+					});
+				} else {
+					actualResponse = res.body;
+				}
 			}
+
+			responseHeader = new Headers();
+
+			type ReturnT = Awaited<ReturnType<Handler<Path, Opts, R>>>;
+			return actualResponse as C extends [{ asResponse: true }]
+				? Response
+				: R extends {
+							_flag: "json";
+						}
+					? R extends { body: infer B }
+						? B
+						: null
+					: ReturnT;
+		} catch (e) {
+			if (e instanceof APIError) {
+				e.headers = responseHeader;
+				responseHeader = new Headers();
+				throw e;
+			}
+			throw e;
 		}
-
-		responseHeader = new Headers();
-
-		type ReturnT = Awaited<ReturnType<Handler<Path, Opts, R>>>;
-		return actualResponse as C extends [{ asResponse: true }]
-			? Response
-			: R extends {
-						_flag: "json";
-					}
-				? R extends { body: infer B }
-					? B
-					: null
-				: ReturnT;
 	};
 	handle.path = path;
 	handle.options = options;

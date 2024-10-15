@@ -144,7 +144,7 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 				return new Response(e.body ? JSON.stringify(e.body) : null, {
 					status: statusCode[e.status],
 					statusText: e.status,
-					headers: handler.headers,
+					headers: e.headers,
 				});
 			}
 			if (config?.throwError) {

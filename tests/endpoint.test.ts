@@ -181,6 +181,7 @@ describe("Endpoint", () => {
 			},
 			async (ctx) => {
 				ctx.setHeader("X-Test", "test");
+				ctx.setCookie("test", "test");
 				return ctx.json({
 					message: "hello world",
 				});
@@ -191,7 +192,9 @@ describe("Endpoint", () => {
 		});
 		expect(res).toBeInstanceOf(Response);
 		const headers = res.headers;
+		const cookie = headers.get("Set-Cookie");
 		expect(headers.get("X-Test")).toBe("test");
+		expect(cookie).toBe("test=test; Path=/");
 		expectTypeOf(res).toMatchTypeOf<Response>();
 	});
 });
