@@ -139,16 +139,7 @@ export function createEndpoint<
 			};
 		}
 		try {
-			let body = internalCtx.body;
-			if (options.body) {
-				const toBeParsed = options.body.safeParse(internalCtx.body);
-				if (toBeParsed.success === false) {
-					throw new APIError("BAD_REQUEST", {
-						message: toBeParsed.error.message,
-					});
-				}
-				body = toBeParsed.data;
-			}
+			const body = options.body ? options.body.parse(internalCtx.body) : internalCtx.body;
 			internalCtx = {
 				...internalCtx,
 				body: body

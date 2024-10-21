@@ -1,4 +1,5 @@
 //https://github.com/honojs/hono/blob/main/src/utils/cookie.ts
+import crypto from "uncrypto";
 
 export type Cookie = Record<string, string>;
 export type SignedCookie = Record<string, string | false>;
@@ -31,7 +32,7 @@ export type CookieConstraint<Name> = Name extends `__Secure-${string}`
 
 const algorithm = { name: "HMAC", hash: "SHA-256" };
 
-const getCryptoKey = async (secret: string | BufferSource): Promise<CryptoKey> => {
+const getCryptoKey = async (secret: string | BufferSource) => {
 	const secretBuf = typeof secret === "string" ? new TextEncoder().encode(secret) : secret;
 	return await crypto.subtle.importKey("raw", secretBuf, algorithm, false, ["sign", "verify"]);
 };
