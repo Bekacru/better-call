@@ -206,6 +206,7 @@ export function createEndpoint<
 					: ReturnT;
 		} catch (e) {
 			if (e instanceof APIError) {
+				responseHeader.set("Content-Type", "application/json");
 				e.headers = responseHeader;
 				responseHeader = new Headers();
 				throw e;
