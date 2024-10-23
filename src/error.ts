@@ -13,7 +13,8 @@ export class APIError extends Error {
 		this.status = status;
 		this.body = body ?? {};
 		this.stack = "";
-		this.headers = headers || new Headers();
+		this.headers = headers ?? new Headers();
 		this.name = "BetterCallAPIError";
+		this.headers.set("Content-Type", "application/json");
 	}
 }

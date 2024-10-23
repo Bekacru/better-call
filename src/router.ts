@@ -141,7 +141,6 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 				}
 			}
 			if (e instanceof APIError) {
-				headers.set("Content-Type", "application/json");
 				return new Response(e.body ? JSON.stringify(e.body) : null, {
 					status: statusCode[e.status],
 					statusText: e.status,
