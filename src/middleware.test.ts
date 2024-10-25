@@ -33,7 +33,7 @@ describe("type", async () => {
         user: "test",
       };
     });
-    const endpoint = createEndpoint(
+    createEndpoint(
       "/path",
       {
         method: "GET",

@@ -144,6 +144,28 @@ describe("types", async () => {
     );
   });
 
+  it("method", async () => {
+    createEndpoint(
+      "/test",
+      {
+        method: "GET",
+      },
+      async (ctx) => {
+        expectTypeOf(ctx.method).toEqualTypeOf<"GET">();
+      }
+    );
+
+    createEndpoint(
+      "/test",
+      {
+        method: ["POST", "GET"],
+      },
+      async (ctx) => {
+        expectTypeOf(ctx.method).toEqualTypeOf<"POST" | "GET">();
+      }
+    );
+  });
+
   it("response", async () => {
     const endpoint1 = createEndpoint(
       "/test",

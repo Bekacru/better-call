@@ -8,10 +8,12 @@ import type {
   EndpointOptions,
   InferBody,
   InferHeaders,
+  InferMethod,
   InferParam,
   InferQuery,
   InferRequest,
   InferUse,
+  Method,
 } from "./options";
 import type { APIError } from "./api-error";
 
@@ -53,6 +55,10 @@ export interface EndpointContext<
    * The path of the endpoint
    */
   path: Path;
+  /**
+   * Method
+   */
+  method: InferMethod<Options>;
   /**
    * Query
    *
@@ -143,6 +149,7 @@ export type Context<
   Options extends EndpointOptions
 > = Input<{
   body: InferBody<Options>;
+  method?: InferMethod<Options>;
   query: InferQuery<Options>;
   params: InferParam<Path>;
   request: InferRequest<Options>;

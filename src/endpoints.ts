@@ -84,6 +84,7 @@ export const createEndpoint = <
       }) as any,
       body: "body" in data ? (data.body as any) : undefined,
       path,
+      method: "method" in ctx ? (ctx.method as any) : undefined,
       query: "query" in data ? (data.query as any) : undefined,
       params: "params" in ctx ? (ctx.params as any) : undefined,
       headers: "headers" in ctx ? (ctx.headers as any) : undefined,
@@ -131,10 +132,14 @@ export const createEndpoint = <
        * If the error is a redirect error and asResponse is true
        * return a response with the headers
        */
-      if (e instanceof APIError && e.status === 302 && asResponse) {
+      if (e instanceof APIError && asResponse) {
+        const headers = response.headers;
+        for (const [key, value] of Object.entries(e.headers)) {
+          headers.set(key, value as string);
+        }
         return new Response(null, {
           status: e.status,
-          headers: e.headers,
+          headers: headers,
         });
       }
       throw e;

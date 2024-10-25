@@ -6,6 +6,7 @@
     "allowJs": true,
     "resolveJsonModule": true,
     "moduleDetection": "force",
+    "moduleResolution": "Bundler",
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "strict": true,

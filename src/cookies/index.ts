@@ -116,3 +116,5 @@ export const getSignedCookie = async (
   const obj = await parseSigned(cookie, secret, finalKey);
   return obj[finalKey];
 };
+
+export * from "./cookie-utils";
