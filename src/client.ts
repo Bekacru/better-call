@@ -58,7 +58,7 @@ export type RequiredOptionKeys<
 
 export const createClient = <R extends Router | Router["endpoints"]>(options: ClientOptions) => {
 	const fetch = createFetch(options);
-	type API = R extends Router ? R["endpoints"] : R;
+	type API = R extends { endpoints: Record<string, Endpoint> } ? R["endpoints"] : R;
 	type Options = API extends {
 		[key: string]: infer T;
 	}
