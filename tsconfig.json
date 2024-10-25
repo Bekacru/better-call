@@ -17,5 +17,12 @@
     "lib": ["es2022"]
   },
   "exclude": ["node_modules", "dist"],
-  "include": ["src"]
+  "include": [
+    "src",
+    "tests/client.test.ts",
+    "tests/endpoints.test.ts",
+    "tests/middleware.test.ts",
+    "tests/open-api.test.ts",
+    "tests/router.test.ts"
+  ]
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createEndpoint } from "./endpoints";
+import { createEndpoint } from "../src/endpoints";
 import { z } from "zod";
 import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 

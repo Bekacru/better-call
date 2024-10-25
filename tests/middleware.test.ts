@@ -1,7 +1,7 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
-import { createEndpoint } from "./endpoints";
-import { createMiddleware } from "./middleware";
-import { APIError } from "./api-error";
+import { createEndpoint } from "../src/endpoints";
+import { createMiddleware } from "../src/middleware";
+import { APIError } from "../src/api-error";
 
 describe("type", async () => {
   it("should infer context", () => {

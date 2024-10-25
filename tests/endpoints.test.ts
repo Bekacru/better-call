@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { createEndpoint } from "./endpoints";
+import { createEndpoint } from "../src/endpoints";
 import { describe, it, expectTypeOf, expect } from "vitest";
-import { createMiddleware } from "./middleware";
+import { createMiddleware } from "../src/middleware";
 
 describe("types", async () => {
   it("body", async () => {

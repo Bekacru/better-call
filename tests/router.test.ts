@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { createEndpoint } from "./endpoints";
+import { createEndpoint } from "../src/endpoints";
 import { z } from "zod";
-import { createRouter } from "./router";
-import { createMiddleware } from "./middleware";
-import { APIError } from "./api-error";
+import { createRouter } from "../src/router";
+import { createMiddleware } from "../src/middleware";
+import { APIError } from "../src/api-error";
 
 describe("router", async () => {
   it("should route", async () => {
