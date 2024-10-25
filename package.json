@@ -8,6 +8,7 @@
     "build": "unbuild",
     "prepack": "unbuild",
     "release": "np",
+    "release:beta": "np --tag=next --any-branch",
     "publish-test": "vitest run"
   },
   "np": {
