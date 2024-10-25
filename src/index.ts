@@ -5,3 +5,4 @@ export * from "./middleware";
 export * from "./context";
 export * from "./response";
 export * from "./cookies";
+export * from "./api-error";
