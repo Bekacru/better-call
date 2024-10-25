@@ -111,7 +111,7 @@ export type InferHeaders<Option extends EndpointOptions> =
 export type InferUse<Opts extends EndpointOptions["use"]> =
   Opts extends Endpoint[]
     ? UnionToIntersection<Awaited<ReturnType<Opts[number]>>>
-    : never;
+    : {};
 export type InferMethod<Options extends EndpointOptions> =
   Options["method"] extends Array<Method>
     ? Options["method"][number]

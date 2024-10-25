@@ -1,7 +1,7 @@
 import { runValidation, type EndpointResponse } from "./response";
 import { createSetHeader, type Context, type EndpointContext } from "./context";
 import type { EndpointOptions, InferUse } from "./options";
-import type { HasRequiredKeys } from "./helper";
+import type { HasRequiredKeys, MergeObject } from "./helper";
 import { APIError } from "./api-error";
 import {
   getCookie,
@@ -241,8 +241,7 @@ function createEndpointCreator<
     options: Opts,
     handler: <InferE extends EndpointContext<Path, Opts>>(
       ctx: Omit<InferE, "context"> & {
-        context: InferUse<E["use"]> &
-          (InferE["context"] extends never ? {} : InferE["context"]);
+        context: InferUse<E["use"]> & InferE["context"];
       }
     ) => Promise<R>
   ) => {

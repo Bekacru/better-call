@@ -461,4 +461,28 @@ describe("creator", () => {
     const res = await endpoint();
     expectTypeOf(res).toEqualTypeOf<{ name: string }>();
   });
+
+  it("should merge use from custom creator", async () => {
+    const middleware = createMiddleware(async () => {
+      return {
+        something: "",
+      };
+    });
+    const createCustomEndpoint = createEndpoint.creator({
+      use: [middleware],
+    });
+
+    const endpoint = createCustomEndpoint(
+      "/",
+      {
+        method: "GET",
+        use: [createMiddleware(async () => ({ anotherProperty: "" }))],
+      },
+      async (ctx) => {
+        expectTypeOf(ctx.context.something).toMatchTypeOf<string>();
+        expectTypeOf(ctx.context.anotherProperty).toMatchTypeOf<string>();
+        return ctx.json({ name: "test" });
+      }
+    );
+  });
 });

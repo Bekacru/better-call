@@ -36,3 +36,8 @@ export type UnionToIntersection<Union> = (
 ) extends (mergedIntersection: infer Intersection) => void
   ? Intersection & Union
   : never;
+
+export type MergeObject<
+  T extends Record<string, any> | never,
+  S extends Record<string, any> | never
+> = T extends never ? S : S extends never ? T : T & S;
