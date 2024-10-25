@@ -1,6 +1,6 @@
 import type { EndpointContext } from "./context";
 import { createEndpoint, type Endpoint } from "./endpoints";
-import type { EndpointOptions } from "./options";
+import type { EndpointOptions, InferUse } from "./options";
 import type { EndpointResponse } from "./response";
 
 type MiddlewareHandler<
@@ -44,3 +44,28 @@ export function createMiddleware(optionsOrHandler: any, handler?: any) {
   );
   return endpoint as any;
 }
+
+function createMiddlewareCreator<
+  E extends {
+    use: Endpoint[];
+  }
+>(opts: E) {
+  return <R extends EndpointResponse>(
+    handler: <InferE extends EndpointContext<any, any>>(
+      ctx: Omit<InferE, "context"> & {
+        context: InferUse<E["use"]>;
+      }
+    ) => Promise<R>
+  ) => {
+    const res = createMiddleware(
+      {
+        method: "*",
+        use: opts.use,
+      },
+      handler
+    );
+    return res;
+  };
+}
+
+createMiddleware.creator = createMiddlewareCreator;

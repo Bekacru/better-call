@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createEndpoint } from "./endpoints";
 import { describe, it, expectTypeOf, expect } from "vitest";
+import { createMiddleware } from "./middleware";
 
 describe("types", async () => {
   it("body", async () => {
@@ -418,5 +419,32 @@ describe("redirect", () => {
       }
     );
     expect(endpoint()).rejects.toThrowError("Redirecting");
+  });
+});
+
+describe("creator", () => {
+  it("should infer from custom creator", async () => {
+    const middleware = createMiddleware(async () => {
+      return {
+        something: "",
+      };
+    });
+
+    const createCustomEndpoint = createEndpoint.creator({
+      use: [middleware],
+    });
+
+    const endpoint = createCustomEndpoint(
+      "/",
+      {
+        method: "GET",
+      },
+      async (ctx) => {
+        expectTypeOf(ctx.context.something).toMatchTypeOf<string>();
+        return ctx.json({ name: "test" });
+      }
+    );
+    const res = await endpoint();
+    expectTypeOf(res).toEqualTypeOf<{ name: string }>();
   });
 });

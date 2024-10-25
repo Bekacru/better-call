@@ -110,3 +110,28 @@ describe("runtime", () => {
     expect(endpoint()).rejects.toThrowError("test");
   });
 });
+
+describe("creator", () => {
+  it("should infer from custom creator", async () => {
+    const middleware = createMiddleware(async () => {
+      return {
+        something: "",
+      };
+    });
+
+    const createCustomMiddleware = createMiddleware.creator({
+      use: [middleware],
+    });
+    const customMiddleware = createCustomMiddleware(async (ctx) => {
+      expectTypeOf(ctx.context.something).toEqualTypeOf<string>();
+      return ctx.context;
+    });
+    //@ts-expect-error
+    const result = await customMiddleware({
+      context: {
+        something: "test",
+      },
+    });
+    expectTypeOf(result).toEqualTypeOf<{ something: string }>();
+  });
+});

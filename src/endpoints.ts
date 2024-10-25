@@ -1,6 +1,6 @@
 import { createJSON, runValidation, type EndpointResponse } from "./response";
 import { createSetHeader, type Context, type EndpointContext } from "./context";
-import type { EndpointOptions } from "./options";
+import type { EndpointOptions, InferUse } from "./options";
 import type { HasRequiredKeys } from "./helper";
 import { APIError } from "./api-error";
 import {
@@ -151,6 +151,39 @@ export const createEndpoint = <
   internalHandler.options = options;
   return internalHandler;
 };
+
+function createEndpointCreator<
+  E extends {
+    use: Endpoint[];
+  }
+>(opts: E) {
+  return <
+    Path extends string,
+    Opts extends EndpointOptions,
+    R extends EndpointResponse
+  >(
+    path: Path,
+    options: Opts,
+    handler: <InferE extends EndpointContext<Path, Opts>>(
+      ctx: Omit<InferE, "context"> & {
+        context: InferUse<E["use"]> &
+          (InferE["context"] extends never ? {} : InferE["context"]);
+      }
+    ) => Promise<R>
+  ) => {
+    const res = createEndpoint(
+      path,
+      {
+        ...options,
+        use: [...(options?.use || []), ...(opts?.use || [])],
+      },
+      handler
+    );
+    return res;
+  };
+}
+
+createEndpoint.creator = createEndpointCreator;
 
 export type Endpoint<
   Handler extends (ctx: any) => Promise<any> = (ctx: any) => Promise<any>,
