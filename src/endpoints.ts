@@ -83,7 +83,9 @@ export const createEndpoint = <
     const { asResponse, ...ctx } = inputCtx[0] || {};
     const { data, error } = runValidation(options, ctx as any);
     if (error) {
-      throw new APIError(error.message, 400);
+      throw new APIError("BAD_REQUEST", {
+        message: error.message,
+      });
     }
     const context: EndpointContext<Path, Options> = {
       json: ((
@@ -138,7 +140,7 @@ export const createEndpoint = <
         return getSignedCookie(headers, secret, key, prefix);
       },
       redirect: (url: string) => {
-        const apiError = new APIError("Redirecting", 302, "FOUND", {
+        const apiError = new APIError("FOUND", undefined, {
           Location: url,
           ...response.headers,
         });
@@ -159,7 +161,7 @@ export const createEndpoint = <
           headers.set(key, value as string);
         }
         return new Response(null, {
-          status: e.status,
+          status: e.statusCode,
           headers: headers,
         });
       }
