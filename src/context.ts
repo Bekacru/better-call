@@ -1,4 +1,3 @@
-import type { BufferSource } from "stream/web";
 import type {
   CookieOptions,
   CookiePrefixOptions,
@@ -13,7 +12,6 @@ import type {
   InferQuery,
   InferRequest,
   InferUse,
-  Method,
 } from "./options";
 import type { APIError } from "./api-error";
 
@@ -127,7 +125,7 @@ export interface EndpointContext<
   setSignedCookie: (
     key: string,
     value: string,
-    secret: string | BufferSource,
+    secret: string | Buffer,
     options?: CookieOptions
   ) => Promise<void>;
   /**

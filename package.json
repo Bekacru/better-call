@@ -40,6 +40,10 @@
     "./client": {
       "import": "./dist/client.mjs",
       "require": "./dist/client.cjs"
+    },
+    "./adapter/node": {
+      "import": "./dist/adapter/node.mjs",
+      "require": "./dist/adapter/node.cjs"
     }
   },
   "files": [

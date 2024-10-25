@@ -36,13 +36,7 @@ export type InferResponse<Ctx, R> = Ctx extends { asResponse: true }
   ? T
   : R;
 
-export function createJSON({
-  asResponse,
-  response,
-}: {
-  asResponse?: boolean;
-  response: Response;
-}) {
+export function createJSON({ asResponse }: { asResponse?: boolean }) {
   return async function json<R extends Record<string, any>>(
     json: R,
     routerResponse?: {

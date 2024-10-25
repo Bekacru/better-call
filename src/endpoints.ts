@@ -80,7 +80,6 @@ export const createEndpoint = <
     const context: EndpointContext<Path, Options> = {
       json: createJSON({
         asResponse,
-        response,
       }) as any,
       body: "body" in data ? (data.body as any) : undefined,
       path,

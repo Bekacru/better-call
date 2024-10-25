@@ -1,5 +1,4 @@
 //https://github.com/honojs/hono/blob/main/src/utils/cookie.ts
-import type { KeyLike } from "crypto";
 import type { BufferSource } from "stream/web";
 import crypto from "uncrypto";
 
@@ -57,10 +56,11 @@ const makeSignature = async (
   return btoa(String.fromCharCode(...new Uint8Array(signature)));
 };
 
+type CryptoKey = ReturnType<typeof getCryptoKey>;
 const verifySignature = async (
   base64Signature: string,
   value: string,
-  secret: KeyLike
+  secret: CryptoKey
 ): Promise<boolean> => {
   try {
     const signatureBinStr = atob(base64Signature);
