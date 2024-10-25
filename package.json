@@ -1,19 +1,15 @@
 {
   "name": "better-call",
-  "version": "0.2.12",
+  "version": "0.2.13-beta.1",
   "description": "",
   "main": "./dist/index.cjs",
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "unbuild",
     "prepack": "unbuild",
-    "release": "np",
-    "release:next": "np --tag=next --any-branch --no-cleanup --no-release-draft",
+    "release": "build && bumpp && npm publish",
+    "release:next": "bun run build && bumpp && npm publish --tag next --no-git-checks",
     "publish-test": "vitest run"
-  },
-  "np": {
-    "testScript": "vitest",
-    "contents": "dist"
   },
   "publishConfig": {
     "access": "public"
@@ -22,6 +18,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "bumpp": "^9.7.1",
     "unbuild": "^2.0.0",
     "@types/bun": "latest",
     "@types/node": "^22.7.9",
