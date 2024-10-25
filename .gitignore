@@ -1,2 +1,13 @@
+# Ignore node modules and distribution files
 node_modules/
 dist/
+.DS_Store
+
+# Ignore log files
+*.log
+
+# Ignore environment variables
+.env
+
+# Ignore build directories
+build/
