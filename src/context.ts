@@ -30,7 +30,7 @@ export interface EndpointContext<
    * @param routerResponse - The response object to return if `asResponse` is
    * true in the context this will take precedence
    */
-  json: <R extends Record<string, any>>(
+  json: <R extends Record<string, any> | null>(
     json: R,
     routerResponse?:
       | {

@@ -28,7 +28,8 @@ export type EndpointResponse =
   | JSONResponse
   | Response
   | void
-  | Record<string, any>;
+  | Record<string, any>
+  | null;
 
 export type InferResponse<Ctx, R> = Ctx extends { asResponse: true }
   ? Response

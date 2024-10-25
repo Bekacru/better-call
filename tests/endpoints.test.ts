@@ -361,6 +361,20 @@ describe("response", async () => {
     const response = await endpoint({ asResponse: true });
     expect(response.headers.get("x-test")).toBe("test");
   });
+
+  it("should work with null", async () => {
+    const endpoint = createEndpoint(
+      "/test",
+      {
+        method: "GET",
+      },
+      async (ctx) => {
+        return ctx.json(null);
+      }
+    );
+    const response = await endpoint();
+    expect(response).toBe(null);
+  });
 });
 
 describe("cookies", async () => {
@@ -418,7 +432,7 @@ describe("redirect", () => {
         throw ctx.redirect("/new-url");
       }
     );
-    expect(endpoint()).rejects.toThrowError("Redirecting");
+    expect(endpoint()).rejects.toThrowError("FOUND");
   });
 });
 
