@@ -81,7 +81,7 @@ export function runValidation(
   options: EndpointOptions,
   context: EndpointContext<any, any>
 ): ValidationResponse {
-  let result = {
+  let request = {
     body: undefined,
     query: undefined,
   } as {
@@ -96,7 +96,7 @@ export function runValidation(
         error: fromError(result.error),
       };
     }
-    context.body = result.data;
+    request.body = result.data;
   }
   if (options.query) {
     const result = options.query.safeParse(context.query);
@@ -106,7 +106,7 @@ export function runValidation(
         error: fromError(result.error),
       };
     }
-    context.query = result.data;
+    request.query = result.data;
   }
   if (options.requireHeaders && !(context.headers instanceof Headers)) {
     return {
@@ -121,7 +121,7 @@ export function runValidation(
     };
   }
   return {
-    data: result,
+    data: request,
     error: null,
   };
 }

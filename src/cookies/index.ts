@@ -8,7 +8,7 @@ import {
   serializeSigned,
   type CookieOptions,
   type CookiePrefixOptions,
-} from "./utils";
+} from "./cookie-utils";
 
 export const getCookie = (
   cookie: string,

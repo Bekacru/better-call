@@ -369,3 +369,32 @@ describe("cookies", async () => {
     expect(response.headers.get("set-cookie")).includes("test=value.");
   });
 });
+
+describe("redirect", () => {
+  it("should redirect", async () => {
+    const endpoint = createEndpoint(
+      "/test",
+      {
+        method: "GET",
+      },
+      async (ctx) => {
+        throw ctx.redirect("/new-url");
+      }
+    );
+    const response = await endpoint({ asResponse: true });
+    expect(response.headers.get("location")).toBe("/new-url");
+  });
+
+  it("should throw redirect if asResponse is false", async () => {
+    const endpoint = createEndpoint(
+      "/test",
+      {
+        method: "GET",
+      },
+      async (ctx) => {
+        throw ctx.redirect("/new-url");
+      }
+    );
+    expect(endpoint()).rejects.toThrowError("Redirecting");
+  });
+});

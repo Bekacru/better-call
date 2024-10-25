@@ -17,6 +17,7 @@
     "zod": "^3.23.8"
   },
   "dependencies": {
+    "rou3": "^0.5.1",
     "uncrypto": "^0.1.3"
   }
 }

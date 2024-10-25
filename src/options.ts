@@ -1,7 +1,8 @@
 import type { ZodSchema } from "zod";
-import type { IsEmptyObject, Prettify } from "./helper";
+import type { IsEmptyObject, Prettify, UnionToIntersection } from "./helper";
+import type { Endpoint } from "./endpoints";
 
-export type Method = "GET" | "POST" | "PUT" | "DELETE";
+export type Method = "GET" | "POST" | "PUT" | "DELETE" | "*";
 
 export interface EndpointOptions {
   /**
@@ -28,6 +29,10 @@ export interface EndpointOptions {
    * Endpoint metadata
    */
   metadata?: Record<string, any>;
+  /**
+   * Middleware to use
+   */
+  use?: Endpoint[];
 }
 
 export type InferBody<Options extends EndpointOptions> =
@@ -66,3 +71,8 @@ export type InferRequest<Option extends EndpointOptions> =
 
 export type InferHeaders<Option extends EndpointOptions> =
   Option["requireHeaders"] extends true ? Headers : Headers | undefined;
+
+export type InferUse<Opts extends EndpointOptions["use"]> =
+  Opts extends Endpoint[]
+    ? UnionToIntersection<Awaited<ReturnType<Opts[number]>>>
+    : never;

@@ -9,7 +9,7 @@ import {
   setCookie,
   setSignedCookie,
 } from "./cookies";
-import type { CookieOptions } from "./cookies/utils";
+import type { CookieOptions } from "./cookies/cookie-utils";
 
 const createResponse = (handlerResponse: any, response: Response) => {
   if (handlerResponse instanceof Response) {
@@ -42,6 +42,23 @@ const createResponse = (handlerResponse: any, response: Response) => {
   }
 };
 
+const runMiddleware = async (
+  options: EndpointOptions,
+  context: EndpointContext<any, any>
+) => {
+  let finalContext: Record<string, any> = {};
+  for (const middleware of options.use || []) {
+    const result = await middleware(context);
+    if (result?.context && result._flag === "context") {
+      context = { ...context, ...result.context };
+    } else {
+      finalContext = { ...result, ...finalContext };
+      context.context = finalContext;
+    }
+  }
+  return finalContext;
+};
+
 export const createEndpoint = <
   Path extends string,
   Options extends EndpointOptions,
@@ -56,9 +73,9 @@ export const createEndpoint = <
   ) => {
     let response = new Response();
     const { asResponse, ...ctx } = inputCtx[0] || {};
-    const data = runValidation(options, ctx as any);
-    if (data.error) {
-      throw new APIError(data.error.message, 400);
+    const { data, error } = runValidation(options, ctx as any);
+    if (error) {
+      throw new APIError(error.message, 400);
     }
     const context: EndpointContext<Path, Options> = {
       json: createJSON({
@@ -99,17 +116,42 @@ export const createEndpoint = <
         return getSignedCookie(headers, secret, key, prefix);
       },
       redirect: (url: string) => {
-        const apiError = new APIError("Redirecting", "", 302, "FOUND", {
+        const apiError = new APIError("Redirecting", 302, "FOUND", {
           Location: url,
           ...response.headers,
         });
         return apiError;
       },
+      context: {} as any,
     };
-    const handlerResponse = (await handler(context)) as EndpointResponse;
+    const finalContext = await runMiddleware(options, context);
+    context.context = finalContext as any;
+    const handlerResponse = (await handler(context).catch((e) => {
+      /**
+       * If the error is a redirect error and asResponse is true
+       * return a response with the headers
+       */
+      if (e instanceof APIError && e.status === 302 && asResponse) {
+        return new Response(null, {
+          status: e.status,
+          headers: e.headers,
+        });
+      }
+      throw e;
+    })) as EndpointResponse;
     response = createResponse(handlerResponse, response);
     const res = asResponse ? response : handlerResponse;
     return res as Ctx["asResponse"] extends true ? Response : R;
   };
+  internalHandler.path = path;
+  internalHandler.options = options;
   return internalHandler;
 };
+
+export type Endpoint<
+  Handler extends (ctx: any) => Promise<any> = (ctx: any) => Promise<any>,
+  Options extends EndpointOptions = EndpointOptions
+> = {
+  path: string;
+  options: Options;
+} & Handler;

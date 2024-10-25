@@ -30,3 +30,9 @@ export type Prettify<T> = {
 } & {};
 
 export type IsEmptyObject<T> = keyof T extends never ? true : false;
+
+export type UnionToIntersection<Union> = (
+  Union extends unknown ? (distributedUnion: Union) => void : never
+) extends (mergedIntersection: infer Intersection) => void
+  ? Intersection & Union
+  : never;

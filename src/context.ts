@@ -1,5 +1,8 @@
 import type { BufferSource } from "stream/web";
-import type { CookieOptions, CookiePrefixOptions } from "./cookies/utils";
+import type {
+  CookieOptions,
+  CookiePrefixOptions,
+} from "./cookies/cookie-utils";
 import type { Input } from "./helper";
 import type {
   EndpointOptions,
@@ -8,6 +11,7 @@ import type {
   InferParam,
   InferQuery,
   InferRequest,
+  InferUse,
 } from "./options";
 import type { APIError } from "./api-error";
 
@@ -79,6 +83,10 @@ export interface EndpointContext<
    * required
    */
   headers: InferHeaders<Options>;
+  /**
+   * Middleware context
+   */
+  context: InferUse<Options["use"]>;
   /**
    * Set header
    *
