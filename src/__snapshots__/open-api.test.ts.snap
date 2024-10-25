@@ -1,0 +1,83 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`openapi > should infer open api types 1`] = `
+{
+  "components": {
+    "parameters": {},
+    "schemas": {},
+  },
+  "info": {
+    "description": "This is the API",
+    "title": "My API",
+    "version": "1.0.0",
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/item/:id": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "something",
+                "properties": {
+                  "hello": {
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "hello",
+                ],
+                "type": "object",
+              },
+            },
+          },
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "hello": {
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "hello",
+                  ],
+                  "type": "object",
+                },
+              },
+            },
+            "description": "ok",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "message",
+                  ],
+                  "type": "object",
+                },
+              },
+            },
+            "description": "Bad request",
+          },
+        },
+      },
+    },
+  },
+  "servers": [
+    {
+      "url": "v1",
+    },
+  ],
+}
+`;

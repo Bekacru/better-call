@@ -1,6 +1,34 @@
-import type { ZodSchema } from "zod";
+import type { ZodObject, ZodOptional, ZodSchema, ZodTypeAny, z } from "zod";
 import type { IsEmptyObject, Prettify, UnionToIntersection } from "./helper";
 import type { Endpoint } from "./endpoints";
+import type {
+  ZodOpenAPIMetadata,
+  ZodOpenApiFullMetadata,
+} from "@asteasolutions/zod-to-openapi/dist/zod-extensions";
+import type { ResponseConfig } from "@asteasolutions/zod-to-openapi";
+
+declare module "zod" {
+  interface ZodTypeDef {
+    openapi?: ZodOpenApiFullMetadata;
+  }
+
+  interface ZodType<
+    Output = any,
+    Def extends ZodTypeDef = ZodTypeDef,
+    Input = Output
+  > {
+    openapi<T extends ZodTypeAny>(
+      this: T,
+      metadata: Partial<ZodOpenAPIMetadata<z.input<T>>>
+    ): T;
+
+    openapi<T extends ZodTypeAny>(
+      this: T,
+      refId: string,
+      metadata?: Partial<ZodOpenAPIMetadata<z.input<T>>>
+    ): T;
+  }
+}
 
 export type Method = "GET" | "POST" | "PUT" | "DELETE" | "*";
 
@@ -16,7 +44,7 @@ export interface EndpointOptions {
   /**
    * Query Schema
    */
-  query?: ZodSchema;
+  query?: ZodObject<any> | ZodOptional<ZodObject<any>>;
   /**
    * If true headers will be required to be passed in the context
    */
@@ -33,6 +61,14 @@ export interface EndpointOptions {
    * Middleware to use
    */
   use?: Endpoint[];
+  /**
+   * OpenAPI metadata
+   */
+  openAPI?: {
+    responses: {
+      [statusCode: string]: ResponseConfig;
+    };
+  };
 }
 
 export type InferBody<Options extends EndpointOptions> =

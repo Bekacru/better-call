@@ -36,26 +36,6 @@ export type InferResponse<Ctx, R> = Ctx extends { asResponse: true }
   ? T
   : R;
 
-export function createJSON({ asResponse }: { asResponse?: boolean }) {
-  return async function json<R extends Record<string, any>>(
-    json: R,
-    routerResponse?: {
-      status?: number;
-      headers?: Record<string, string>;
-      response?: Response;
-    }
-  ) {
-    if (!asResponse) {
-      return json;
-    }
-    return {
-      body: json,
-      routerResponse,
-      _flag: "json",
-    };
-  };
-}
-
 type ValidationResponse =
   | {
       data: {

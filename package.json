@@ -29,6 +29,7 @@
     "zod": "^3.23.8"
   },
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^7.2.0",
     "rou3": "^0.5.1",
     "uncrypto": "^0.1.3"
   },

@@ -78,11 +78,11 @@ describe("types", async () => {
       "/test",
       {
         method: "GET",
-        query: z
-          .object({
+        query: z.optional(
+          z.object({
             name: z.string(),
           })
-          .optional(),
+        ),
       },
       async (ctx) => {
         expectTypeOf(ctx.query).toEqualTypeOf<{ name: string } | undefined>();

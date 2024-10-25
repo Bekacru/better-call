@@ -1,4 +1,4 @@
-import { createJSON, runValidation, type EndpointResponse } from "./response";
+import { runValidation, type EndpointResponse } from "./response";
 import { createSetHeader, type Context, type EndpointContext } from "./context";
 import type { EndpointOptions, InferUse } from "./options";
 import type { HasRequiredKeys } from "./helper";
@@ -10,6 +10,14 @@ import {
   setSignedCookie,
 } from "./cookies";
 import type { CookieOptions } from "./cookies/cookie-utils";
+import {
+  OpenAPIRegistry,
+  extendZodWithOpenApi,
+} from "@asteasolutions/zod-to-openapi";
+import { ZodObject, z } from "zod";
+import { paramToZod } from "./open-api";
+
+extendZodWithOpenApi(z);
 
 const createResponse = (handlerResponse: any, response: Response) => {
   if (handlerResponse instanceof Response) {
@@ -78,8 +86,22 @@ export const createEndpoint = <
       throw new APIError(error.message, 400);
     }
     const context: EndpointContext<Path, Options> = {
-      json: createJSON({
-        asResponse,
+      json: ((
+        json: Record<string, any>,
+        routerResponse?: {
+          status?: number;
+          headers?: Record<string, string>;
+          response?: Response;
+        }
+      ) => {
+        if (!asResponse) {
+          return json;
+        }
+        return {
+          body: json,
+          routerResponse,
+          _flag: "json",
+        };
       }) as any,
       body: "body" in data ? (data.body as any) : undefined,
       path,
@@ -149,6 +171,57 @@ export const createEndpoint = <
   };
   internalHandler.path = path;
   internalHandler.options = options;
+
+  const registry = new OpenAPIRegistry();
+  registry.registerPath({
+    path,
+    method: Array.isArray(options.method)
+      ? (options.method[0].toLowerCase() as any)
+      : (options.method.toLowerCase() as any),
+    request: {
+      ...(options.body
+        ? {
+            body: {
+              content: {
+                "application/json": {
+                  schema: options.body,
+                },
+              },
+            },
+          }
+        : {}),
+      ...(options.query
+        ? {
+            query: options.query as ZodObject<any>,
+          }
+        : {}),
+      params: paramToZod(path),
+    },
+    responses: {
+      200: {
+        description: "Successful response",
+        content: {
+          "application/json": {
+            schema: z.record(z.unknown()),
+          },
+        },
+      },
+      400: {
+        description: "Bad request",
+        content: {
+          "application/json": {
+            schema: z.object({
+              message: z.string(),
+            }),
+          },
+        },
+      },
+      ...options.openAPI?.responses,
+    },
+  });
+  internalHandler.openAPI = {
+    definitions: registry.definitions,
+  };
   return internalHandler;
 };
 
