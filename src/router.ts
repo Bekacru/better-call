@@ -182,3 +182,5 @@ export const createRouter = <
     endpoints,
   };
 };
+
+export type Router = ReturnType<typeof createRouter>;

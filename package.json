@@ -19,6 +19,7 @@
   "license": "ISC",
   "devDependencies": {
     "bumpp": "^9.7.1",
+    "@better-fetch/fetch": "^1.1.12",
     "unbuild": "^2.0.0",
     "@types/bun": "latest",
     "@types/node": "^22.7.9",
