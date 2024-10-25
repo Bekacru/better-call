@@ -1,6 +1,7 @@
 {
   "name": "better-call",
   "version": "0.2.12",
+  "packageManager": "bun@1.1.29",
   "description": "",
   "main": "./dist/index.cjs",
   "types": "./dist/index.d.ts",
@@ -8,7 +9,7 @@
     "build": "unbuild",
     "prepack": "unbuild",
     "release": "np",
-    "release:beta": "np --tag=next --any-branch",
+    "release:beta": "np --tag=next --any-branch --no-cleanup --no-release-draft",
     "publish-test": "vitest run"
   },
   "np": {
