@@ -155,18 +155,10 @@ export const createRouter = <
         }
       }
       if (e instanceof APIError) {
-        return new Response(
-          e.message
-            ? JSON.stringify({
-                message: e.message,
-                code: e.code,
-              })
-            : null,
-          {
-            status: e.status,
-            headers: e.headers,
-          }
-        );
+        return new Response(e.body ? JSON.stringify(e.body) : null, {
+          status: e.statusCode,
+          headers: e.headers,
+        });
       }
       if (config?.throwError) {
         throw e;
