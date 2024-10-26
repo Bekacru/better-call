@@ -35,6 +35,7 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 	const _endpoints = Object.values(endpoints);
 	const router = createRou3Router();
 	for (const endpoint of _endpoints) {
+		if (endpoint.options.metadata?.SERVER_ONLY) continue;
 		if (Array.isArray(endpoint.options?.method)) {
 			for (const method of endpoint.options.method) {
 				addRoute(router, method, endpoint.path, endpoint);

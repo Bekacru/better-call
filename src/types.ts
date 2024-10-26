@@ -31,7 +31,14 @@ export interface EndpointOptions {
 	/**
 	 * Endpoint metadata
 	 */
-	metadata?: Record<string, any>;
+	metadata?:
+		| Record<string, any>
+		| {
+				/**
+				 * If true this endpoint will only be available on the server
+				 */
+				SERVER_ONLY?: boolean;
+		  };
 }
 
 export type Endpoint<
