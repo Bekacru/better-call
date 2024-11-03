@@ -15,6 +15,7 @@
     "dev:dts": "tsup --watch --dts"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.16.4",
     "@biomejs/biome": "^1.8.3",
     "@types/bun": "latest",
     "@types/set-cookie-parser": "^2.4.10",
@@ -33,14 +34,24 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "default": "./dist/index.js",
+        "types": "./dist/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/index.cjs",
+        "types": "./dist/index.d.cts"
+      }
     },
     "./client": {
-      "types": "./dist/client.d.ts",
-      "import": "./dist/client.js",
-      "require": "./dist/client.cjs"
+      "import": {
+        "default": "./dist/client.js",
+        "types": "./dist/client.d.ts"
+      },
+      "require": {
+        "default": "./dist/client.cjs",
+        "types": "./dist/client.d.cts"
+      }
     }
   },
   "files": [
