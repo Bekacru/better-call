@@ -130,7 +130,7 @@ export function createEndpoint<
 				...internalCtx,
 				body: {
 					...middlewareBody,
-					...internalCtx.body,
+					...(internalCtx.body as Record<string, any>),
 				},
 				context: {
 					...(internalCtx.context || {}),
@@ -145,12 +145,15 @@ export function createEndpoint<
 				body: body
 					? {
 							...body,
-							...internalCtx.body,
+							...(internalCtx.body as Record<string, any>),
 						}
 					: internalCtx.body,
 			};
+			console.log(internalCtx.query);
 			internalCtx.query = options.query
-				? options.query.parse(internalCtx.query)
+				? options.query.parse(
+						internalCtx
+				)
 				: internalCtx.query;
 		} catch (e) {
 			if (e instanceof ZodError) {
