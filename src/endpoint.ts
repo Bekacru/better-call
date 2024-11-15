@@ -149,11 +149,8 @@ export function createEndpoint<
 						}
 					: internalCtx.body,
 			};
-			console.log(internalCtx.query);
 			internalCtx.query = options.query
-				? options.query.parse(
-						internalCtx
-				)
+				? options.query.parse(internalCtx)
 				: internalCtx.query;
 		} catch (e) {
 			if (e instanceof ZodError) {
