@@ -3,7 +3,7 @@ import { getBody, shouldSerialize, statusCode } from "./utils";
 import { APIError } from "./error";
 import type { Endpoint } from "./types";
 
-interface RouterConfig {
+export interface RouterConfig {
 	/**
 	 * Throw error if error occurred other than APIError
 	 */

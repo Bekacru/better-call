@@ -219,3 +219,10 @@ export const serializeSigned = async (
 	value = encodeURIComponent(value);
 	return _serialize(name, value, opt);
 };
+
+export const signCookieValue = async (value: string, secret: string | BufferSource) => {
+	const signature = await makeSignature(value, secret);
+	value = `${value}.${signature}`;
+	value = encodeURIComponent(value);
+	return value;
+};

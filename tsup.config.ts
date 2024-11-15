@@ -10,5 +10,4 @@ export default defineConfig({
 	format: ["esm", "cjs"],
 	target: "es2020",
 	bundle: true,
-	external: ["zod"],
 });
