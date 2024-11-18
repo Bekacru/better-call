@@ -38,6 +38,9 @@ export interface EndpointOptions {
 				 * If true this endpoint will only be available on the server
 				 */
 				SERVER_ONLY?: boolean;
+				$Infer?: {
+					body?: Record<string, any>;
+				};
 		  };
 }
 
@@ -274,14 +277,16 @@ export type InferBody<
 	Opts extends EndpointOptions,
 	Body extends ZodSchema | undefined = Opts["body"] &
 		(undefined extends InferUseOptions<Opts>["body"] ? {} : InferUseOptions<Opts>["body"]),
-> = Body extends ZodSchema
-	? Body extends ZodOptional<any>
-		? {
-				body?: Prettify<z.infer<Body>>;
-			}
+> = Opts["metadata"] extends { $Infer: { body: infer B } }
+	? { body: B }
+	: Body extends ZodSchema
+		? Body extends ZodOptional<any>
+			? {
+					body?: Prettify<z.infer<Body>>;
+				}
+			: {
+					body: Prettify<z.infer<Body>>;
+				}
 		: {
-				body: Prettify<z.infer<Body>>;
-			}
-	: {
-			body?: undefined;
-		};
+				body?: undefined;
+			};

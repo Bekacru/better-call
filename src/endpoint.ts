@@ -130,7 +130,7 @@ export function createEndpoint<
 				...internalCtx,
 				body: {
 					...middlewareBody,
-					...internalCtx.body,
+					...(internalCtx.body as Record<string, any>),
 				},
 				context: {
 					...(internalCtx.context || {}),
@@ -145,7 +145,7 @@ export function createEndpoint<
 				body: body
 					? {
 							...body,
-							...internalCtx.body,
+							...(internalCtx.body as Record<string, any>),
 						}
 					: internalCtx.body,
 			};
