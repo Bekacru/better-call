@@ -3,6 +3,8 @@ import type { json, UnionToIntersection } from "./helper";
 import type { CookieOptions, CookiePrefixOptions } from "./cookie";
 import type { APIError } from "./error";
 
+type Type = "string" | "number" | "integer" | "boolean" | "array" | "object";
+
 export interface EndpointOptions {
 	/**
 	 * Request Method
@@ -31,17 +33,64 @@ export interface EndpointOptions {
 	/**
 	 * Endpoint metadata
 	 */
-	metadata?:
-		| Record<string, any>
-		| {
-				/**
-				 * If true this endpoint will only be available on the server
-				 */
-				SERVER_ONLY?: boolean;
-				$Infer?: {
-					body?: Record<string, any>;
+	metadata?: {
+		/**
+		 * If true this endpoint will only be available on the server
+		 */
+		SERVER_ONLY?: boolean;
+		$Infer?: {
+			body?: Record<string, any>;
+		};
+		openapi?: {
+			summary?: string;
+			description?: string;
+			tags?: string[];
+			operationId?: string;
+			parameters?: {
+				in: "query" | "path" | "header" | "cookie";
+				name?: string;
+				description?: string;
+				required?: boolean;
+				schema?: {
+					type: Type;
+					format?: string;
+					items?: {
+						type: Type;
+					};
+					enum?: string[];
+					default?: string;
+					example?: string;
+				}[];
+			}[];
+			requestBody?: {
+				content: {
+					"application/json": {
+						schema: {
+							type?: Type;
+							properties?: Record<string, any>;
+							required?: string[];
+							$ref?: string;
+						};
+					};
 				};
-		  };
+			};
+			responses?: {
+				[status: string]: {
+					description: string;
+					content: {
+						"application/json": {
+							schema: {
+								type?: Type;
+								properties?: Record<string, any>;
+								required?: string[];
+								$ref?: string;
+							};
+						};
+					};
+				};
+			};
+		};
+	};
 }
 
 export type Endpoint<
