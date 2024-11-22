@@ -17,9 +17,10 @@ export interface OpenAPIParameter {
 			type: OpenAPISchemaType;
 		};
 		enum?: string[];
+		minLength?: number;
 		default?: string;
 		example?: string;
-	}[];
+	};
 }
 export interface EndpointOptions {
 	/**
