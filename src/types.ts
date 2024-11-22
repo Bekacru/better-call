@@ -80,9 +80,25 @@ export interface EndpointOptions {
 			responses?: {
 				[status: string]: {
 					description: string;
-					content: {
-						"application/json": {
+					content?: {
+						"application/json"?: {
 							schema: {
+								type?: OpenAPISchemaType;
+								properties?: Record<string, any>;
+								required?: string[];
+								$ref?: string;
+							};
+						};
+						"text/plain"?: {
+							schema?: {
+								type?: OpenAPISchemaType;
+								properties?: Record<string, any>;
+								required?: string[];
+								$ref?: string;
+							};
+						};
+						"text/html"?: {
+							schema?: {
 								type?: OpenAPISchemaType;
 								properties?: Record<string, any>;
 								required?: string[];
