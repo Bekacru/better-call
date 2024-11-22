@@ -3,8 +3,24 @@ import type { json, UnionToIntersection } from "./helper";
 import type { CookieOptions, CookiePrefixOptions } from "./cookie";
 import type { APIError } from "./error";
 
-type Type = "string" | "number" | "integer" | "boolean" | "array" | "object";
+export type OpenAPISchemaType = "string" | "number" | "integer" | "boolean" | "array" | "object";
 
+export interface OpenAPIParameter {
+	in: "query" | "path" | "header" | "cookie";
+	name?: string;
+	description?: string;
+	required?: boolean;
+	schema?: {
+		type: OpenAPISchemaType;
+		format?: string;
+		items?: {
+			type: OpenAPISchemaType;
+		};
+		enum?: string[];
+		default?: string;
+		example?: string;
+	}[];
+}
 export interface EndpointOptions {
 	/**
 	 * Request Method
@@ -46,27 +62,12 @@ export interface EndpointOptions {
 			description?: string;
 			tags?: string[];
 			operationId?: string;
-			parameters?: {
-				in: "query" | "path" | "header" | "cookie";
-				name?: string;
-				description?: string;
-				required?: boolean;
-				schema?: {
-					type: Type;
-					format?: string;
-					items?: {
-						type: Type;
-					};
-					enum?: string[];
-					default?: string;
-					example?: string;
-				}[];
-			}[];
+			parameters?: OpenAPIParameter[];
 			requestBody?: {
 				content: {
 					"application/json": {
 						schema: {
-							type?: Type;
+							type?: OpenAPISchemaType;
 							properties?: Record<string, any>;
 							required?: string[];
 							$ref?: string;
@@ -80,7 +81,7 @@ export interface EndpointOptions {
 					content: {
 						"application/json": {
 							schema: {
-								type?: Type;
+								type?: OpenAPISchemaType;
 								properties?: Record<string, any>;
 								required?: string[];
 								$ref?: string;
