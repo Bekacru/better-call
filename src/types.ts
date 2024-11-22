@@ -93,6 +93,7 @@ export interface EndpointOptions {
 				};
 			};
 		};
+		[key: string]: any;
 	};
 }
 
