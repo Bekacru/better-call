@@ -171,6 +171,11 @@ export function createEndpoint<
 				message: "Request is required",
 			});
 		}
+		// If request is provided but headers are not provided
+		// then set headers from request
+		if (internalCtx.request && !internalCtx.headers) {
+			internalCtx.headers = internalCtx.request.headers;
+		}
 		try {
 			let res = (await handler(internalCtx as any)) as any;
 			let actualResponse: any = res;
