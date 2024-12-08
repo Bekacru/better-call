@@ -120,6 +120,7 @@ export type Endpoint<
 	path: string;
 	options: Option;
 	headers?: Headers;
+	context?: Record<string, any>;
 } & Handler;
 
 export type InferParamPath<Path> = Path extends `${infer _Start}:${infer Param}/${infer Rest}`
