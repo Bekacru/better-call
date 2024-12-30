@@ -1,4 +1,4 @@
-import { IncomingMessage, ServerResponse } from "node:http";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import * as set_cookie_parser from "set-cookie-parser";
 
 function get_raw_body(req: IncomingMessage, body_size_limit?: number) {

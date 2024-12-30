@@ -1,4 +1,4 @@
-import { IncomingMessage, ServerResponse } from "node:http";
+import type { IncomingMessage, ServerResponse } from "node:http";
 
 import { getRequest, setResponse } from "./request.js";
 import type { Router } from "../router.js";
