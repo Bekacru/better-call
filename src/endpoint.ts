@@ -1,4 +1,4 @@
-import { z, ZodObject, ZodOptional, type ZodSchema } from "zod";
+import { ZodObject, ZodOptional, type ZodSchema } from "zod";
 import type {
 	HasRequiredKeys,
 	InferParamPath,
@@ -6,10 +6,12 @@ import type {
 	Input,
 	IsEmptyObject,
 	Prettify,
+	UnionToIntersection,
 } from "./helper";
 import { runValidation } from "./validator";
 import { APIError } from "./error";
 import { toResponse } from "./to-response";
+import type { Middleware, MiddlewareOptions } from "./middleware";
 
 export type HTTPMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 export type Method = HTTPMethod | "*";
@@ -39,7 +41,40 @@ export interface EndpointOptions {
 	 * Endpoint metadata
 	 */
 	metadata?: {
-		openAPI: {};
+		/**
+		 * Open API definition
+		 */
+		openAPI?: {};
+		/**
+		 * Infer body and query type from ts interface
+		 *
+		 * useful for generic and dynamic types
+		 *
+		 * @example
+		 * ```ts
+		 * const endpoint = createEndpoint("/path", {
+		 * 		method: "POST",
+		 * 		body: z.record(z.string()),
+		 * 		$Infer: {
+		 * 			body: {} as {
+		 * 				type: InferTypeFromOptions<Option> // custom type inference
+		 * 			}
+		 * 		}
+		 * 	}, async(ctx)=>{
+		 * 		const body = ctx.body
+		 * 	})
+		 * ```
+		 */
+		$Infer?: {
+			/**
+			 * Body
+			 */
+			body?: any;
+			/**
+			 * Query
+			 */
+			query?: Record<string, any>;
+		};
 	};
 	/**
 	 * Middleware to use
@@ -47,15 +82,25 @@ export interface EndpointOptions {
 	use?: any[];
 }
 
-export type InferBody<Options extends EndpointOptions> = Options["body"] extends ZodSchema<infer T>
-	? T
-	: never;
+export type InferBody<Options extends EndpointOptions> = Options["metadata"] extends {
+	$Infer: {
+		body: infer Body;
+	};
+}
+	? Body
+	: Options["body"] extends ZodSchema<infer T>
+		? T
+		: never;
 
-export type InferQuery<Options extends EndpointOptions> = Options["query"] extends ZodSchema<
-	infer T
->
-	? T
-	: Record<string, any> | undefined;
+export type InferQuery<Options extends EndpointOptions> = Options["metadata"] extends {
+	$Infer: {
+		query: infer Query;
+	};
+}
+	? Query
+	: Options["query"] extends ZodSchema<infer T>
+		? T
+		: Record<string, any> | undefined;
 
 export type InferMethod<Options extends EndpointOptions> = Options["method"] extends Array<Method>
 	? Options["method"][number]
@@ -76,13 +121,17 @@ export type InferParam<Path extends string> = IsEmptyObject<
 	? never
 	: Prettify<InferParamPath<Path> & InferParamWildCard<Path>>;
 
-export type InferRequest<Option extends EndpointOptions> = Option["requireRequest"] extends true
-	? Request
-	: Request | undefined;
+export type InferRequest<Option extends EndpointOptions | MiddlewareOptions> =
+	Option["requireRequest"] extends true ? Request : Request | undefined;
 
-export type InferHeaders<Option extends EndpointOptions> = Option["requireHeaders"] extends true
-	? Headers | Record<string, any>
-	: Headers | undefined | Record<string, any>;
+export type InferHeaders<Option extends EndpointOptions | MiddlewareOptions> =
+	Option["requireHeaders"] extends true
+		? Headers | Record<string, any>
+		: Headers | undefined | Record<string, any>;
+
+export type InferUse<Opts extends EndpointOptions["use"]> = Opts extends Middleware[]
+	? UnionToIntersection<Awaited<ReturnType<Opts[number]>>>
+	: {};
 
 export type EndpointContext<Path extends string, Options extends EndpointOptions> = {
 	/**
@@ -101,7 +150,7 @@ export type EndpointContext<Path extends string, Options extends EndpointOptions
 	 * Body
 	 *
 	 * The body object will be the parsed JSON from the request and validated
-	 * against the body schema if it exists
+	 * against the body schema if it exists.
 	 */
 	body: InferBody<Options>;
 	/**
@@ -174,21 +223,111 @@ export type EndpointContext<Path extends string, Options extends EndpointOptions
 			  }
 			| Response,
 	) => Promise<R>;
+	/**
+	 * Middleware context
+	 */
+	context: InferUse<Options["use"]>;
 };
 
 export type InputContext<Path extends string, Options extends EndpointOptions> = Input<{
+	/**
+	 * Payload
+	 */
 	body: InferBody<Options>;
+	/**
+	 * Request Method
+	 */
 	method: InferInputMethod<Options>;
+	/**
+	 * Query Params
+	 */
 	query: InferQuery<Options>;
+	/**
+	 * Dynamic Params
+	 */
 	params: InferParam<Path>;
+	/**
+	 * Request Object
+	 */
 	request: InferRequest<Options>;
+	/**
+	 * Headers
+	 */
 	headers: InferHeaders<Options>;
+	/**
+	 * Return a `Response` object
+	 */
 	asResponse?: boolean;
 	/**
 	 * include headers on the return
 	 */
 	returnHeaders?: boolean;
+	/**
+	 * Middlewares to use
+	 */
+	use?: Middleware[];
 }>;
+
+export const createInternalContext = (
+	context: InputContext<any, any>,
+	{
+		options,
+		path,
+		headers,
+	}: {
+		options: EndpointOptions;
+		path: string;
+		headers: HeadersInit;
+	},
+) => {
+	const { data, error } = runValidation(options, context);
+	if (error) {
+		throw new APIError(400, {
+			message: error.message,
+		});
+	}
+	return {
+		body: data.body,
+		query: data.query,
+		path,
+		headers: context?.headers,
+		request: context?.request,
+		params: "params" in context ? context.params : undefined,
+		method: context.method,
+		setHeader: (key: string, value: string) => {
+			headers[key as keyof typeof headers] = value;
+		},
+		getHeader: (key: string) => {
+			const requestHeaders: Headers | null =
+				"headers" in context
+					? context.headers instanceof Headers
+						? context.headers
+						: new Headers(context.headers)
+					: "request" in context && context.request instanceof Request
+						? context.request.headers
+						: null;
+			if (!requestHeaders) return null;
+			return requestHeaders.get(key);
+		},
+		json: (
+			json: Record<string, any>,
+			routerResponse?: {
+				status?: number;
+				headers?: Record<string, string>;
+				response?: Response;
+			},
+		) => {
+			if (!context.asResponse) {
+				return json;
+			}
+			return {
+				body: json,
+				routerResponse,
+				_flag: "json",
+			};
+		},
+	};
+};
 
 export const createEndpoint = <Path extends string, Options extends EndpointOptions, R>(
 	path: Path,
@@ -199,54 +338,12 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 		...inputCtx: HasRequiredKeys<Context> extends true ? [Context] : [Context?]
 	) => {
 		const context = (inputCtx[0] || {}) as InputContext<any, any>;
-		const { data, error } = runValidation(options, context);
-		if (error) {
-			throw new APIError(400, {
-				message: error.message,
-			});
-		}
 		const headers: HeadersInit = {};
-		const internalContext = {
-			body: data.body,
-			query: data.query,
+		const internalContext = createInternalContext(context, {
+			options,
 			path,
-			headers: context?.headers,
-			request: context?.request,
-			params: "params" in context ? context.params : undefined,
-			method: context.method,
-			setHeader: (key: string, value: string) => {
-				headers[key] = value;
-			},
-			getHeader: (key: string) => {
-				const requestHeaders: Headers | null =
-					"headers" in context
-						? context.headers instanceof Headers
-							? context.headers
-							: new Headers(context.headers)
-						: "request" in context && context.request instanceof Request
-							? context.request.headers
-							: null;
-				if (!requestHeaders) return null;
-				return requestHeaders.get(key);
-			},
-			json: (
-				json: Record<string, any>,
-				routerResponse?: {
-					status?: number;
-					headers?: Record<string, string>;
-					response?: Response;
-				},
-			) => {
-				if (!context.asResponse) {
-					return json;
-				}
-				return {
-					body: json,
-					routerResponse,
-					_flag: "json",
-				};
-			},
-		};
+			headers,
+		});
 		const response = await handler(internalContext as any);
 		return (
 			context.asResponse
@@ -270,23 +367,3 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 	};
 	return internalHandler;
 };
-
-const endpoint = createEndpoint(
-	"/path/:id",
-	{
-		method: "DELETE",
-		body: z.object({
-			name: z.string(),
-		}),
-	},
-	async (ctx) => {
-		ctx.params;
-		return ctx.body;
-	},
-);
-
-// const res = await endpoint({
-// 	body: {
-// 		name: "string",
-// 	},
-// });

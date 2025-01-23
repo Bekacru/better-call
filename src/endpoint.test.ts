@@ -132,6 +132,26 @@ describe("types", async () => {
 				expectTypeOf(ctx.body).toEqualTypeOf<{ name: string } | undefined>();
 			},
 		);
+
+		createEndpoint(
+			"/path",
+			{
+				method: "POST",
+				body: z.record(z.string()),
+				metadata: {
+					$Infer: {
+						body: {} as {
+							hello: "world";
+						},
+					},
+				},
+			},
+			async (c) => {
+				expectTypeOf(c.body).toMatchTypeOf<{
+					hello: "world";
+				}>();
+			},
+		);
 	});
 
 	it("query", async () => {
@@ -173,6 +193,26 @@ describe("types", async () => {
 			},
 			async (ctx) => {
 				expectTypeOf(ctx.query).toEqualTypeOf<{ name: string } | undefined>();
+			},
+		);
+
+		createEndpoint(
+			"/path",
+			{
+				method: "POST",
+				body: z.record(z.string()),
+				metadata: {
+					$Infer: {
+						query: {} as {
+							hello: "world";
+						},
+					},
+				},
+			},
+			async (c) => {
+				expectTypeOf(c.query).toMatchTypeOf<{
+					hello: "world";
+				}>();
 			},
 		);
 	});
@@ -285,7 +325,7 @@ describe("types", async () => {
 	});
 });
 
-describe.only("response", () => {
+describe("response", () => {
 	describe("flat", () => {
 		it("should return primitive values", async () => {
 			for (const value of [1, "hello", true]) {
