@@ -1,12 +1,13 @@
-import { describe, expectTypeOf, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 import { createMiddleware } from "./middleware";
 import { createEndpoint } from "./endpoint";
-import { z } from "zod";
 
-describe("middleware type", () => {
+describe("type", () => {
 	it("should infer middleware returned type", async () => {
 		const middleware = createMiddleware(async (c) => {
-			return 1;
+			return {
+				test: 1,
+			};
 		});
 		const middleware2 = createMiddleware(async (c) => {
 			return {
@@ -20,12 +21,63 @@ describe("middleware type", () => {
 				use: [middleware, middleware2],
 			},
 			async (c) => {
-				expectTypeOf(c.context).toMatchTypeOf<
-					{
-						hello: string;
-					} & number
-				>();
+				expectTypeOf(c.context).toMatchTypeOf<{
+					hello: string;
+					test: number;
+				}>();
 			},
 		);
+	});
+});
+
+describe("runtime", () => {
+	it("should run middleware", async () => {
+		const middleware = createMiddleware(async () => {
+			return {
+				hello: "world",
+			};
+		});
+		const endpoint = createEndpoint(
+			"/test",
+			{
+				method: "POST",
+				use: [middleware],
+			},
+			async (ctx) => {
+				return ctx.context;
+			},
+		);
+		const response = await endpoint();
+		expect(response).toMatchObject({
+			hello: "world",
+		});
+	});
+
+	it("should run multiple middleware", async () => {
+		const middleware = createMiddleware(async () => {
+			return {
+				hello: "world",
+			};
+		});
+		const middleware2 = createMiddleware(async () => {
+			return {
+				test: 2,
+			};
+		});
+		const endpoint = createEndpoint(
+			"/test",
+			{
+				method: "POST",
+				use: [middleware, middleware2],
+			},
+			async (ctx) => {
+				return ctx.context;
+			},
+		);
+		const response = await endpoint();
+		expect(response).toMatchObject({
+			hello: "world",
+			test: 2,
+		});
 	});
 });

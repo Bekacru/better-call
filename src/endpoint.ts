@@ -1,20 +1,20 @@
 import { ZodObject, ZodOptional, type ZodSchema } from "zod";
-import type {
-	HasRequiredKeys,
-	InferParamPath,
-	InferParamWildCard,
-	Input,
-	IsEmptyObject,
-	Prettify,
-	UnionToIntersection,
-} from "./helper";
-import { runValidation } from "./validator";
-import { APIError } from "./error";
+import type { HasRequiredKeys } from "./helper";
 import { toResponse } from "./to-response";
-import type { Middleware, MiddlewareOptions } from "./middleware";
-
-export type HTTPMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
-export type Method = HTTPMethod | "*";
+import type { Middleware } from "./middleware";
+import {
+	createInternalContext,
+	type InferBody,
+	type InferHeaders,
+	type InferMethod,
+	type InferParam,
+	type InferQuery,
+	type InferRequest,
+	type InferUse,
+	type InputContext,
+	type Method,
+} from "./context";
+import { APIError } from "./error";
 
 export interface EndpointOptions {
 	/**
@@ -77,61 +77,10 @@ export interface EndpointOptions {
 		};
 	};
 	/**
-	 * Middleware to use
+	 * List of middlewares to use
 	 */
-	use?: any[];
+	use?: Middleware[];
 }
-
-export type InferBody<Options extends EndpointOptions> = Options["metadata"] extends {
-	$Infer: {
-		body: infer Body;
-	};
-}
-	? Body
-	: Options["body"] extends ZodSchema<infer T>
-		? T
-		: never;
-
-export type InferQuery<Options extends EndpointOptions> = Options["metadata"] extends {
-	$Infer: {
-		query: infer Query;
-	};
-}
-	? Query
-	: Options["query"] extends ZodSchema<infer T>
-		? T
-		: Record<string, any> | undefined;
-
-export type InferMethod<Options extends EndpointOptions> = Options["method"] extends Array<Method>
-	? Options["method"][number]
-	: Options["method"] extends "*"
-		? HTTPMethod
-		: Options["method"];
-
-export type InferInputMethod<Options extends EndpointOptions> =
-	Options["method"] extends Array<Method>
-		? Options["method"][number]
-		: Options["method"] extends "*"
-			? HTTPMethod
-			: Options["method"] | undefined;
-
-export type InferParam<Path extends string> = IsEmptyObject<
-	InferParamPath<Path> & InferParamWildCard<Path>
-> extends true
-	? never
-	: Prettify<InferParamPath<Path> & InferParamWildCard<Path>>;
-
-export type InferRequest<Option extends EndpointOptions | MiddlewareOptions> =
-	Option["requireRequest"] extends true ? Request : Request | undefined;
-
-export type InferHeaders<Option extends EndpointOptions | MiddlewareOptions> =
-	Option["requireHeaders"] extends true
-		? Headers | Record<string, any>
-		: Headers | undefined | Record<string, any>;
-
-export type InferUse<Opts extends EndpointOptions["use"]> = Opts extends Middleware[]
-	? UnionToIntersection<Awaited<ReturnType<Opts[number]>>>
-	: {};
 
 export type EndpointContext<Path extends string, Options extends EndpointOptions> = {
 	/**
@@ -229,106 +178,6 @@ export type EndpointContext<Path extends string, Options extends EndpointOptions
 	context: InferUse<Options["use"]>;
 };
 
-export type InputContext<Path extends string, Options extends EndpointOptions> = Input<{
-	/**
-	 * Payload
-	 */
-	body: InferBody<Options>;
-	/**
-	 * Request Method
-	 */
-	method: InferInputMethod<Options>;
-	/**
-	 * Query Params
-	 */
-	query: InferQuery<Options>;
-	/**
-	 * Dynamic Params
-	 */
-	params: InferParam<Path>;
-	/**
-	 * Request Object
-	 */
-	request: InferRequest<Options>;
-	/**
-	 * Headers
-	 */
-	headers: InferHeaders<Options>;
-	/**
-	 * Return a `Response` object
-	 */
-	asResponse?: boolean;
-	/**
-	 * include headers on the return
-	 */
-	returnHeaders?: boolean;
-	/**
-	 * Middlewares to use
-	 */
-	use?: Middleware[];
-}>;
-
-export const createInternalContext = (
-	context: InputContext<any, any>,
-	{
-		options,
-		path,
-		headers,
-	}: {
-		options: EndpointOptions;
-		path: string;
-		headers: HeadersInit;
-	},
-) => {
-	const { data, error } = runValidation(options, context);
-	if (error) {
-		throw new APIError(400, {
-			message: error.message,
-		});
-	}
-	return {
-		body: data.body,
-		query: data.query,
-		path,
-		headers: context?.headers,
-		request: context?.request,
-		params: "params" in context ? context.params : undefined,
-		method: context.method,
-		setHeader: (key: string, value: string) => {
-			headers[key as keyof typeof headers] = value;
-		},
-		getHeader: (key: string) => {
-			const requestHeaders: Headers | null =
-				"headers" in context
-					? context.headers instanceof Headers
-						? context.headers
-						: new Headers(context.headers)
-					: "request" in context && context.request instanceof Request
-						? context.request.headers
-						: null;
-			if (!requestHeaders) return null;
-			return requestHeaders.get(key);
-		},
-		json: (
-			json: Record<string, any>,
-			routerResponse?: {
-				status?: number;
-				headers?: Record<string, string>;
-				response?: Response;
-			},
-		) => {
-			if (!context.asResponse) {
-				return json;
-			}
-			return {
-				body: json,
-				routerResponse,
-				_flag: "json",
-			};
-		},
-	};
-};
-
 export const createEndpoint = <Path extends string, Options extends EndpointOptions, R>(
 	path: Path,
 	options: Options,
@@ -344,6 +193,12 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 			path,
 			headers,
 		});
+		const middlewareContext = {};
+		for (const middleware of options.use || []) {
+			const response = await middleware(internalContext);
+			Object.assign(middlewareContext, response);
+		}
+		internalContext.context = middlewareContext;
 		const response = await handler(internalContext as any);
 		return (
 			context.asResponse

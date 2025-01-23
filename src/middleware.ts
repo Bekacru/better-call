@@ -1,28 +1,14 @@
-import type { ZodSchema } from "zod";
+import { type EndpointOptions } from "./endpoint";
 import {
 	createInternalContext,
-	type EndpointOptions,
 	type InferHeaders,
+	type InferMiddlewareBody,
+	type InferMiddlewareQuery,
 	type InferRequest,
 	type InputContext,
-} from "./endpoint";
+} from "./context";
 
-export interface MiddlewareOptions extends Omit<EndpointOptions, "method"> {
-	/**
-	 * The order a middleware runs
-	 *
-	 * - pre: before the endpoint runs
-	 * - post: after the endpoint runs and `returned` would be defined
-	 * in this case
-	 */
-	order?: "pre" | "post";
-}
-
-export type InferMiddlewareBody<Options extends MiddlewareOptions> =
-	Options["body"] extends ZodSchema<infer T> ? T : any;
-
-export type InferMiddlewareQuery<Options extends MiddlewareOptions> =
-	Options["query"] extends ZodSchema<infer T> ? T : any;
+export interface MiddlewareOptions extends Omit<EndpointOptions, "method"> {}
 
 export type MiddlewareContext<Options extends MiddlewareOptions> = {
 	/**
@@ -117,7 +103,6 @@ export type MiddlewareContext<Options extends MiddlewareOptions> = {
 			  }
 			| Response,
 	) => Promise<R>;
-	returned: Options["order"] extends "post" ? any : never;
 };
 
 export function createMiddleware<
@@ -178,18 +163,15 @@ export function createMiddleware(optionsOrHandler: any, handler?: any) {
 		const response = await _handler(internalContext as any);
 		return response;
 	};
-	internalHandler.options =
-		typeof optionsOrHandler === "function"
-			? {
-					order: "pre",
-				}
-			: optionsOrHandler;
+	internalHandler.options = typeof optionsOrHandler === "function" ? {} : optionsOrHandler;
 	return internalHandler;
 }
 
 export type Middleware<
-	Options extends EndpointOptions = EndpointOptions,
-	Handler extends (inputCtx: any) => Promise<any> = any,
+	Options extends MiddlewareOptions = MiddlewareOptions,
+	Handler extends (inputCtx: any) => Promise<any> = (
+		inputCtx: any,
+	) => Promise<Record<string, any>>,
 > = Handler & {
 	options: Options;
 };
