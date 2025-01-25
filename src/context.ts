@@ -11,6 +11,15 @@ import type {
 } from "./helper";
 import type { Middleware, MiddlewareOptions } from "./middleware";
 import { runValidation } from "./validator";
+import {
+	getCookieKey,
+	parseCookies,
+	serializeCookie,
+	serializeSignedCookie,
+	type CookieOptions,
+	type CookiePrefixOptions,
+} from "./cookies";
+import { getCryptoKey, verifySignature } from "./crypto";
 
 export type HTTPMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 export type Method = HTTPMethod | "*";
@@ -129,6 +138,16 @@ export const createInternalContext = (
 			message: error.message,
 		});
 	}
+	const requestHeaders: Headers | null =
+		"headers" in context
+			? context.headers instanceof Headers
+				? context.headers
+				: new Headers(context.headers)
+			: "request" in context && context.request instanceof Request
+				? context.request.headers
+				: null;
+	const requestCookies = requestHeaders?.get("cookie");
+	const parsedCookies = requestCookies ? parseCookies(requestCookies) : undefined;
 	return {
 		body: data.body,
 		query: data.query,
@@ -143,16 +162,54 @@ export const createInternalContext = (
 			headers[key as keyof typeof headers] = value;
 		},
 		getHeader: (key: string) => {
-			const requestHeaders: Headers | null =
-				"headers" in context
-					? context.headers instanceof Headers
-						? context.headers
-						: new Headers(context.headers)
-					: "request" in context && context.request instanceof Request
-						? context.request.headers
-						: null;
 			if (!requestHeaders) return null;
 			return requestHeaders.get(key);
+		},
+		getCookie: (key: string, prefix?: CookiePrefixOptions) => {
+			const finalKey = getCookieKey(key, prefix);
+			if (!finalKey) {
+				return null;
+			}
+			return parsedCookies?.get(finalKey) || null;
+		},
+		getSignedCookie: async (key: string, secret: string, prefix?: CookiePrefixOptions) => {
+			const finalKey = getCookieKey(key, prefix);
+			if (!finalKey) {
+				return null;
+			}
+			const value = parsedCookies?.get(finalKey);
+			if (!value) {
+				return null;
+			}
+			const signatureStartPos = value.lastIndexOf(".");
+			if (signatureStartPos < 1) {
+				return null;
+			}
+			const signedValue = value.substring(0, signatureStartPos);
+			const signature = value.substring(signatureStartPos + 1);
+			if (signature.length !== 44 || !signature.endsWith("=")) {
+				return null;
+			}
+			const secretKey = await getCryptoKey(secret);
+			const isVerified = await verifySignature(signature, signedValue, secretKey);
+			return isVerified ? signedValue : false;
+		},
+		setCookie: (key: string, value: string, options?: CookieOptions) => {
+			const cookie = serializeCookie(key, value, options);
+			const setCookie = headers["Set-Cookie" as keyof typeof headers];
+			headers["Set-Cookie" as keyof typeof headers] = `${setCookie || ""}; ${cookie}`;
+			return cookie;
+		},
+		setSignedCookie: async (
+			key: string,
+			value: string,
+			secret: string,
+			options?: CookieOptions,
+		) => {
+			const cookie = await serializeSignedCookie(key, value, secret, options);
+			headers["Set-Cookie" as keyof typeof headers] =
+				`${headers["Set-Cookie" as keyof typeof headers] || ""}; ${cookie}`;
+			return cookie;
 		},
 		json: (
 			json: Record<string, any>,

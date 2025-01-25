@@ -14,7 +14,7 @@ import {
 	type InputContext,
 	type Method,
 } from "./context";
-import { APIError } from "./error";
+import type { CookieOptions, CookiePrefixOptions } from "./cookies";
 
 export interface EndpointOptions {
 	/**
@@ -147,6 +147,51 @@ export type EndpointContext<Path extends string, Options extends EndpointOptions
 	 * @returns
 	 */
 	getHeader: (key: string) => string | null;
+	/**
+	 * Get a cookie value from the request
+	 *
+	 * @param key - The key of the cookie
+	 * @param prefix - The prefix of the cookie between `__Secure-` and `__Host-`
+	 * @returns - The value of the cookie
+	 */
+	getCookie: (key: string, prefix?: CookiePrefixOptions) => string | null;
+	/**
+	 * Get a signed cookie value from the request
+	 *
+	 * @param key - The key of the cookie
+	 * @param secret - The secret of the signed cookie
+	 * @param prefix - The prefix of the cookie between `__Secure-` and `__Host-`
+	 * @returns
+	 */
+	getSignedCookie: (
+		key: string,
+		secret: string,
+		prefix?: CookiePrefixOptions,
+	) => Promise<string | null>;
+	/**
+	 * Set a cookie value in the response
+	 *
+	 * @param key - The key of the cookie
+	 * @param value - The value to set
+	 * @param options - The options of the cookie
+	 * @returns - The cookie string
+	 */
+	setCookie: (key: string, value: string, options?: CookieOptions) => string;
+	/**
+	 * Set signed cookie
+	 *
+	 * @param key - The key of the cookie
+	 * @param value  - The value to set
+	 * @param secret - The secret to sign the cookie with
+	 * @param options - The options of the cookie
+	 * @returns - The cookie string
+	 */
+	setSignedCookie: (
+		key: string,
+		value: string,
+		secret: string,
+		options?: CookieOptions,
+	) => Promise<string>;
 	/**
 	 * JSON
 	 *

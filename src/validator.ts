@@ -1,5 +1,6 @@
 import type { ZodError } from "zod";
-import type { EndpointContext, EndpointOptions, InputContext } from "./endpoint";
+import type { EndpointOptions } from "./endpoint";
+import type { InputContext } from "./context";
 
 type ValidationResponse =
 	| {
@@ -51,7 +52,7 @@ export function runValidation(
 		}
 		request.query = result.data;
 	}
-	if (options.requireHeaders && !(context.headers instanceof Headers)) {
+	if (options.requireHeaders && !context.headers) {
 		return {
 			data: null,
 			error: { message: "Validation Error: Headers are required" },
