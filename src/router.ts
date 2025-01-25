@@ -1,5 +1,6 @@
 import { createRouter as createRou3Router, addRoute, findRoute, findAllRoutes } from "rou3";
-import type { Endpoint } from "./endpoint";
+import { createEndpoint, type Endpoint } from "./endpoint";
+import { generator, getHTML } from "./openapi";
 
 export interface RouterConfig {
 	throwError?: boolean;
@@ -12,12 +13,75 @@ export interface RouterConfig {
 	extraContext?: Record<string, any>;
 	onResponse?: (res: Response) => any | Promise<any>;
 	onRequest?: (req: Request) => any | Promise<any>;
+	/**
+	 * Open API route configuration
+	 */
+	openAPI?: {
+		/**
+		 * Disable openapi route
+		 *
+		 * @default false
+		 */
+		disabled?: boolean;
+		/**
+		 * A path to display open api using scalar
+		 *
+		 * @default "/api/reference"
+		 */
+		path?: string;
+		/**
+		 * Scalar Configuration
+		 */
+		scalar?: {
+			/**
+			 * Title
+			 * @default "Open API Reference"
+			 */
+			title?: string;
+			/**
+			 * Description
+			 *
+			 * @default "Better Call Open API Reference"
+			 */
+			description?: string;
+			/**
+			 * Logo URL
+			 */
+			logo?: string;
+			/**
+			 * Scalar theme
+			 * @default "saturn"
+			 */
+			theme?: string;
+		};
+	};
 }
 
 export const createRouter = <E extends Record<string, Endpoint>, Config extends RouterConfig>(
 	endpoints: E,
 	config?: Config,
 ) => {
+	if (!config?.openAPI?.disabled) {
+		const openAPI = {
+			path: "/api/reference",
+			...config?.openAPI,
+		};
+		//@ts-expect-error
+		endpoints["openAPI"] = createEndpoint(
+			openAPI.path,
+			{
+				method: "GET",
+			},
+			async (c) => {
+				const schema = await generator(endpoints);
+				return new Response(getHTML(schema, openAPI.scalar), {
+					headers: {
+						"Content-Type": "text/html",
+					},
+				});
+			},
+		);
+	}
 	const router = createRou3Router();
 	const middlewareRouter = createRou3Router();
 

@@ -16,6 +16,7 @@ import {
 } from "./context";
 import type { CookieOptions, CookiePrefixOptions } from "./cookies";
 import { APIError, type _statusCode, type Status } from "./error";
+import type { OpenAPIParameter, OpenAPISchemaType } from "./openapi";
 
 export interface EndpointOptions {
 	/**
@@ -45,7 +46,56 @@ export interface EndpointOptions {
 		/**
 		 * Open API definition
 		 */
-		openAPI?: {};
+		openAPI?: {
+			summary?: string;
+			description?: string;
+			tags?: string[];
+			operationId?: string;
+			parameters?: OpenAPIParameter[];
+			requestBody?: {
+				content: {
+					"application/json": {
+						schema: {
+							type?: OpenAPISchemaType;
+							properties?: Record<string, any>;
+							required?: string[];
+							$ref?: string;
+						};
+					};
+				};
+			};
+			responses?: {
+				[status: string]: {
+					description: string;
+					content?: {
+						"application/json"?: {
+							schema: {
+								type?: OpenAPISchemaType;
+								properties?: Record<string, any>;
+								required?: string[];
+								$ref?: string;
+							};
+						};
+						"text/plain"?: {
+							schema?: {
+								type?: OpenAPISchemaType;
+								properties?: Record<string, any>;
+								required?: string[];
+								$ref?: string;
+							};
+						};
+						"text/html"?: {
+							schema?: {
+								type?: OpenAPISchemaType;
+								properties?: Record<string, any>;
+								required?: string[];
+								$ref?: string;
+							};
+						};
+					};
+				};
+			};
+		};
 		/**
 		 * Infer body and query type from ts interface
 		 *
