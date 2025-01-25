@@ -15,6 +15,7 @@ import {
 	type Method,
 } from "./context";
 import type { CookieOptions, CookiePrefixOptions } from "./cookies";
+import type { APIError } from "./error";
 
 export interface EndpointOptions {
 	/**
@@ -221,6 +222,10 @@ export type EndpointContext<Path extends string, Options extends EndpointOptions
 	 * Middleware context
 	 */
 	context: InferUse<Options["use"]>;
+	/**
+	 * Redirect to a new URL
+	 */
+	redirect: (url: string) => APIError;
 };
 
 export const createEndpoint = <Path extends string, Options extends EndpointOptions, R>(

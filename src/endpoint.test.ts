@@ -1,6 +1,7 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { createEndpoint } from "./endpoint";
 import { z } from "zod";
+import { APIError } from "./error";
 
 describe("validation", (it) => {
 	it("should validate body and throw validation error", async () => {
@@ -407,7 +408,25 @@ describe("response", () => {
 		});
 	});
 
-	describe("headers", () => {
+	describe("redirect", () => {
+		it("should return redirect response", async () => {
+			const endpoint = createEndpoint(
+				"/endpoint",
+				{
+					method: "POST",
+				},
+				async (c) => {
+					return c.redirect("/");
+				},
+			);
+			const response = await endpoint();
+			expect(response).instanceOf(APIError);
+			expect(response.status).toBe("FOUND");
+			expect(response.statusCode).toBe(302);
+		});
+	});
+
+	describe("set-headers", () => {
 		it("should set headers", async () => {
 			const endpoint = createEndpoint(
 				"/endpoint",

@@ -211,6 +211,10 @@ export const createInternalContext = (
 				`${headers["Set-Cookie" as keyof typeof headers] || ""}; ${cookie}`;
 			return cookie;
 		},
+		redirect: (url: string) => {
+			headers["location" as keyof typeof headers] = url;
+			return new APIError("FOUND");
+		},
 		json: (
 			json: Record<string, any>,
 			routerResponse?: {
