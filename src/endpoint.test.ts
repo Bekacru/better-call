@@ -448,4 +448,81 @@ describe("response", () => {
 			expect(response2.headers.get("hello")).toBe("world");
 		});
 	});
+
+	describe("API Error", () => {
+		it("should throw API Error", async () => {
+			const endpoint = createEndpoint(
+				"/endpoint",
+				{
+					method: "POST",
+				},
+				async (c) => {
+					throw c.error("NOT_FOUND");
+				},
+			);
+			await expect(endpoint()).rejects.toThrowError(APIError);
+		});
+
+		it("should return error Response", async () => {
+			const endpoint = createEndpoint(
+				"/endpoint",
+				{
+					method: "POST",
+				},
+				async (c) => {
+					throw c.error("NOT_FOUND");
+				},
+			);
+			const response = await endpoint({
+				asResponse: true,
+			});
+			expect(response.status).toBe(404);
+		});
+
+		it("should return error Response with it's body", async () => {
+			const endpoint = createEndpoint(
+				"/endpoint",
+				{
+					method: "POST",
+				},
+				async (c) => {
+					throw c.error("BAD_REQUEST", {
+						message: "error message",
+					});
+				},
+			);
+			const response = await endpoint({
+				asResponse: true,
+			});
+			const body = await response.json();
+			expect(response.status).toBe(400);
+			expect(body).toMatchObject({
+				message: "error message",
+			});
+		});
+	});
+	describe("json", async () => {
+		it("should return the json directly", async () => {
+			const endpoint = createEndpoint(
+				"/",
+				{
+					method: "GET",
+				},
+				async (c) => {
+					return c.json(
+						{ name: "hello" },
+						new Response(
+							JSON.stringify({
+								client: "hello",
+							}),
+						),
+					);
+				},
+			);
+			const response = await endpoint();
+			expect(response).toMatchObject({
+				name: "hello",
+			});
+		});
+	});
 });

@@ -15,7 +15,7 @@ import {
 	type Method,
 } from "./context";
 import type { CookieOptions, CookiePrefixOptions } from "./cookies";
-import type { APIError } from "./error";
+import { APIError, type _statusCode, type Status } from "./error";
 
 export interface EndpointOptions {
 	/**
@@ -76,6 +76,10 @@ export interface EndpointOptions {
 			 */
 			query?: Record<string, any>;
 		};
+		/**
+		 * If enabled, endpoint won't be exposed over a router
+		 */
+		SERVER_ONLY?: boolean;
 	};
 	/**
 	 * List of middlewares to use
@@ -226,6 +230,17 @@ export type EndpointContext<Path extends string, Options extends EndpointOptions
 	 * Redirect to a new URL
 	 */
 	redirect: (url: string) => APIError;
+	/**
+	 * Return error
+	 */
+	error: (
+		status: keyof typeof _statusCode | Status,
+		body?: {
+			message?: string;
+			code?: string;
+		} & Record<string, any>,
+		headers?: HeadersInit,
+	) => APIError;
 };
 
 export const createEndpoint = <Path extends string, Options extends EndpointOptions, R>(
@@ -249,7 +264,12 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 			Object.assign(middlewareContext, response);
 		}
 		internalContext.context = middlewareContext;
-		const response = await handler(internalContext as any);
+		const response = await handler(internalContext as any).catch((e) => {
+			if (e instanceof APIError && context.asResponse) {
+				return e;
+			}
+			throw e;
+		});
 		return (
 			context.asResponse
 				? toResponse(response, {
@@ -270,5 +290,9 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 					}
 				: R;
 	};
+	internalHandler.options = options;
+	internalHandler.path = path;
 	return internalHandler;
 };
+
+export type Endpoint = ReturnType<typeof createEndpoint>;

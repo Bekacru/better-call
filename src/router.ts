@@ -1,0 +1,118 @@
+import { createRouter as createRou3Router, addRoute, findRoute, findAllRoutes } from "rou3";
+import type { Endpoint } from "./endpoint";
+
+export interface RouterConfig {
+	throwError?: boolean;
+	onError?: (e: unknown) => void | Promise<void> | Response | Promise<Response>;
+	basePath?: string;
+	routerMiddleware?: Array<{
+		path: string;
+		middleware: Endpoint;
+	}>;
+	extraContext?: Record<string, any>;
+	onResponse?: (res: Response) => any | Promise<any>;
+	onRequest?: (req: Request) => any | Promise<any>;
+}
+
+export const createRouter = <E extends Record<string, Endpoint>, Config extends RouterConfig>(
+	endpoints: E,
+	config?: Config,
+) => {
+	const router = createRou3Router();
+	const middlewareRouter = createRou3Router();
+
+	for (const endpoint of Object.values(endpoints)) {
+		if (endpoint.options.metadata?.SERVER_ONLY) continue;
+
+		const methods = Array.isArray(endpoint.options?.method)
+			? endpoint.options.method
+			: [endpoint.options.method];
+
+		for (const method of methods) {
+			addRoute(router, method, endpoint.path, endpoint);
+		}
+	}
+
+	if (config?.routerMiddleware?.length) {
+		for (const { path, middleware } of config.routerMiddleware) {
+			addRoute(middlewareRouter, "*", path, middleware);
+		}
+	}
+
+	const processRequest = async (request: Request) => {
+		const url = new URL(request.url);
+		const path = config?.basePath ? url.pathname.split(config.basePath)[1] : url.pathname;
+
+		if (!path?.length) {
+			config?.onError?.(new Error("NOT_FOUND"));
+			return new Response(null, { status: 404, statusText: "Not Found" });
+		}
+
+		const route = findRoute(router, request.method, path);
+		if (!route?.data) {
+			return new Response(null, { status: 404, statusText: "Not Found" });
+		}
+
+		const handler = route.data as Endpoint;
+		const context = {
+			path,
+			method: request.method as "GET",
+			headers: request.headers,
+			params: route.params as any,
+			request,
+			body: await request.json().catch(() => undefined),
+			query: Object.fromEntries(url.searchParams),
+			_flag: "router" as const,
+			asResponse: true,
+			context: { ...config?.extraContext },
+		};
+
+		try {
+			const middlewareRoutes = findAllRoutes(middlewareRouter, "*", path);
+			if (middlewareRoutes?.length) {
+				for (const { data: middleware, params } of middlewareRoutes) {
+					const res = await (middleware as Endpoint)({
+						...context,
+						params,
+						asResponse: false,
+					});
+
+					if (res instanceof Response) return res;
+					if (res) {
+						Object.assign(context.context, res);
+					}
+				}
+			}
+
+			const response = (await handler(context)) as Response;
+			return response;
+		} catch (error) {
+			return new Response(null, {
+				status: 500,
+				statusText: "Internal Server Error",
+			});
+		}
+	};
+
+	return {
+		handler: async (request: Request) => {
+			const modifiedRequest = config?.onRequest ? await config.onRequest(request) : request;
+
+			const req = modifiedRequest instanceof Request ? modifiedRequest : request;
+
+			const response = await processRequest(req);
+
+			if (config?.onResponse) {
+				const modifiedResponse = await config.onResponse(response);
+				if (modifiedResponse instanceof Response) {
+					return modifiedResponse;
+				}
+			}
+
+			return response;
+		},
+		endpoints,
+	};
+};
+
+export type Router = ReturnType<typeof createRouter>;

@@ -1,6 +1,6 @@
 import type { ZodSchema } from "zod";
 import type { EndpointOptions } from "./endpoint";
-import { APIError } from "./error";
+import { _statusCode, APIError, type Status } from "./error";
 import type {
 	InferParamPath,
 	InferParamWildCard,
@@ -214,6 +214,18 @@ export const createInternalContext = (
 		redirect: (url: string) => {
 			headers["location" as keyof typeof headers] = url;
 			return new APIError("FOUND");
+		},
+		error: (
+			status: keyof typeof _statusCode | Status,
+			body?:
+				| {
+						message?: string;
+						code?: string;
+				  }
+				| undefined,
+			headers?: HeadersInit,
+		) => {
+			return new APIError(status, body, headers);
 		},
 		json: (
 			json: Record<string, any>,

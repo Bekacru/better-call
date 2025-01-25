@@ -1,4 +1,6 @@
-export function toResponse(data: any, init?: ResponseInit): Response {
+import { APIError } from "./error";
+
+export function toResponse(data?: any, init?: ResponseInit): Response {
 	if (data instanceof Response) {
 		if (init?.headers instanceof Headers) {
 			init.headers.forEach((value, key) => {
@@ -6,6 +8,24 @@ export function toResponse(data: any, init?: ResponseInit): Response {
 			});
 		}
 		return data;
+	}
+	if (data?._flag === "json") {
+		const routerResponse = data.routerResponse;
+		const response = routerResponse?.response;
+		if (response instanceof Response) {
+			return response;
+		}
+		return toResponse(data.body);
+	}
+	if (data instanceof APIError) {
+		return toResponse(data.body, {
+			status: data.statusCode,
+			statusText: data.stack,
+			headers: {
+				...data.headers,
+				...init?.headers,
+			},
+		});
 	}
 	let body: BodyInit;
 	let headers: HeadersInit = {
