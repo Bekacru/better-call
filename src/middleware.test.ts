@@ -81,3 +81,82 @@ describe("runtime", () => {
 		});
 	});
 });
+
+describe("creator", () => {
+	it("should use creator middlewares", async () => {
+		const creator = createMiddleware.create({
+			use: [
+				createMiddleware(async (c) => {
+					return {
+						hello: "world",
+					};
+				}),
+			],
+		});
+
+		const middleware = creator(async (c) => {
+			expectTypeOf(c.context).toMatchTypeOf<{
+				hello: string;
+			}>();
+
+			return c.context;
+		});
+
+		const endpoint = createEndpoint(
+			"/",
+			{
+				use: [middleware],
+				method: "GET",
+			},
+			async (c) => {
+				return c.context;
+			},
+		);
+		const response = await endpoint();
+		expect(response).toMatchObject({
+			hello: "world",
+		});
+	});
+
+	it("should be able to combine with local middleware", async () => {
+		const creator = createMiddleware.create({
+			use: [
+				createMiddleware(async () => {
+					return {
+						hello: "world",
+					};
+				}),
+			],
+		});
+		const middleware = creator(
+			{
+				use: [
+					createMiddleware(async () => {
+						return {
+							test: "payload",
+						};
+					}),
+				],
+			},
+			async (c) => {
+				return c.context;
+			},
+		);
+
+		const endpoint = createEndpoint(
+			"/path",
+			{
+				use: [middleware],
+				method: "POST",
+			},
+			async (c) => {
+				return c.context;
+			},
+		);
+		const response = await endpoint();
+		expect(response).toMatchObject({
+			hello: "world",
+			test: "payload",
+		});
+	});
+});

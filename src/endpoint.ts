@@ -1,7 +1,7 @@
 import { ZodObject, ZodOptional, type ZodSchema } from "zod";
-import type { HasRequiredKeys } from "./helper";
+import type { HasRequiredKeys, Prettify } from "./helper";
 import { toResponse } from "./to-response";
-import type { Middleware } from "./middleware";
+import { createMiddleware, type Middleware } from "./middleware";
 import {
 	createInternalContext,
 	type InferBody,
@@ -87,7 +87,7 @@ export interface EndpointOptions {
 	use?: Middleware[];
 }
 
-export type EndpointContext<Path extends string, Options extends EndpointOptions> = {
+export type EndpointContext<Path extends string, Options extends EndpointOptions, Context = {}> = {
 	/**
 	 * Method
 	 *
@@ -225,7 +225,7 @@ export type EndpointContext<Path extends string, Options extends EndpointOptions
 	/**
 	 * Middleware context
 	 */
-	context: InferUse<Options["use"]>;
+	context: Prettify<Context & InferUse<Options["use"]>>;
 	/**
 	 * Redirect to a new URL
 	 */
@@ -253,17 +253,11 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 	) => {
 		const context = (inputCtx[0] || {}) as InputContext<any, any>;
 		const headers: HeadersInit = {};
-		const internalContext = createInternalContext(context, {
+		const internalContext = await createInternalContext(context, {
 			options,
 			path,
 			headers,
 		});
-		const middlewareContext = {};
-		for (const middleware of options.use || []) {
-			const response = await middleware(internalContext);
-			Object.assign(middlewareContext, response);
-		}
-		internalContext.context = middlewareContext;
 		const response = await handler(internalContext as any).catch((e) => {
 			if (e instanceof APIError && context.asResponse) {
 				return e;
@@ -293,6 +287,23 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 	internalHandler.options = options;
 	internalHandler.path = path;
 	return internalHandler;
+};
+
+createEndpoint.create = <E extends { use?: Middleware[] }>(opts?: E) => {
+	return <Path extends string, Opts extends EndpointOptions, R>(
+		path: Path,
+		options: Opts,
+		handler: (ctx: EndpointContext<Path, Opts, InferUse<E["use"]>>) => Promise<R>,
+	) => {
+		return createEndpoint(
+			path,
+			{
+				...options,
+				use: [...(options?.use || []), ...(opts?.use || [])],
+			},
+			handler as any,
+		);
+	};
 };
 
 export type Endpoint = ReturnType<typeof createEndpoint>;

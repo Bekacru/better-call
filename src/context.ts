@@ -120,7 +120,7 @@ export type InputContext<Path extends string, Options extends EndpointOptions> =
 	use?: Middleware[];
 }>;
 
-export const createInternalContext = (
+export const createInternalContext = async (
 	context: InputContext<any, any>,
 	{
 		options,
@@ -148,7 +148,7 @@ export const createInternalContext = (
 				: null;
 	const requestCookies = requestHeaders?.get("cookie");
 	const parsedCookies = requestCookies ? parseCookies(requestCookies) : undefined;
-	return {
+	const internalContext = {
 		body: data.body,
 		query: data.query,
 		path,
@@ -245,4 +245,11 @@ export const createInternalContext = (
 			};
 		},
 	};
+	const middlewareContext = {};
+	for (const middleware of options.use || []) {
+		const response = await middleware(internalContext);
+		Object.assign(middlewareContext, response);
+	}
+	internalContext.context = middlewareContext;
+	return internalContext;
 };

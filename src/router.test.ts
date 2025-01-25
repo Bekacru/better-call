@@ -143,7 +143,7 @@ describe("router", () => {
 	});
 });
 
-describe.only("route middleware", () => {
+describe("route middleware", () => {
 	it("should apply middleware as context", async () => {
 		const endpoint = createEndpoint(
 			"/",

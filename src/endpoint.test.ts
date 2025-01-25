@@ -2,6 +2,7 @@ import { describe, expect, expectTypeOf, it } from "vitest";
 import { createEndpoint } from "./endpoint";
 import { z } from "zod";
 import { APIError } from "./error";
+import { createMiddleware } from "./middleware";
 
 describe("validation", (it) => {
 	it("should validate body and throw validation error", async () => {
@@ -523,6 +524,66 @@ describe("response", () => {
 			expect(response).toMatchObject({
 				name: "hello",
 			});
+		});
+	});
+});
+
+describe.only("creator", () => {
+	it("should use creator context", async () => {
+		const creator = createEndpoint.create({
+			use: [
+				createMiddleware(async () => {
+					return {
+						hello: "world",
+					};
+				}),
+			],
+		});
+		const endpoint = creator(
+			"/path",
+			{
+				method: "POST",
+			},
+			async (c) => {
+				return c.context;
+			},
+		);
+		const response = await endpoint();
+		expect(response).toMatchObject({
+			hello: "world",
+		});
+	});
+
+	it("should be able to combine with endpoint middleware", async () => {
+		const creator = createEndpoint.create({
+			use: [
+				createMiddleware(async () => {
+					return {
+						hello: "world",
+					};
+				}),
+			],
+		});
+		const endpoint = creator(
+			"/path",
+			{
+				method: "POST",
+				use: [
+					createMiddleware(async () => {
+						return {
+							test: "payload",
+						};
+					}),
+				],
+			},
+			async (c) => {
+				return c.context;
+			},
+		);
+		const response = await endpoint();
+		expect(response).toMatchObject({
+			hello: "world",
+			test: "payload",
 		});
 	});
 });

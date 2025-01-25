@@ -1,16 +1,19 @@
-import { type EndpointOptions } from "./endpoint";
+import { createEndpoint, type Endpoint, type EndpointOptions } from "./endpoint";
 import {
 	createInternalContext,
+	type InferBody,
 	type InferHeaders,
 	type InferMiddlewareBody,
 	type InferMiddlewareQuery,
 	type InferRequest,
+	type InferUse,
 	type InputContext,
 } from "./context";
+import type { Prettify } from "./helper";
 
 export interface MiddlewareOptions extends Omit<EndpointOptions, "method"> {}
 
-export type MiddlewareContext<Options extends MiddlewareOptions> = {
+export type MiddlewareContext<Options extends MiddlewareOptions, Context = {}> = {
 	/**
 	 * Method
 	 *
@@ -103,6 +106,10 @@ export type MiddlewareContext<Options extends MiddlewareOptions> = {
 			  }
 			| Response,
 	) => Promise<R>;
+	/**
+	 * Middleware context
+	 */
+	context: Prettify<Context & InferUse<Options["use"]>>;
 };
 
 export function createMiddleware<
@@ -117,13 +124,7 @@ export function createMiddleware<
 	) => Promise<R>,
 >(
 	options: Options,
-	handler: (
-		context: MiddlewareContext<
-			Options & {
-				method: "*";
-			}
-		>,
-	) => Promise<R>,
+	handler: Handler,
 ): Middleware<
 	Options & {
 		method: "*";
@@ -153,13 +154,15 @@ export function createMiddleware(optionsOrHandler: any, handler?: any) {
 		const context = inputCtx as InputContext<any, any>;
 		const headers: HeadersInit = {};
 		const _handler = typeof optionsOrHandler === "function" ? optionsOrHandler : handler;
-		const internalContext = createInternalContext(context, {
-			options: {
-				method: "*",
-			},
+		const options = typeof optionsOrHandler === "function" ? {} : optionsOrHandler;
+		const internalContext = await createInternalContext(context, {
+			options,
 			path: "/",
 			headers,
 		});
+		if (!_handler) {
+			throw new Error("handler must be defined");
+		}
 		const response = await _handler(internalContext as any);
 		return response;
 	};
@@ -174,4 +177,64 @@ export type Middleware<
 	) => Promise<Record<string, any>>,
 > = Handler & {
 	options: Options;
+};
+
+createMiddleware.create = <
+	E extends {
+		use?: Middleware[];
+	},
+>(
+	opts?: E,
+) => {
+	type InferHandler<Opts extends MiddlewareOptions, R> = (
+		ctx: MiddlewareContext<Opts, InferUse<E["use"]>>,
+	) => Promise<R>;
+	function fn<
+		Options extends Omit<MiddlewareOptions, "method">,
+		R extends Record<string, any>,
+		Handler extends InferHandler<Options, R>,
+	>(
+		options: Options,
+		handler: Handler,
+	): Middleware<
+		Options & {
+			method: "*";
+		},
+		Handler
+	>;
+	function fn<
+		Options extends Omit<MiddlewareOptions, "method">,
+		R extends Record<string, any>,
+		Handler extends InferHandler<Options, R>,
+	>(
+		handler: Handler,
+	): Middleware<
+		Options & {
+			method: "*";
+		},
+		Handler
+	>;
+	function fn(optionsOrHandler: any, handler?: any) {
+		if (typeof optionsOrHandler === "function") {
+			return createMiddleware(
+				{
+					use: opts?.use,
+				},
+				optionsOrHandler,
+			);
+		}
+		if (!handler) {
+			throw new Error("Middleware handler is required");
+		}
+		const middleware = createMiddleware(
+			{
+				...optionsOrHandler,
+				method: "*",
+				use: [...(opts?.use || []), ...(optionsOrHandler.use || [])],
+			},
+			handler,
+		);
+		return middleware as any;
+	}
+	return fn;
 };
