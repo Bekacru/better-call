@@ -3,6 +3,7 @@ import { createClient } from "../src/client";
 import { z } from "zod";
 import { createEndpoint } from "./endpoint";
 import { createRouter } from "./router";
+import { createMiddleware } from "./middleware";
 
 describe("client", () => {
 	it("should infer types", () => {
@@ -153,37 +154,37 @@ describe("client", () => {
 		});
 	});
 
-	// it("should infer from custom creator", () => {
-	// 	const cr2 = createEndpointCreatorr({
-	// 		use: [
-	// 			createMiddleware(async (ctx) => {
-	// 				return {
-	// 					something: "",
-	// 				};
-	// 			}),
-	// 		],
-	// 	});
+	it("should infer from custom creator", () => {
+		const cr2 = createEndpoint.create({
+			use: [
+				createMiddleware(async (ctx) => {
+					return {
+						something: "",
+					};
+				}),
+			],
+		});
 
-	// 	const endpoint = cr2(
-	// 		"/test",
-	// 		{
-	// 			method: "POST",
-	// 		},
-	// 		async (ctx) => {
-	// 			return {
-	// 				status: 200,
-	// 				body: {
-	// 					hello: "world",
-	// 				},
-	// 			};
-	// 		},
-	// 	);
-	// 	const endpoints = {
-	// 		endpoint,
-	// 	};
-	// 	const client = createClient<typeof endpoints>({
-	// 		baseURL: "http://localhost:3000",
-	// 	});
-	// 	expectTypeOf<Parameters<typeof client>[0]>().toMatchTypeOf<"@post/test">();
-	// });
+		const endpoint = cr2(
+			"/test",
+			{
+				method: "POST",
+			},
+			async (ctx) => {
+				return {
+					status: 200,
+					body: {
+						hello: "world",
+					},
+				};
+			},
+		);
+		const endpoints = {
+			endpoint,
+		};
+		const client = createClient<typeof endpoints>({
+			baseURL: "http://localhost:3000",
+		});
+		expectTypeOf<Parameters<typeof client>[0]>().toMatchTypeOf<"@post/test">();
+	});
 });
