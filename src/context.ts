@@ -24,25 +24,27 @@ import { getCryptoKey, verifySignature } from "./crypto";
 export type HTTPMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 export type Method = HTTPMethod | "*";
 
-export type InferBody<Options extends EndpointOptions> = Options["metadata"] extends {
-	$Infer: {
-		body: infer Body;
-	};
-}
-	? Body
-	: Options["body"] extends ZodSchema<infer T>
-		? T
-		: never;
+export type InferBody<Options extends EndpointOptions | MiddlewareOptions> =
+	Options["metadata"] extends {
+		$Infer: {
+			body: infer Body;
+		};
+	}
+		? Body
+		: Options["body"] extends ZodSchema<infer T>
+			? T
+			: any;
 
-export type InferQuery<Options extends EndpointOptions> = Options["metadata"] extends {
-	$Infer: {
-		query: infer Query;
-	};
-}
-	? Query
-	: Options["query"] extends ZodSchema<infer T>
-		? T
-		: Record<string, any> | undefined;
+export type InferQuery<Options extends EndpointOptions | MiddlewareOptions> =
+	Options["metadata"] extends {
+		$Infer: {
+			query: infer Query;
+		};
+	}
+		? Query
+		: Options["query"] extends ZodSchema<infer T>
+			? T
+			: Record<string, any> | undefined;
 
 export type InferMethod<Options extends EndpointOptions> = Options["method"] extends Array<Method>
 	? Options["method"][number]
@@ -67,9 +69,7 @@ export type InferRequest<Option extends EndpointOptions | MiddlewareOptions> =
 	Option["requireRequest"] extends true ? Request : Request | undefined;
 
 export type InferHeaders<Option extends EndpointOptions | MiddlewareOptions> =
-	Option["requireHeaders"] extends true
-		? Headers | Record<string, any>
-		: Headers | undefined | Record<string, any>;
+	Option["requireHeaders"] extends true ? Headers : Headers | undefined;
 
 export type InferUse<Opts extends EndpointOptions["use"]> = Opts extends Middleware[]
 	? UnionToIntersection<Awaited<ReturnType<Opts[number]>>>
@@ -229,17 +229,20 @@ export const createInternalContext = async (
 		},
 		json: (
 			json: Record<string, any>,
-			routerResponse?: {
-				status?: number;
-				headers?: Record<string, string>;
-				response?: Response;
-			},
+			routerResponse?:
+				| {
+						status?: number;
+						headers?: Record<string, string>;
+						response?: Response;
+						body?: Record<string, string>;
+				  }
+				| Response,
 		) => {
 			if (!context.asResponse) {
 				return json;
 			}
 			return {
-				body: json,
+				body: routerResponse?.body || json,
 				routerResponse,
 				_flag: "json",
 			};

@@ -388,7 +388,7 @@ export const getHTML = (
 	   	theme: ${config?.theme || "saturn"},
         metaData: {
 			title: ${config?.title || "Open API Reference"},
-			description: ${config?.description || "Better Call Open API Reference"},
+			description: ${config?.description || "Better Call Open API"},
 		}
       }
       document.getElementById('api-reference').dataset.configuration =

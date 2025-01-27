@@ -15,6 +15,7 @@ describe("validation", (it) => {
 				}),
 			},
 			async (ctx) => {
+				ctx.headers;
 				return ctx.body;
 			},
 		);

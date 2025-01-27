@@ -1,6 +1,7 @@
 import { createRouter as createRou3Router, addRoute, findRoute, findAllRoutes } from "rou3";
 import { createEndpoint, type Endpoint } from "./endpoint";
 import { generator, getHTML } from "./openapi";
+import type { Middleware } from "./middleware";
 
 export interface RouterConfig {
 	throwError?: boolean;
@@ -8,10 +9,15 @@ export interface RouterConfig {
 	basePath?: string;
 	routerMiddleware?: Array<{
 		path: string;
-		middleware: Endpoint;
+		middleware: Middleware;
 	}>;
-	extraContext?: Record<string, any>;
+	/**
+	 * A callback to run before any response
+	 */
 	onResponse?: (res: Response) => any | Promise<any>;
+	/**
+	 * A callback to run before any request
+	 */
 	onRequest?: (req: Request) => any | Promise<any>;
 	/**
 	 * Open API route configuration
@@ -128,7 +134,6 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 			query: Object.fromEntries(url.searchParams),
 			_flag: "router" as const,
 			asResponse: true,
-			context: { ...config?.extraContext },
 		};
 
 		try {
@@ -142,9 +147,6 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 					});
 
 					if (res instanceof Response) return res;
-					if (res) {
-						Object.assign(context.context, res);
-					}
 				}
 			}
 

@@ -1,7 +1,7 @@
 import { ZodObject, ZodOptional, type ZodSchema } from "zod";
 import type { HasRequiredKeys, Prettify } from "./helper";
 import { toResponse } from "./to-response";
-import { createMiddleware, type Middleware } from "./middleware";
+import { type Middleware } from "./middleware";
 import {
 	createInternalContext,
 	type InferBody,
@@ -130,6 +130,10 @@ export interface EndpointOptions {
 		 * If enabled, endpoint won't be exposed over a router
 		 */
 		SERVER_ONLY?: boolean;
+		/**
+		 * Extra metadata
+		 */
+		[key: string]: any;
 	};
 	/**
 	 * List of middlewares to use
@@ -269,6 +273,7 @@ export type EndpointContext<Path extends string, Options extends EndpointOptions
 					status?: number;
 					headers?: Record<string, string>;
 					response?: Response;
+					body?: Record<string, string>;
 			  }
 			| Response,
 	) => Promise<R>;
@@ -356,4 +361,11 @@ createEndpoint.create = <E extends { use?: Middleware[] }>(opts?: E) => {
 	};
 };
 
-export type Endpoint = ReturnType<typeof createEndpoint>;
+export type Endpoint<
+	Path extends string = string,
+	Options extends EndpointOptions = EndpointOptions,
+	Handler extends (inputCtx: any) => Promise<any> = (inputCtx: any) => Promise<any>,
+> = Handler & {
+	options: Options;
+	path: Path;
+};

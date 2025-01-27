@@ -11,11 +11,13 @@ export function toResponse(data?: any, init?: ResponseInit): Response {
 	}
 	if (data?._flag === "json") {
 		const routerResponse = data.routerResponse;
-		const response = routerResponse?.response;
-		if (response instanceof Response) {
-			return response;
+		if (routerResponse instanceof Response) {
+			return routerResponse;
 		}
-		return toResponse(data.body);
+		return toResponse(data.body, {
+			headers: data.headers,
+			status: data.status,
+		});
 	}
 	if (data instanceof APIError) {
 		return toResponse(data.body, {
