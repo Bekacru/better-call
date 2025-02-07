@@ -1,5 +1,4 @@
 "use server";
-import { ZodError } from "zod";
 import { APIError } from "./error";
 import { json, type HasRequiredKeys } from "./helper";
 import type {
@@ -100,9 +99,11 @@ export function createEndpoint<
 			path: path,
 			...(ctx[0] || {}),
 		};
+
+		// Process middleware if provided
 		if (options.use?.length) {
-			let middlewareContexts = {};
-			let middlewareBody = {};
+			let middlewareContexts: Record<string, any> = {};
+			let middlewareBody: Record<string, any> = {};
 			for (const middleware of options.use) {
 				if (typeof middleware !== "function") {
 					console.warn("Middleware is not a function", {
@@ -112,9 +113,18 @@ export function createEndpoint<
 				}
 				const res = (await middleware(internalCtx)) as Endpoint;
 				if (res) {
-					const body = res.options?.body
-						? res.options.body.parse(internalCtx.body)
-						: undefined;
+					let body: any;
+					if (res.options?.body) {
+						let result = res.options.body["~standard"].validate(internalCtx.body);
+						if (result instanceof Promise) result = await result;
+						if ("issues" in result) {
+							throw new APIError("BAD_REQUEST", {
+								message: "Invalid middleware body",
+								details: result.issues,
+							});
+						}
+						body = result.value;
+					}
 					middlewareContexts = {
 						...middlewareContexts,
 						...res,
@@ -137,8 +147,21 @@ export function createEndpoint<
 				},
 			};
 		}
+
+		// Validate body and query using Standard Schema
 		try {
-			const body = options.body ? options.body.parse(internalCtx.body) : internalCtx.body;
+			let body = internalCtx.body;
+			if (options.body) {
+				let result = options.body["~standard"].validate(internalCtx.body);
+				if (result instanceof Promise) result = await result;
+				if ("issues" in result) {
+					throw new APIError("BAD_REQUEST", {
+						message: "Invalid body",
+						details: result.issues,
+					});
+				}
+				body = result.value;
+			}
 			internalCtx = {
 				...internalCtx,
 				body: body
@@ -148,18 +171,21 @@ export function createEndpoint<
 						}
 					: internalCtx.body,
 			};
-			internalCtx.query = options.query
-				? options.query.parse(internalCtx.query)
-				: internalCtx.query;
-		} catch (e) {
-			if (e instanceof ZodError) {
-				throw new APIError("BAD_REQUEST", {
-					message: e.message,
-					details: e.errors,
-				});
+			if (options.query) {
+				let result = options.query["~standard"].validate(internalCtx.query);
+				if (result instanceof Promise) result = await result;
+				if ("issues" in result) {
+					throw new APIError("BAD_REQUEST", {
+						message: "Invalid query",
+						details: result.issues,
+					});
+				}
+				internalCtx.query = result.value;
 			}
+		} catch (e) {
 			throw e;
 		}
+
 		if (options.requireHeaders && !internalCtx.headers) {
 			throw new APIError("BAD_REQUEST", {
 				message: "Headers are required",

@@ -12,10 +12,10 @@ Built for typescript and it comes with a very high performance router based on [
 pnpm i better-call
 ```
 
-make sure to install zod if you haven't
+You can use any validation library that implements the standard schema interface such as `zod`, `valibot`, `arktype` and others. You can see the complete list [here](https://github.com/standard-schema/standard-schema/tree/main?tab=readme-ov-file#what-schema-libraries-implement-the-spec). In our example, we will use `zod`:
 
 ```bash
-pnpm i zod
+pnpm i zod # `valibot`, `arktype`...
 ```
 
 ## Usage
@@ -134,12 +134,15 @@ const endpoint = createEndpoint("/item/**:name", {
 ```
 #### Body Schema
 
-The `body` option accepts a zod schema and will validate the request body. If the request body doesn't match the schema, the endpoint will throw an error. If it's mounted to a router, it'll return a 400 error.
+The `body` option accepts a validator that implements the standard schema interface such as `zod`, `valibot`, `arktype` and others. You can see the complete list [here](https://github.com/standard-schema/standard-schema/tree/main?tab=readme-ov-file#what-schema-libraries-implement-the-spec).
+
+It validates the request and if the input does not match the schema, the endpoint throws an error (or returns a 400 response if mounted).
+
 
 ```ts
 const createItem = createEndpoint("/item", {
     method: "POST",
-    body: z.object({
+    body: z.object({ // You can also use valibot, arktype...
         id: z.string()
     })
 }, async (ctx) => {
@@ -153,7 +156,9 @@ const createItem = createEndpoint("/item", {
 
 #### Query Schema
 
-The `query` option accepts a zod schema and will validate the request query. If the request query doesn't match the schema, the endpoint will throw an error. If it's mounted to a router, it'll return a 400 error.
+The `query` option accepts a validator that implements the standard schema interface such as `zod`, `valibot`, `arktype` and others. You can see the complete list [here](https://github.com/standard-schema/standard-schema/tree/main?tab=readme-ov-file#what-schema-libraries-implement-the-spec).
+
+It validates the request and if the input does not match the schema, the endpoint throws an error (or returns a 400 response if mounted).
 
 ```ts
 const createItem = createEndpoint("/item", {
@@ -249,7 +254,7 @@ You can also pass an options object to the middleware and a handler function.
 
 ```ts
 const middleware = createMiddleware({
-    body: z.object({
+    body: z.object({ // You can also use `valibot`, `arktype`...
         name: z.string()
     })
 }, async (ctx) => {
@@ -347,7 +352,7 @@ If you return a response object from an endpoint, the headers and cookies will b
 ```ts
 const createItem = createEndpoint("/item", {
     method: "POST",
-    body: z.object({
+    body: z.object({ // You can also use `valibot`, `arktype`...
         id: z.string()
     })
 }, async (ctx) => {
@@ -366,7 +371,7 @@ You can also get cookies from the context object.
 ```ts
 const createItem = createEndpoint("/item", {
     method: "POST",
-    body: z.object({
+    body: z.object({ // You can also use `valibot`, `arktype`...
         id: z.string()
     })
 }, async (ctx) => {

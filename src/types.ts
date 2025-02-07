@@ -1,4 +1,4 @@
-import { z, type ZodOptional, type ZodSchema } from "zod";
+import type { StandardSchemaV1 } from "@standard-schema/spec";
 import type { json, UnionToIntersection } from "./helper";
 import type { CookieOptions, CookiePrefixOptions } from "./cookie";
 import type { APIError } from "./error";
@@ -31,11 +31,11 @@ export interface EndpointOptions {
 	/**
 	 * Body Schema
 	 */
-	body?: ZodSchema;
+	body?: StandardSchemaV1<any, any>;
 	/**
 	 * Query Schema
 	 */
-	query?: ZodSchema;
+	query?: StandardSchemaV1<any, any>;
 	/**
 	 * If true headers will be required to be passed in the context
 	 */
@@ -283,17 +283,9 @@ export type InferRequest<
 				request?: Request;
 			};
 
-export type InferQuery<Query> = Query extends ZodSchema
-	? Query extends ZodOptional<any>
-		? {
-				query?: z.infer<Query>;
-			}
-		: {
-				query: z.infer<Query>;
-			}
-	: {
-			query?: undefined;
-		};
+export type InferQuery<Query> = Query extends StandardSchemaV1<any, any>
+	? { query: StandardSchemaV1.InferOutput<Query> }
+	: { query?: undefined };
 
 export type InferParam<
 	Path extends string,
@@ -344,18 +336,10 @@ export type Method = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "*";
 
 export type InferBody<
 	Opts extends EndpointOptions,
-	Body extends ZodSchema | undefined = Opts["body"] &
+	Body extends StandardSchemaV1 | undefined = Opts["body"] &
 		(undefined extends InferUseOptions<Opts>["body"] ? {} : InferUseOptions<Opts>["body"]),
 > = Opts["metadata"] extends { $Infer: { body: infer B } }
 	? { body: B }
-	: Body extends ZodSchema
-		? Body extends ZodOptional<any>
-			? {
-					body?: Prettify<z.infer<Body>>;
-				}
-			: {
-					body: Prettify<z.infer<Body>>;
-				}
-		: {
-				body?: undefined;
-			};
+	: Body extends StandardSchemaV1
+		? { body: Prettify<StandardSchemaV1.InferInput<Body>> }
+		: { body?: undefined };
