@@ -26,12 +26,6 @@ export interface RouterConfig {
 	extraContext?: Record<string, any>;
 	onResponse?: (res: Response) => any | Promise<any>;
 	onRequest?: (req: Request) => any | Promise<any>;
-	/**
-	 * Disable request cloning
-	 *
-	 * @default false
-	 */
-	disableRequestCloning?: boolean;
 }
 
 export const createRouter = <E extends Record<string, Endpoint>, Config extends RouterConfig>(
@@ -75,7 +69,7 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 		const method = request.method;
 		const route = findRoute(router, method, path);
 		const handler = route?.data as Endpoint;
-		const body = await getBody(config?.disableRequestCloning ? request : request.clone());
+		const body = await getBody(handler.options.cloneRequest ? request.clone() : request);
 		const headers = request.headers;
 		const query = Object.fromEntries(url.searchParams);
 		const routerMiddleware = findAllRoutes(middlewareRouter, "*", path);

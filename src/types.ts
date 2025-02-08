@@ -41,6 +41,11 @@ export interface EndpointOptions {
 	 */
 	requireHeaders?: boolean;
 	/**
+	 * If true request object will be cloned when passed to the handler
+	 * from the router
+	 */
+	cloneRequest?: boolean;
+	/**
 	 * If true request object will be required
 	 */
 	requireRequest?: boolean;
