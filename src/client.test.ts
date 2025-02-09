@@ -90,7 +90,9 @@ describe("client", () => {
 				hello: 2,
 			},
 		});
-		client("/test3");
+		client("/test3", {
+			query: {},
+		});
 	});
 
 	it("should call endpoint n", async () => {

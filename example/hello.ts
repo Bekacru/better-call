@@ -22,7 +22,9 @@ const hello = createEndpoint(
 			},
 		},
 	},
-	async () => {
+	async (c) => {
+		c.setCookie("hello", "world");
+		c.setCookie("test", "value");
 		return "hello from better-call!";
 	},
 );

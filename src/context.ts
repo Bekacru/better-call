@@ -24,7 +24,7 @@ import type { StandardSchemaV1 } from "@standard-schema/spec";
 export type HTTPMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 export type Method = HTTPMethod | "*";
 
-export type InferBody<Options extends EndpointOptions | MiddlewareOptions> =
+export type InferBodyInput<Options extends EndpointOptions | MiddlewareOptions> =
 	Options["metadata"] extends {
 		$Infer: {
 			body: infer Body;
@@ -35,7 +35,7 @@ export type InferBody<Options extends EndpointOptions | MiddlewareOptions> =
 			? StandardSchemaV1.InferInput<Options["body"]>
 			: any;
 
-export type InferBodyOutput<Options extends EndpointOptions | MiddlewareOptions> =
+export type InferBody<Options extends EndpointOptions | MiddlewareOptions> =
 	Options["metadata"] extends {
 		$Infer: {
 			body: infer Body;
@@ -46,6 +46,17 @@ export type InferBodyOutput<Options extends EndpointOptions | MiddlewareOptions>
 			? StandardSchemaV1.InferOutput<Options["body"]>
 			: any;
 
+export type InferQueryInput<Options extends EndpointOptions | MiddlewareOptions> =
+	Options["metadata"] extends {
+		$Infer: {
+			query: infer Query;
+		};
+	}
+		? Query
+		: Options["query"] extends StandardSchemaV1
+			? StandardSchemaV1.InferInput<Options["query"]>
+			: Record<string, any> | undefined;
+
 export type InferQuery<Options extends EndpointOptions | MiddlewareOptions> =
 	Options["metadata"] extends {
 		$Infer: {
@@ -53,8 +64,8 @@ export type InferQuery<Options extends EndpointOptions | MiddlewareOptions> =
 		};
 	}
 		? Query
-		: Options["query"] extends StandardSchemaV1<infer T>
-			? T
+		: Options["query"] extends StandardSchemaV1
+			? StandardSchemaV1.InferOutput<Options["query"]>
 			: Record<string, any> | undefined;
 
 export type InferMethod<Options extends EndpointOptions> = Options["method"] extends Array<Method>
@@ -80,6 +91,9 @@ export type InferRequest<Option extends EndpointOptions | MiddlewareOptions> =
 	Option["requireRequest"] extends true ? Request : Request | undefined;
 
 export type InferHeaders<Option extends EndpointOptions | MiddlewareOptions> =
+	Option["requireHeaders"] extends true ? Headers : Headers | undefined;
+
+export type InferHeadersInput<Option extends EndpointOptions | MiddlewareOptions> =
 	Option["requireHeaders"] extends true ? HeadersInit : HeadersInit | undefined;
 
 export type InferUse<Opts extends EndpointOptions["use"]> = Opts extends Middleware[]
@@ -96,7 +110,7 @@ export type InputContext<Path extends string, Options extends EndpointOptions> =
 	/**
 	 * Payload
 	 */
-	body: InferBody<Options>;
+	body: InferBodyInput<Options>;
 	/**
 	 * Request Method
 	 */
@@ -104,7 +118,7 @@ export type InputContext<Path extends string, Options extends EndpointOptions> =
 	/**
 	 * Query Params
 	 */
-	query: InferQuery<Options>;
+	query: InferQueryInput<Options>;
 	/**
 	 * Dynamic Params
 	 */
@@ -116,7 +130,7 @@ export type InputContext<Path extends string, Options extends EndpointOptions> =
 	/**
 	 * Headers
 	 */
-	headers: InferHeaders<Options>;
+	headers: InferHeadersInput<Options>;
 	/**
 	 * Return a `Response` object
 	 */
@@ -140,13 +154,12 @@ export const createInternalContext = async (
 	{
 		options,
 		path,
-		headers,
 	}: {
 		options: EndpointOptions;
 		path: string;
-		headers: Headers;
 	},
 ) => {
+	const headers = new Headers();
 	const { data, error } = await runValidation(options, context);
 	if (error) {
 		throw new APIError(400, {
@@ -222,12 +235,11 @@ export const createInternalContext = async (
 			options?: CookieOptions,
 		) => {
 			const cookie = await serializeSignedCookie(key, value, secret, options);
-
 			headers.append("set-cookie", cookie);
 			return cookie;
 		},
 		redirect: (url: string) => {
-			headers.append("url", url);
+			headers.set("location", url);
 			return new APIError("FOUND", undefined, headers);
 		},
 		error: (
@@ -262,6 +274,7 @@ export const createInternalContext = async (
 				_flag: "json",
 			};
 		},
+		responseHeaders: headers,
 	};
 	//if context was shimmed through the input we want to apply it
 	const middlewareContext = {

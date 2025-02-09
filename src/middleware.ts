@@ -135,18 +135,18 @@ export function createMiddleware<Options extends MiddlewareOptions, R>(
 export function createMiddleware(optionsOrHandler: any, handler?: any) {
 	const internalHandler = async (inputCtx: InputContext<any, any>) => {
 		const context = inputCtx as InputContext<any, any>;
-		const headers = new Headers();
 		const _handler = typeof optionsOrHandler === "function" ? optionsOrHandler : handler;
 		const options = typeof optionsOrHandler === "function" ? {} : optionsOrHandler;
 		const internalContext = await createInternalContext(context, {
 			options,
 			path: "/",
-			headers,
 		});
+
 		if (!_handler) {
 			throw new Error("handler must be defined");
 		}
 		const response = await _handler(internalContext as any);
+		const headers = internalContext.responseHeaders;
 		return context.returnHeaders
 			? {
 					headers,

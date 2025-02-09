@@ -12,7 +12,8 @@
     "bump": "bumpp",
     "build": "tsup --dts --clean",
     "dev": "tsup --watch",
-    "dev:dts": "tsup --watch --dts"
+    "dev:dts": "tsup --watch --dts",
+    "serve": "bun --hot example/hello.ts"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.16.4",

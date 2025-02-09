@@ -30,38 +30,31 @@ export function toResponse(data?: any, init?: ResponseInit): Response {
 		});
 	}
 	let body: BodyInit;
-	let headers: HeadersInit = {
-		"Content-Type": "application/json",
-	};
+	let headers = new Headers(init?.headers);
 
 	if (typeof data === "string") {
 		body = data;
-		headers["Content-Type"] = "text/plain";
+		headers.set("Content-Type", "text/plain");
 	} else if (data instanceof ArrayBuffer || ArrayBuffer.isView(data)) {
 		body = data;
-		headers["Content-Type"] = "application/octet-stream";
+		headers.set("Content-Type", "application/octet-stream");
 	} else if (data instanceof Blob) {
 		body = data;
-		headers["Content-Type"] = data.type || "application/octet-stream";
+		headers.set("Content-Type", data.type || "application/octet-stream");
 	} else if (data instanceof FormData) {
 		body = data;
-		headers = {};
 	} else if (data instanceof URLSearchParams) {
 		body = data;
-		headers["Content-Type"] = "application/x-www-form-urlencoded";
+		headers.set("Content-Type", "application/x-www-form-urlencoded");
 	} else if (data instanceof ReadableStream) {
 		body = data;
-		headers["Content-Type"] = "application/octet-stream";
+		headers.set("Content-Type", "application/octet-stream");
 	} else if (data === null || data === undefined) {
 		body = "";
-		headers["Content-Type"] = "text/plain";
+		headers.set("Content-Type", "text/plain");
 	} else {
 		body = JSON.stringify(data);
-		headers["Content-Type"] = "application/json";
-	}
-
-	if (init?.headers) {
-		headers = { ...headers, ...init.headers };
+		headers.set("Content-Type", "application/json");
 	}
 
 	return new Response(body, {

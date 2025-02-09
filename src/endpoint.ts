@@ -309,11 +309,9 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 		...inputCtx: HasRequiredKeys<Context> extends true ? [Context] : [Context?]
 	) => {
 		const context = (inputCtx[0] || {}) as InputContext<any, any>;
-		const headers = new Headers();
 		const internalContext = await createInternalContext(context, {
 			options,
 			path,
-			headers,
 		});
 		const response = await handler(internalContext as any).catch((e) => {
 			if (e instanceof APIError && context.asResponse) {
@@ -321,6 +319,7 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 			}
 			throw e;
 		});
+		const headers = internalContext.responseHeaders;
 		return (
 			context.asResponse
 				? toResponse(response, {
