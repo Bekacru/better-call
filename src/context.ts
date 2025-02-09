@@ -1,4 +1,3 @@
-import type { ZodSchema } from "zod";
 import type { EndpointOptions } from "./endpoint";
 import { _statusCode, APIError, type Status } from "./error";
 import type {
@@ -20,6 +19,7 @@ import {
 	type CookiePrefixOptions,
 } from "./cookies";
 import { getCryptoKey, verifySignature } from "./crypto";
+import type { StandardSchemaV1 } from "@standard-schema/spec";
 
 export type HTTPMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 export type Method = HTTPMethod | "*";
@@ -31,8 +31,19 @@ export type InferBody<Options extends EndpointOptions | MiddlewareOptions> =
 		};
 	}
 		? Body
-		: Options["body"] extends ZodSchema<infer T>
-			? T
+		: Options["body"] extends StandardSchemaV1
+			? StandardSchemaV1.InferInput<Options["body"]>
+			: any;
+
+export type InferBodyOutput<Options extends EndpointOptions | MiddlewareOptions> =
+	Options["metadata"] extends {
+		$Infer: {
+			body: infer Body;
+		};
+	}
+		? Body
+		: Options["body"] extends StandardSchemaV1
+			? StandardSchemaV1.InferOutput<Options["body"]>
 			: any;
 
 export type InferQuery<Options extends EndpointOptions | MiddlewareOptions> =
@@ -42,7 +53,7 @@ export type InferQuery<Options extends EndpointOptions | MiddlewareOptions> =
 		};
 	}
 		? Query
-		: Options["query"] extends ZodSchema<infer T>
+		: Options["query"] extends StandardSchemaV1<infer T>
 			? T
 			: Record<string, any> | undefined;
 
@@ -62,24 +73,24 @@ export type InferInputMethod<Options extends EndpointOptions> =
 export type InferParam<Path extends string> = IsEmptyObject<
 	InferParamPath<Path> & InferParamWildCard<Path>
 > extends true
-	? never
+	? Record<string, any> | undefined
 	: Prettify<InferParamPath<Path> & InferParamWildCard<Path>>;
 
 export type InferRequest<Option extends EndpointOptions | MiddlewareOptions> =
 	Option["requireRequest"] extends true ? Request : Request | undefined;
 
 export type InferHeaders<Option extends EndpointOptions | MiddlewareOptions> =
-	Option["requireHeaders"] extends true ? Headers : Headers | undefined;
+	Option["requireHeaders"] extends true ? HeadersInit : HeadersInit | undefined;
 
 export type InferUse<Opts extends EndpointOptions["use"]> = Opts extends Middleware[]
 	? UnionToIntersection<Awaited<ReturnType<Opts[number]>>>
 	: {};
 
 export type InferMiddlewareBody<Options extends MiddlewareOptions> =
-	Options["body"] extends ZodSchema<infer T> ? T : any;
+	Options["body"] extends StandardSchemaV1<infer T> ? T : any;
 
 export type InferMiddlewareQuery<Options extends MiddlewareOptions> =
-	Options["query"] extends ZodSchema<infer T> ? T : any;
+	Options["query"] extends StandardSchemaV1<infer T> ? T : any;
 
 export type InputContext<Path extends string, Options extends EndpointOptions> = Input<{
 	/**
@@ -118,6 +129,10 @@ export type InputContext<Path extends string, Options extends EndpointOptions> =
 	 * Middlewares to use
 	 */
 	use?: Middleware[];
+	/**
+	 * Customize the path
+	 */
+	path?: string;
 }>;
 
 export const createInternalContext = async (
@@ -129,10 +144,10 @@ export const createInternalContext = async (
 	}: {
 		options: EndpointOptions;
 		path: string;
-		headers: HeadersInit;
+		headers: Headers;
 	},
 ) => {
-	const { data, error } = runValidation(options, context);
+	const { data, error } = await runValidation(options, context);
 	if (error) {
 		throw new APIError(400, {
 			message: error.message,
@@ -149,9 +164,10 @@ export const createInternalContext = async (
 	const requestCookies = requestHeaders?.get("cookie");
 	const parsedCookies = requestCookies ? parseCookies(requestCookies) : undefined;
 	const internalContext = {
+		...context,
 		body: data.body,
 		query: data.query,
-		path,
+		path: context.path || path,
 		context: undefined as any,
 		returned: undefined as any,
 		headers: context?.headers,
@@ -159,7 +175,7 @@ export const createInternalContext = async (
 		params: "params" in context ? context.params : undefined,
 		method: context.method,
 		setHeader: (key: string, value: string) => {
-			headers[key as keyof typeof headers] = value;
+			headers.set(key, value);
 		},
 		getHeader: (key: string) => {
 			if (!requestHeaders) return null;
@@ -196,8 +212,7 @@ export const createInternalContext = async (
 		},
 		setCookie: (key: string, value: string, options?: CookieOptions) => {
 			const cookie = serializeCookie(key, value, options);
-			const setCookie = headers["Set-Cookie" as keyof typeof headers];
-			headers["Set-Cookie" as keyof typeof headers] = `${setCookie || ""}; ${cookie}`;
+			headers.append("set-cookie", cookie);
 			return cookie;
 		},
 		setSignedCookie: async (
@@ -207,13 +222,13 @@ export const createInternalContext = async (
 			options?: CookieOptions,
 		) => {
 			const cookie = await serializeSignedCookie(key, value, secret, options);
-			headers["Set-Cookie" as keyof typeof headers] =
-				`${headers["Set-Cookie" as keyof typeof headers] || ""}; ${cookie}`;
+
+			headers.append("set-cookie", cookie);
 			return cookie;
 		},
 		redirect: (url: string) => {
-			headers["location" as keyof typeof headers] = url;
-			return new APIError("FOUND");
+			headers.append("url", url);
+			return new APIError("FOUND", undefined, headers);
 		},
 		error: (
 			status: keyof typeof _statusCode | Status,
@@ -248,7 +263,10 @@ export const createInternalContext = async (
 			};
 		},
 	};
-	const middlewareContext = {};
+	//if context was shimmed through the input we want to apply it
+	const middlewareContext = {
+		...("context" in context && context.context ? context.context : {}),
+	};
 	for (const middleware of options.use || []) {
 		const response = await middleware(internalContext);
 		Object.assign(middlewareContext, response);

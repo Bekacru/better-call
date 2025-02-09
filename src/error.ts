@@ -125,13 +125,13 @@ export class APIError extends Error {
 					code?: string;
 			  }
 			| undefined = undefined,
-		public headers = {},
+		public headers: HeadersInit = {},
 		public statusCode = typeof status === "number" ? status : _statusCode[status],
 	) {
 		super(body?.message);
 		this.name = "APIError";
 		this.status = status;
-		this.headers = headers;
+		this.headers = new Headers(headers);
 		this.statusCode = statusCode;
 		this.stack = "";
 	}

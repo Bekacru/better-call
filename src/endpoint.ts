@@ -1,4 +1,3 @@
-import { ZodObject, ZodOptional, type ZodSchema } from "zod";
 import type { HasRequiredKeys, Prettify } from "./helper";
 import { toResponse } from "./to-response";
 import { type Middleware } from "./middleware";
@@ -18,6 +17,9 @@ import type { CookieOptions, CookiePrefixOptions } from "./cookies";
 import { APIError, type _statusCode, type Status } from "./error";
 import type { OpenAPIParameter, OpenAPISchemaType } from "./openapi";
 
+import type { StandardSchemaV1 } from "@standard-schema/spec";
+import { type } from "arktype";
+
 export interface EndpointOptions {
 	/**
 	 * Request Method
@@ -26,11 +28,11 @@ export interface EndpointOptions {
 	/**
 	 * Body Schema
 	 */
-	body?: ZodSchema;
+	body?: StandardSchemaV1;
 	/**
 	 * Query Schema
 	 */
-	query?: ZodObject<any> | ZodOptional<ZodObject<any>>;
+	query?: StandardSchemaV1;
 	/**
 	 * If true headers will be required to be passed in the context
 	 */
@@ -307,7 +309,7 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 		...inputCtx: HasRequiredKeys<Context> extends true ? [Context] : [Context?]
 	) => {
 		const context = (inputCtx[0] || {}) as InputContext<any, any>;
-		const headers: HeadersInit = {};
+		const headers = new Headers();
 		const internalContext = await createInternalContext(context, {
 			options,
 			path,
@@ -326,7 +328,7 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 					})
 				: context.returnHeaders
 					? {
-							headers: new Headers(headers),
+							headers,
 							response,
 						}
 					: response
@@ -356,7 +358,7 @@ createEndpoint.create = <E extends { use?: Middleware[] }>(opts?: E) => {
 				...options,
 				use: [...(options?.use || []), ...(opts?.use || [])],
 			},
-			handler as any,
+			handler,
 		);
 	};
 };

@@ -3,6 +3,9 @@ import { createEndpoint } from "./endpoint";
 import { z } from "zod";
 import { APIError } from "./error";
 import { createMiddleware } from "./middleware";
+import * as v from "valibot";
+import type { StandardSchemaV1 } from "@standard-schema/spec";
+import { type } from "arktype";
 
 describe("validation", (it) => {
 	it("should validate body and throw validation error", async () => {
@@ -10,11 +13,12 @@ describe("validation", (it) => {
 			"/test",
 			{
 				method: "GET",
-				body: z.object({
-					name: z.string(),
+				body: v.object({
+					name: v.string(),
 				}),
 			},
 			async (ctx) => {
+				ctx.body;
 				ctx.headers;
 				return ctx.body;
 			},
@@ -25,7 +29,7 @@ describe("validation", (it) => {
 				//@ts-expect-error
 				body: { name: 1 },
 			}),
-		).rejects.toThrowError(`Validation error: Expected string, received number at "name"`);
+		).rejects.toThrowError(`Validation error: Invalid type: Expected string but received 1`);
 	});
 
 	it("should validate query and throw validation error", async () => {
@@ -33,8 +37,8 @@ describe("validation", (it) => {
 			"/test",
 			{
 				method: "GET",
-				query: z.object({
-					name: z.string(),
+				query: v.object({
+					name: v.string(),
 				}),
 			},
 			async (ctx) => {
@@ -47,7 +51,7 @@ describe("validation", (it) => {
 				//@ts-expect-error
 				query: { name: 1 },
 			}),
-		).rejects.toThrowError(`Validation error: Expected string, received number at "name"`);
+		).rejects.toThrowError(`Validation error: Invalid type: Expected string but received 1`);
 	});
 
 	it("should validate the body and return the body", async () => {
@@ -68,6 +72,7 @@ describe("validation", (it) => {
 				name: "test",
 			},
 		});
+		console.log(response);
 		expect(response.name).toBe("test-validated");
 	});
 
@@ -529,7 +534,7 @@ describe("response", () => {
 	});
 });
 
-describe.only("creator", () => {
+describe("creator", () => {
 	it("should use creator context", async () => {
 		const creator = createEndpoint.create({
 			use: [
@@ -588,3 +593,50 @@ describe.only("creator", () => {
 		});
 	});
 });
+
+interface ExtraOptions {
+	method: "POST" | "GET";
+}
+
+interface Options extends ExtraOptions {
+	body?: StandardSchemaV1;
+	query?: StandardSchemaV1;
+}
+
+function fn<
+	Extra extends ExtraOptions,
+	Body extends StandardSchemaV1,
+	Query extends StandardSchemaV1,
+>(
+	options: {
+		body?: Body;
+		query?: Query;
+	} & Extra,
+	handler: (
+		ctx: InferContext<
+			{
+				body: Body;
+				query: Query;
+			} & Extra
+		>,
+	) => Promise<any>,
+) {}
+
+type InferSchema<T> = T extends StandardSchemaV1 ? StandardSchemaV1.InferInput<T> : any;
+
+type InferContext<Option extends Options> = {
+	body: InferSchema<Option["body"]>;
+	query: InferSchema<Option["body"]>;
+};
+
+fn(
+	{
+		method: "POST",
+		body: type({
+			name: "string",
+		}),
+	},
+	async (c) => {
+		c.body;
+	},
+);

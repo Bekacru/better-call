@@ -1,6 +1,6 @@
-import type { ZodError } from "zod";
 import type { EndpointOptions } from "./endpoint";
 import type { InputContext } from "./context";
+import type { StandardSchemaV1 } from "./standard-schema";
 
 type ValidationResponse =
 	| {
@@ -21,10 +21,10 @@ type ValidationResponse =
  * Runs validation on body and query
  * @returns error and data object
  */
-export function runValidation(
+export async function runValidation(
 	options: EndpointOptions,
 	context: InputContext<any, any> = {},
-): ValidationResponse {
+): Promise<ValidationResponse> {
 	let request = {
 		body: context.body,
 		query: context.query,
@@ -33,24 +33,25 @@ export function runValidation(
 		query: any;
 	};
 	if (options.body) {
-		const result = options.body.safeParse(context.body);
-		if (result.error) {
+		const result = await options.body["~standard"].validate(context.body);
+		if (result.issues) {
 			return {
 				data: null,
-				error: fromError(result.error),
+				error: fromError(result.issues),
 			};
 		}
-		request.body = result.data;
+		request.body = result.value;
 	}
+
 	if (options.query) {
-		const result = options.query.safeParse(context.query);
-		if (result.error) {
+		const result = await options.query["~standard"].validate(context.query);
+		if (result.issues) {
 			return {
 				data: null,
-				error: fromError(result.error),
+				error: fromError(result.issues),
 			};
 		}
-		request.query = result.data;
+		request.query = result.value;
 	}
 	if (options.requireHeaders && !context.headers) {
 		return {
@@ -70,18 +71,12 @@ export function runValidation(
 	};
 }
 
-export function fromError(error: ZodError) {
+export function fromError(error: readonly StandardSchemaV1.Issue[]) {
 	const errorMessages: string[] = [];
 
-	for (const issue of error.issues) {
-		const path = issue.path.join(".");
+	for (const issue of error) {
 		const message = issue.message;
-
-		if (path) {
-			errorMessages.push(`${message} at "${path}"`);
-		} else {
-			errorMessages.push(message);
-		}
+		errorMessages.push(message);
 	}
 	return {
 		message: `Validation error: ${errorMessages.join(", ")}`,

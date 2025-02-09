@@ -122,7 +122,7 @@ describe("set-cookies", () => {
 		const response = await endpoint({
 			returnHeaders: true,
 		});
-		expect(response.headers.get("set-cookie")).toBe("; test=test");
+		expect(response.headers.get("set-cookie")).toBe("test=test");
 	});
 
 	it("should set multiple cookies", async () => {
@@ -140,7 +140,7 @@ describe("set-cookies", () => {
 		const response = await endpoint({
 			returnHeaders: true,
 		});
-		expect(response.headers.get("set-cookie")).toBe("; test=test; test2=test2; test3=test3");
+		expect(response.headers.get("set-cookie")).toBe("test=test, test2=test2, test3=test3");
 	});
 
 	it("should apply options", async () => {
@@ -160,7 +160,35 @@ describe("set-cookies", () => {
 		const response = await endpoint({
 			returnHeaders: true,
 		});
-		expect(response.headers.get("Set-Cookie")).toBe("; test=test; Path=/; HttpOnly; Secure");
+
+		expect(response.headers.get("Set-Cookie")).toBe("test=test; Path=/; HttpOnly; Secure");
+	});
+
+	it("should apply multiple cookies with options", async () => {
+		const endpoint = createEndpoint(
+			"/",
+			{
+				method: "POST",
+			},
+			async (c) => {
+				c.setCookie("test", "test", {
+					secure: true,
+					httpOnly: true,
+					path: "/",
+				});
+				c.setCookie("test2", "test2", {
+					secure: true,
+					httpOnly: true,
+					path: "/",
+				});
+			},
+		);
+		const response = await endpoint({
+			returnHeaders: true,
+		});
+		expect(response.headers.get("Set-Cookie")).toBe(
+			"test=test; Path=/; HttpOnly; Secure, test2=test2; Path=/; HttpOnly; Secure",
+		);
 	});
 
 	it("should set signed cookie", async () => {
@@ -178,7 +206,7 @@ describe("set-cookies", () => {
 		});
 		const setCookie = response.headers.get("set-cookie");
 		const signature = setCookie?.split(".")[1];
-		expect(setCookie).toContain("; test=test.");
+		expect(setCookie).toContain("test=test.");
 		expect(signature?.length).toBeGreaterThan(10);
 	});
 
@@ -208,7 +236,7 @@ describe("set-cookies", () => {
 		);
 		const response2 = await endpoint2({
 			headers: {
-				cookie: setCookie,
+				cookie: setCookie!,
 			},
 		});
 		expect(response2).toBe("test");

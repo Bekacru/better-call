@@ -16,7 +16,6 @@ import {
 	type InputContext,
 } from "./context";
 import type { Input, Prettify } from "./helper";
-import { z } from "zod";
 
 export interface MiddlewareOptions extends Omit<EndpointOptions, "method"> {}
 
@@ -136,7 +135,7 @@ export function createMiddleware<Options extends MiddlewareOptions, R>(
 export function createMiddleware(optionsOrHandler: any, handler?: any) {
 	const internalHandler = async (inputCtx: InputContext<any, any>) => {
 		const context = inputCtx as InputContext<any, any>;
-		const headers: HeadersInit = {};
+		const headers = new Headers();
 		const _handler = typeof optionsOrHandler === "function" ? optionsOrHandler : handler;
 		const options = typeof optionsOrHandler === "function" ? {} : optionsOrHandler;
 		const internalContext = await createInternalContext(context, {
@@ -150,7 +149,7 @@ export function createMiddleware(optionsOrHandler: any, handler?: any) {
 		const response = await _handler(internalContext as any);
 		return context.returnHeaders
 			? {
-					headers: new Headers(headers),
+					headers,
 					response,
 				}
 			: response;
