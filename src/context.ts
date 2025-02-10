@@ -164,6 +164,7 @@ export const createInternalContext = async (
 	if (error) {
 		throw new APIError(400, {
 			message: error.message,
+			code: "VALIDATION_ERROR",
 		});
 	}
 	const requestHeaders: Headers | null =
@@ -278,8 +279,25 @@ export const createInternalContext = async (
 	};
 	//if context was shimmed through the input we want to apply it
 	for (const middleware of options.use || []) {
-		const response = await middleware(internalContext);
-		Object.assign(internalContext.context, response);
+		const response = (await middleware({
+			...internalContext,
+			returnHeaders: true,
+			asResponse: false,
+		})) as {
+			response?: any;
+			headers?: Headers;
+		};
+		if (response.response) {
+			Object.assign(internalContext.context, response.response);
+		}
+		/**
+		 * Apply headers from the middleware to the endpoint headers
+		 */
+		if (response.headers) {
+			response.headers.forEach((value, key) => {
+				internalContext.responseHeaders.set(key, value);
+			});
+		}
 	}
 	return internalContext;
 };

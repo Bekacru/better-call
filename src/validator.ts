@@ -37,7 +37,7 @@ export async function runValidation(
 		if (result.issues) {
 			return {
 				data: null,
-				error: fromError(result.issues),
+				error: fromError(result.issues, "body"),
 			};
 		}
 		request.body = result.value;
@@ -48,7 +48,7 @@ export async function runValidation(
 		if (result.issues) {
 			return {
 				data: null,
-				error: fromError(result.issues),
+				error: fromError(result.issues, "query"),
 			};
 		}
 		request.query = result.value;
@@ -56,13 +56,13 @@ export async function runValidation(
 	if (options.requireHeaders && !context.headers) {
 		return {
 			data: null,
-			error: { message: "Validation Error: Headers are required" },
+			error: { message: "Headers is required" },
 		};
 	}
 	if (options.requireRequest && !context.request) {
 		return {
 			data: null,
-			error: { message: "Validation Error: Request is required" },
+			error: { message: "Request is required" },
 		};
 	}
 	return {
@@ -71,7 +71,7 @@ export async function runValidation(
 	};
 }
 
-export function fromError(error: readonly StandardSchemaV1.Issue[]) {
+export function fromError(error: readonly StandardSchemaV1.Issue[], validating: string) {
 	const errorMessages: string[] = [];
 
 	for (const issue of error) {
@@ -79,6 +79,6 @@ export function fromError(error: readonly StandardSchemaV1.Issue[]) {
 		errorMessages.push(message);
 	}
 	return {
-		message: `Validation error: ${errorMessages.join(", ")}`,
+		message: `Invalid ${validating} parameters`,
 	};
 }

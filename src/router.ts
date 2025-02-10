@@ -2,6 +2,7 @@ import { createRouter as createRou3Router, addRoute, findRoute, findAllRoutes } 
 import { createEndpoint, type Endpoint } from "./endpoint";
 import { generator, getHTML } from "./openapi";
 import type { Middleware } from "./middleware";
+import { getBody } from "./utils";
 
 export interface RouterConfig {
 	throwError?: boolean;
@@ -138,8 +139,8 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 			method: request.method as "GET",
 			headers: request.headers,
 			params: route.params as any,
-			request: handler.options.cloneRequest ? request.clone() : request,
-			body: await request.json().catch(() => undefined),
+			request: request,
+			body: await getBody(handler.options.cloneRequest ? request.clone() : request),
 			query: Object.fromEntries(url.searchParams),
 			_flag: "router" as const,
 			asResponse: true,
