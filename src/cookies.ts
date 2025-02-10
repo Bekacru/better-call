@@ -104,11 +104,11 @@ export const getCookieKey = (key: string, prefix?: CookiePrefixOptions) => {
 };
 
 export function parseCookies(cookieHeader: string) {
-	const cookies = cookieHeader.split("; ");
+	const cookies = cookieHeader.split(";");
 	const cookieMap = new Map<string, string>();
 
 	cookies.forEach((cookie) => {
-		const [name, value] = cookie.split("=");
+		const [name, value] = cookie.trim().split("=");
 		cookieMap.set(name, decodeURIComponent(value));
 	});
 	return cookieMap;

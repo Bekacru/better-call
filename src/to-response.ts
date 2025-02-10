@@ -56,10 +56,11 @@ export function toResponse(data?: any, init?: ResponseInit): Response {
 			},
 		});
 	}
-	let body: BodyInit;
+	let body = data;
 	let headers = new Headers(init?.headers);
-
-	if (typeof data === "string") {
+	if (!data) {
+		headers.set("content-type", "application/json");
+	} else if (typeof data === "string") {
 		body = data;
 		headers.set("Content-Type", "text/plain");
 	} else if (data instanceof ArrayBuffer || ArrayBuffer.isView(data)) {
@@ -76,14 +77,9 @@ export function toResponse(data?: any, init?: ResponseInit): Response {
 	} else if (data instanceof ReadableStream) {
 		body = data;
 		headers.set("Content-Type", "application/octet-stream");
-	} else if (data === null || data === undefined) {
-		body = "";
-		headers.set("Content-Type", "text/plain");
 	} else if (isJSONSerializable(data)) {
 		body = JSON.stringify(data);
 		headers.set("Content-Type", "application/json");
-	} else {
-		body = data;
 	}
 
 	return new Response(body, {
