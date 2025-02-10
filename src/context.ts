@@ -104,7 +104,7 @@ export type InferMiddlewareBody<Options extends MiddlewareOptions> =
 	Options["body"] extends StandardSchemaV1<infer T> ? T : any;
 
 export type InferMiddlewareQuery<Options extends MiddlewareOptions> =
-	Options["query"] extends StandardSchemaV1<infer T> ? T : any;
+	Options["query"] extends StandardSchemaV1<infer T> ? T : Record<string, any> | undefined;
 
 export type InputContext<Path extends string, Options extends EndpointOptions> = Input<{
 	/**

@@ -40,6 +40,10 @@ export interface EndpointOptions {
 	 */
 	requireRequest?: boolean;
 	/**
+	 * Clone the request object from the router
+	 */
+	cloneRequest?: boolean;
+	/**
 	 * Endpoint metadata
 	 */
 	metadata?: {

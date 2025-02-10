@@ -132,7 +132,7 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 			method: request.method as "GET",
 			headers: request.headers,
 			params: route.params as any,
-			request,
+			request: handler.options.cloneRequest ? request.clone() : request,
 			body: await request.json().catch(() => undefined),
 			query: Object.fromEntries(url.searchParams),
 			_flag: "router" as const,
