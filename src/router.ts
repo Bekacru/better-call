@@ -92,11 +92,14 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 	const middlewareRouter = createRou3Router();
 
 	for (const endpoint of Object.values(endpoints)) {
-		if (endpoint.options.metadata?.SERVER_ONLY) continue;
+		if (!endpoint.options) {
+			continue;
+		}
+		if (endpoint.options?.metadata?.SERVER_ONLY) continue;
 
 		const methods = Array.isArray(endpoint.options?.method)
 			? endpoint.options.method
-			: [endpoint.options.method];
+			: [endpoint.options?.method];
 
 		for (const method of methods) {
 			addRoute(router, method, endpoint.path, endpoint);

@@ -6,60 +6,85 @@ import { createRouter } from "./router";
 import { createMiddleware } from "./middleware";
 
 describe("client", () => {
+	const getEndpoint = createEndpoint(
+		"/test2",
+		{
+			method: "GET",
+			query: z.object({
+				hello: z.string(),
+			}),
+		},
+		async (ctx) => {
+			return {
+				status: 200,
+				body: {
+					hello: "world",
+				},
+			};
+		},
+	);
+	const endpoint = createEndpoint(
+		"/test",
+		{
+			method: "POST",
+			body: z.object({
+				hello: z.string(),
+			}),
+		},
+		async (ctx) => {
+			return {
+				status: 200,
+				body: {
+					hello: "world",
+				},
+			};
+		},
+	);
+
+	const endpoint2 = createEndpoint(
+		"/test3",
+		{
+			method: "GET",
+			query: z.object({
+				hello: z.string().optional(),
+			}),
+		},
+		async (ctx) => {
+			return {
+				status: 200,
+				body: {
+					hello: "world",
+				},
+			};
+		},
+	);
+	it("should send request and get response", async () => {
+		const router = createRouter({
+			endpoint,
+			endpoint2,
+			getEndpoint,
+		});
+
+		const client = createClient<typeof router>({
+			baseURL: "http://localhost:3000",
+			customFetchImpl: async (url, init) => {
+				return router.handler(new Request(url, init));
+			},
+		});
+
+		expectTypeOf<Parameters<typeof client>[0]>().toMatchTypeOf<
+			"@post/test" | "/test2" | "/test3"
+		>();
+
+		const response = await client("@post/test", {
+			body: {
+				hello: "world",
+			},
+		});
+		expect(response.data).toMatchObject({ status: 200, body: { hello: "world" } });
+	});
+
 	it("should infer types", () => {
-		const getEndpoint = createEndpoint(
-			"/test2",
-			{
-				method: "GET",
-				query: z.object({
-					hello: z.string(),
-				}),
-			},
-			async (ctx) => {
-				return {
-					status: 200,
-					body: {
-						hello: "world",
-					},
-				};
-			},
-		);
-		const endpoint = createEndpoint(
-			"/test",
-			{
-				method: "POST",
-				body: z.object({
-					hello: z.string(),
-				}),
-			},
-			async (ctx) => {
-				return {
-					status: 200,
-					body: {
-						hello: "world",
-					},
-				};
-			},
-		);
-
-		const endpoint2 = createEndpoint(
-			"/test3",
-			{
-				method: "GET",
-				query: z.object({
-					hello: z.string().optional(),
-				}),
-			},
-			async (ctx) => {
-				return {
-					status: 200,
-					body: {
-						hello: "world",
-					},
-				};
-			},
-		);
-
 		const router = createRouter({
 			endpoint,
 			endpoint2,

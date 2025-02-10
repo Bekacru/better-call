@@ -131,7 +131,7 @@ export class APIError extends Error {
 		super(body?.message);
 		this.name = "APIError";
 		this.status = status;
-		this.headers = new Headers(headers);
+		this.headers = headers;
 		this.statusCode = statusCode;
 		this.stack = "";
 	}
