@@ -16,7 +16,7 @@ import {
 import type { CookieOptions, CookiePrefixOptions } from "./cookies";
 import { APIError, type _statusCode, type Status } from "./error";
 import type { OpenAPIParameter, OpenAPISchemaType } from "./openapi";
-import type { StandardSchemaV1 } from "@standard-schema/spec";
+import type { StandardSchemaV1 } from "./standard-schema";
 
 export interface EndpointOptions {
 	/**

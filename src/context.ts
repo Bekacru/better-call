@@ -19,7 +19,7 @@ import {
 	type CookiePrefixOptions,
 } from "./cookies";
 import { getCryptoKey, verifySignature } from "./crypto";
-import type { StandardSchemaV1 } from "@standard-schema/spec";
+import type { StandardSchemaV1 } from "./standard-schema";
 
 export type HTTPMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 export type Method = HTTPMethod | "*";
