@@ -12,6 +12,12 @@ export interface RouterConfig {
 		middleware: Middleware;
 	}>;
 	/**
+	 * additional Context that needs to passed to endpoints
+	 *
+	 * this will be available on `ctx.context` on endpoints
+	 */
+	routerContext?: Record<string, any>;
+	/**
 	 * A callback to run before any response
 	 */
 	onResponse?: (res: Response) => any | Promise<any>;
@@ -137,6 +143,7 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 			query: Object.fromEntries(url.searchParams),
 			_flag: "router" as const,
 			asResponse: true,
+			context: config?.routerContext,
 		};
 
 		try {
@@ -156,6 +163,7 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 			const response = (await handler(context)) as Response;
 			return response;
 		} catch (error) {
+			console.error(`#SERVER_ERROR: `, error);
 			return new Response(null, {
 				status: 500,
 				statusText: "Internal Server Error",
@@ -165,20 +173,17 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 
 	return {
 		handler: async (request: Request) => {
-			const modifiedRequest = config?.onRequest ? await config.onRequest(request) : request;
-
-			const req = modifiedRequest instanceof Request ? modifiedRequest : request;
-
-			const response = await processRequest(req);
-
-			if (config?.onResponse) {
-				const modifiedResponse = await config.onResponse(response);
-				if (modifiedResponse instanceof Response) {
-					return modifiedResponse;
-				}
+			const onReq = await config?.onRequest?.(request);
+			if (onReq instanceof Response) {
+				return onReq;
 			}
-
-			return response;
+			const req = onReq instanceof Request ? onReq : request;
+			const res = await processRequest(req);
+			const onRes = await config?.onResponse?.(res);
+			if (onRes instanceof Response) {
+				return onRes;
+			}
+			return res;
 		},
 		endpoints,
 	};

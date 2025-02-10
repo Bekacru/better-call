@@ -133,6 +133,15 @@ export class APIError extends Error {
 		this.status = status;
 		this.headers = headers;
 		this.statusCode = statusCode;
+		this.body = {
+			message: body?.message,
+			code:
+				body?.code ||
+				body?.message
+					?.toUpperCase()
+					.replace(/ /g, "_")
+					.replace(/[^A-Z0-9_]/g, ""),
+		};
 		this.stack = "";
 	}
 }
