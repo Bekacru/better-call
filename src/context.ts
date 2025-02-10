@@ -262,7 +262,7 @@ export const createInternalContext = async (
 						status?: number;
 						headers?: Record<string, string>;
 						response?: Response;
-						body?: Record<string, string>;
+						body?: Record<string, any>;
 				  }
 				| Response,
 		) => {
