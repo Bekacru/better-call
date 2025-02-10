@@ -10,7 +10,7 @@ Built for typescript and it comes with a very high performance router based on [
 pnpm i better-call
 ```
 
-make sure to install [standard schema](https://github.com/standard-schema/standard-schema) compatible validation library like zod.
+Make sure to install [standard schema](https://github.com/standard-schema/standard-schema) compatible validation library like zod.
 
 ```bash
 pnpm i zod
