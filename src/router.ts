@@ -3,6 +3,8 @@ import { createEndpoint, type Endpoint } from "./endpoint";
 import { generator, getHTML } from "./openapi";
 import type { Middleware } from "./middleware";
 import { getBody } from "./utils";
+import { APIError } from "./error";
+import { toResponse } from "./to-response";
 
 export interface RouterConfig {
 	throwError?: boolean;
@@ -164,7 +166,10 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 			const response = (await handler(context)) as Response;
 			return response;
 		} catch (error) {
-			console.error(`#SERVER_ERROR: `, error);
+			if (error instanceof APIError) {
+				return toResponse(error);
+			}
+			console.error(`# SERVER_ERROR: `, error);
 			return new Response(null, {
 				status: 500,
 				statusText: "Internal Server Error",

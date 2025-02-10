@@ -33,7 +33,7 @@ export type InferBodyInput<Options extends EndpointOptions | MiddlewareOptions> 
 		? Body
 		: Options["body"] extends StandardSchemaV1
 			? StandardSchemaV1.InferInput<Options["body"]>
-			: any;
+			: undefined;
 
 export type InferBody<Options extends EndpointOptions | MiddlewareOptions> =
 	Options["metadata"] extends {
