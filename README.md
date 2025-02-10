@@ -1,10 +1,8 @@
-# better-call
+# Better Call
 
 Better call is a tiny web framework for creating endpoints that can be invoked as a normal function or mounted to a router to be served by any web standard compatible server (like Bun, node, nextjs, sveltekit...) and also includes a typed RPC client for typesafe client-side invocation of these endpoints.
 
 Built for typescript and it comes with a very high performance router based on [rou3](https://github.com/unjs/rou3).
-
-> ⚠️ This project in development and not ready for production use. But feel free to try it out and give feedback.
 
 ## Install
 
@@ -12,7 +10,7 @@ Built for typescript and it comes with a very high performance router based on [
 pnpm i better-call
 ```
 
-make sure to install zod if you haven't
+make sure to install [standard schema](https://github.com/standard-schema/standard-schema) compatible validation library like zod.
 
 ```bash
 pnpm i zod
