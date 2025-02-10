@@ -1,5 +1,28 @@
 import { APIError } from "./error";
 
+function isJSONSerializable(value: any) {
+	if (value === undefined) {
+		return false;
+	}
+	const t = typeof value;
+	if (t === "string" || t === "number" || t === "boolean" || t === null) {
+		return true;
+	}
+	if (t !== "object") {
+		return false;
+	}
+	if (Array.isArray(value)) {
+		return true;
+	}
+	if (value.buffer) {
+		return false;
+	}
+	return (
+		(value.constructor && value.constructor.name === "Object") ||
+		typeof value.toJSON === "function"
+	);
+}
+
 export function toResponse(data?: any, init?: ResponseInit): Response {
 	if (data instanceof Response) {
 		if (init?.headers instanceof Headers) {
@@ -22,10 +45,14 @@ export function toResponse(data?: any, init?: ResponseInit): Response {
 	if (data instanceof APIError) {
 		return toResponse(data.body, {
 			status: data.statusCode,
-			statusText: data.stack,
+			statusText: data.status.toString(),
 			headers: {
-				...data.headers,
-				...init?.headers,
+				...(data.headers instanceof Headers
+					? Object.fromEntries(data.headers.entries())
+					: data?.headers),
+				...(init?.headers instanceof Headers
+					? Object.fromEntries(init.headers.entries())
+					: init?.headers),
 			},
 		});
 	}
@@ -52,9 +79,11 @@ export function toResponse(data?: any, init?: ResponseInit): Response {
 	} else if (data === null || data === undefined) {
 		body = "";
 		headers.set("Content-Type", "text/plain");
-	} else {
+	} else if (isJSONSerializable(data)) {
 		body = JSON.stringify(data);
 		headers.set("Content-Type", "application/json");
+	} else {
+		body = data;
 	}
 
 	return new Response(body, {

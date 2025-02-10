@@ -120,10 +120,10 @@ export class APIError extends Error {
 	constructor(
 		public status: keyof typeof _statusCode | Status = "INTERNAL_SERVER_ERROR",
 		public body:
-			| {
+			| ({
 					message?: string;
 					code?: string;
-			  }
+			  } & Record<string, any>)
 			| undefined = undefined,
 		public headers: HeadersInit = {},
 		public statusCode = typeof status === "number" ? status : _statusCode[status],
@@ -133,15 +133,15 @@ export class APIError extends Error {
 		this.status = status;
 		this.headers = headers;
 		this.statusCode = statusCode;
-		this.body = {
-			message: body?.message,
-			code:
-				body?.code ||
-				body?.message
-					?.toUpperCase()
-					.replace(/ /g, "_")
-					.replace(/[^A-Z0-9_]/g, ""),
-		};
+		this.body = body
+			? {
+					code: body?.message
+						?.toUpperCase()
+						.replace(/ /g, "_")
+						.replace(/[^A-Z0-9_]/g, ""),
+					...body,
+				}
+			: undefined;
 		this.stack = "";
 	}
 }
