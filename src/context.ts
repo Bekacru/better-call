@@ -181,7 +181,7 @@ export const createInternalContext = async (
 		body: data.body,
 		query: data.query,
 		path: context.path || path,
-		context: undefined as any,
+		context: "context" in context && context.context ? context.context : {},
 		returned: undefined as any,
 		headers: context?.headers,
 		request: context?.request,
@@ -277,13 +277,9 @@ export const createInternalContext = async (
 		responseHeaders: headers,
 	};
 	//if context was shimmed through the input we want to apply it
-	const middlewareContext = {
-		...("context" in context && context.context ? context.context : {}),
-	};
 	for (const middleware of options.use || []) {
 		const response = await middleware(internalContext);
-		Object.assign(middlewareContext, response);
+		Object.assign(internalContext.context, response);
 	}
-	internalContext.context = middlewareContext;
 	return internalContext;
 };
