@@ -26,10 +26,6 @@ type InferContext<T> = T extends (ctx: infer Ctx) => any
 		: never
 	: never;
 
-export interface ClientOptions extends BetterFetchOption {
-	baseURL: string;
-}
-
 type WithRequired<T, K> = T & {
 	[P in K extends string ? K : never]-?: T[P extends keyof T ? P : never];
 };
@@ -56,7 +52,9 @@ export type RequiredOptionKeys<
 				params: true;
 			});
 
-export const createClient = <R extends Router | Router["endpoints"]>(options: ClientOptions) => {
+export const createClient = <R extends Router | Router["endpoints"]>(
+	options?: BetterFetchOption,
+) => {
 	const fetch = createFetch(options);
 	type API = R extends { endpoints: Record<string, Endpoint> } ? R["endpoints"] : R;
 	type Options = API extends {
@@ -86,6 +84,7 @@ export const createClient = <R extends Router | Router["endpoints"]>(options: Cl
 		BetterFetchResponse<Awaited<ReturnType<OPT[K] extends Endpoint ? OPT[K] : never>>>
 	> => {
 		return (await fetch(path as string, {
+			baseURL: typeof window !== "undefined" ? window.origin : undefined,
 			...options[0],
 		})) as any;
 	};
