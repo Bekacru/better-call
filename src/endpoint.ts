@@ -307,8 +307,11 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 	options: Options,
 	handler: (context: EndpointContext<Path, Options>) => Promise<R>,
 ) => {
-	const internalHandler = async <Context extends InputContext<Path, Options>>(
-		...inputCtx: HasRequiredKeys<Context> extends true ? [Context] : [Context?]
+	type Context = InputContext<Path, Options>;
+	const internalHandler = async <
+		C extends HasRequiredKeys<Context> extends true ? [Context] : [Context?],
+	>(
+		...inputCtx: C
 	) => {
 		const context = (inputCtx[0] || {}) as InputContext<any, any>;
 		const internalContext = await createInternalContext(context, {
@@ -333,9 +336,9 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 							response,
 						}
 					: response
-		) as Context["asResponse"] extends true
+		) as C extends [{ asResponse: true }]
 			? Response
-			: Context["returnHeaders"] extends true
+			: C extends [{ returnHeaders: true }]
 				? {
 						headers: Headers;
 						response: R;

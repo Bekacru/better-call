@@ -140,7 +140,7 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 			path,
 			method: request.method as "GET",
 			headers: request.headers,
-			params: route.params as any,
+			params: route.params ? (JSON.parse(JSON.stringify(route.params)) as any) : {},
 			request: request,
 			body: await getBody(handler.options.cloneRequest ? request.clone() : request),
 			query: Object.fromEntries(url.searchParams),

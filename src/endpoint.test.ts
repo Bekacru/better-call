@@ -4,8 +4,6 @@ import { z } from "zod";
 import { APIError } from "./error";
 import { createMiddleware } from "./middleware";
 import * as v from "valibot";
-import type { StandardSchemaV1 } from "@standard-schema/spec";
-import { type } from "arktype";
 
 describe("validation", (it) => {
 	it("should validate body and throw validation error", async () => {
@@ -29,7 +27,7 @@ describe("validation", (it) => {
 				//@ts-expect-error
 				body: { name: 1 },
 			}),
-		).rejects.toThrowError(`Validation error: Invalid type: Expected string but received 1`);
+		).rejects.toThrowError("Invalid body parameters");
 	});
 
 	it("should validate query and throw validation error", async () => {
@@ -51,7 +49,7 @@ describe("validation", (it) => {
 				//@ts-expect-error
 				query: { name: 1 },
 			}),
-		).rejects.toThrowError(`Validation error: Invalid type: Expected string but received 1`);
+		).rejects.toThrowError(`Invalid query parameters`);
 	});
 
 	it("should validate the body and return the body", async () => {
@@ -72,7 +70,7 @@ describe("validation", (it) => {
 				name: "test",
 			},
 		});
-		console.log(response);
+
 		expect(response.name).toBe("test-validated");
 	});
 
@@ -594,49 +592,14 @@ describe("creator", () => {
 	});
 });
 
-interface ExtraOptions {
-	method: "POST" | "GET";
-}
-
-interface Options extends ExtraOptions {
-	body?: StandardSchemaV1;
-	query?: StandardSchemaV1;
-}
-
-function fn<
-	Extra extends ExtraOptions,
-	Body extends StandardSchemaV1,
-	Query extends StandardSchemaV1,
->(
-	options: {
-		body?: Body;
-		query?: Query;
-	} & Extra,
-	handler: (
-		ctx: InferContext<
-			{
-				body: Body;
-				query: Query;
-			} & Extra
-		>,
-	) => Promise<any>,
-) {}
-
-type InferSchema<T> = T extends StandardSchemaV1 ? StandardSchemaV1.InferInput<T> : any;
-
-type InferContext<Option extends Options> = {
-	body: InferSchema<Option["body"]>;
-	query: InferSchema<Option["body"]>;
-};
-
-fn(
+const c = createEndpoint(
+	"/",
 	{
-		method: "POST",
-		body: type({
-			name: "string",
-		}),
+		method: "GET",
 	},
-	async (c) => {
-		c.body;
+	async () => {
+		return {
+			hello: "world",
+		};
 	},
 );

@@ -94,6 +94,9 @@ describe("router", () => {
 				name: "hello",
 			}),
 			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
 		});
 		const response = await router.handler(request).then((res) => res.json());
 		expect(response).toMatchObject({ name: "hello" });
@@ -152,7 +155,6 @@ describe("route middleware", () => {
 			},
 			async (c) => {
 				const cx = c.json({ name: "hello" });
-				console.log(cx);
 				return cx;
 			},
 		);
