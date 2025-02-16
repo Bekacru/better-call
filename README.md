@@ -318,6 +318,22 @@ const router = createRouter({
 
 **throwError**: If true, the router will throw an error if an error occurs in the middleware or the endpoint.
 
+#### Node Adapter
+
+You can use the node adapter to serve the router with node http server.
+
+```ts
+import { createRouter } from "better-call";
+import { toNodeHandler } from "better-call/node";
+import { createItem } from "./item";
+import http from "http";
+
+const router = createRouter({
+    createItem
+})
+const server = http.createServer(toNodeHandler(router.handler))
+```
+
 ### RPC Client
 
 better-call comes with a rpc client that can be used to call endpoints from the client. The client wraps over better-fetch so you can pass any options that are supported by better-fetch.
