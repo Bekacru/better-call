@@ -1,10 +1,14 @@
 import { createEndpoint } from "../src/endpoint";
 import { createRouter } from "../src/router";
+import { z } from "zod";
 
 const hello = createEndpoint(
 	"/hello",
 	{
-		method: "GET",
+		method: "POST",
+		body: z.object({
+			name: z.string(),
+		}),
 		metadata: {
 			openAPI: {
 				responses: {

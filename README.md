@@ -63,9 +63,12 @@ Then you can use the rpc client to call the endpoints on client.
 
 ```ts
 //client.ts
+import type { router } from "./router" // import router type
 import { createClient } from "better-call/client";
 
-const client = createClient<typeof router>();
+const client = createClient<typeof router>({
+    baseURL: "http://localhost:3000"
+});
 const items = await client("/item", {
     body: {
         id: "123"
@@ -85,7 +88,29 @@ const createItem = createEndpoint("/item", {
     })
 }, async (ctx) => {
     if(ctx.body.id === "123") {
-        throw new APIError("Bad Request", {
+        throw ctx.error("Bad Request", {
+            message: "Id is not allowed"
+        })
+    }
+    return {
+        item: {
+            id: ctx.body.id
+        }
+    }
+})
+```
+
+You can also instead throw using a status code:
+
+```ts
+const createItem = createEndpoint("/item", {
+    method: "POST",
+    body: z.object({
+        id: z.string()
+    })
+}, async (ctx) => {
+    if(ctx.body.id === "123") {
+        throw ctx.error(400, {
             message: "Id is not allowed"
         })
     }
@@ -130,9 +155,10 @@ const endpoint = createEndpoint("/item/**:name", {
     ctx.params.name
 })
 ```
+
 #### Body Schema
 
-The `body` option accepts a zod schema and will validate the request body. If the request body doesn't match the schema, the endpoint will throw an error. If it's mounted to a router, it'll return a 400 error.
+The `body` option accepts a standard schema and will validate the request body. If the request body doesn't match the schema, the endpoint will throw an error. If it's mounted to a router, it'll return a 400 error.
 
 ```ts
 const createItem = createEndpoint("/item", {
@@ -151,7 +177,7 @@ const createItem = createEndpoint("/item", {
 
 #### Query Schema
 
-The `query` option accepts a zod schema and will validate the request query. If the request query doesn't match the schema, the endpoint will throw an error. If it's mounted to a router, it'll return a 400 error.
+The `query` option accepts a standard schema and will validate the request query. If the request query doesn't match the schema, the endpoint will throw an error. If it's mounted to a router, it'll return a 400 error.
 
 ```ts
 const createItem = createEndpoint("/item", {
@@ -170,7 +196,7 @@ const createItem = createEndpoint("/item", {
 
 #### Require Headers
 
-The `requireHeaders` option is used to require the request to have headers. If the request doesn't have headers, the endpoint will throw an error. And even when you call the endpoint as a function, it will require headers to be passed in the context.
+The `requireHeaders` option is used to require the request to have headers. If the request doesn't have headers, the endpoint will throw an error. This is only useful when you call the endpoint as a function.
 
 ```ts
 const createItem = createEndpoint("/item", {
@@ -190,7 +216,7 @@ createItem({
 
 #### Require Request
 
-The `requireRequest` option is used to require the request to have a request object. If the request doesn't have a request object, the endpoint will throw an error. And even when you call the endpoint as a function, it will require a request to be passed in the context.
+The `requireRequest` option is used to require the request to have a request object. If the request doesn't have a request object, the endpoint will throw an error. This is only useful when you call the endpoint as a function.
 
 ```ts
 const createItem = createEndpoint("/item", {
@@ -209,14 +235,11 @@ createItem({
 })
 ```
 
-
 ### Handler
 
 this is the function that will be invoked when the endpoint is called. It accepts a context object that contains the request, headers, body, query, params and other information. 
 
-It can return a response object, a string, a boolean, a number, an object with a status, body, headers and other properties or undefined.
-
-If you return a response object, it will be returned as is even when it's mounted to a router.
+It can return a response object, a string, a number, a boolean, an object or an array. 
 
 It can also throw an error and if it throws APIError, it will be converted to a response object with the correct status code and headers.
 
@@ -229,39 +252,20 @@ Endpoints can use middleware by passing the `use` option to the endpoint. To cre
 If you return a context object from the middleware, it will be available in the endpoint context.
 
 ```ts
+import { createMiddleware, createEndpoint } from "better-call";
+
 const middleware = createMiddleware(async (ctx) => {
     return {
         name: "hello"
     }
 })
+
 const endpoint = createEndpoint("/", {
     method: "GET",
     use: [middleware],
 }, async (ctx) => {
    //this will be the context object returned by the middleware with the name property
    ctx.context
-})
-```
-
-You can also pass an options object to the middleware and a handler function.
-
-```ts
-const middleware = createMiddleware({
-    body: z.object({
-        name: z.string()
-    })
-}, async (ctx) => {
-    return {
-        name: "hello"
-    }
-})
-
-const endpoint = createEndpoint("/", {
-    method: "GET",
-    use: [middleware],  
-}, async (ctx) => {
-    //the body will also contain the middleware body
-    ctx.body
 })
 ```
 
@@ -378,6 +382,93 @@ const createItem = createEndpoint("/item", {
 ```
 
 > other than normal cookies the ctx object also exposes signed cookies.
+
+### Endpoint Creator
+
+You can create an endpoint creator by calling `createEndpoint.create` that will let you apply set of middlewares to all the endpoints created by the creator.
+
+```ts
+const dbMiddleware = createMiddleware(async (ctx) => {
+   return {
+    db: new Database()
+   }
+})
+const create = createEndpoint.create({
+    use: [dbMiddleware]
+})
+
+const createItem = create("/item", {
+    method: "POST",
+    body: z.object({
+        id: z.string()
+    })
+}, async (ctx) => {
+    await ctx.context.db.save(ctx.body)
+})
+```
+
+### Open API
+
+Better Call by default generate open api schema for the endpoints and exposes it on `/api/reference` path using scalar. By default, if you're using `zod` it'll be able to generate `body` and `query` schema.
+
+```ts
+import { createEndpoint, createRouter } from "better-call"
+
+const createItem = createEndpoint("/item/:id", {
+    method: "GET",
+    query: z.object({
+        id: z.string({
+            description: "The id of the item"
+        })
+    })
+}, async (ctx) => {
+    return {
+        item: {
+            id: ctx.query.id
+        }
+    }
+})
+```
+
+But you can also define custom schema for the open api schema.
+
+```ts
+import { createEndpoint, createRouter } from "better-call"
+
+const createItem = createEndpoint("/item/:id", {
+    method: "GET",
+    query: z.object({
+        id: z.string({
+            description: "The id of the item"
+        })
+    }),
+    metadata: {
+    openAPI: {
+        requestBody: {
+            content: {
+                "application/json": {
+                    schema: {
+                        type: "object",
+                        properties: {
+                            id: {
+                                type: "string",
+                                description: "The id of the item"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+   }
+}, async (ctx) => {
+    return {
+        item: {
+            id: ctx.query.id
+        }
+    }
+})
+```
 
 ## License
 MIT
