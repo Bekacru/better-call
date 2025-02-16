@@ -486,5 +486,26 @@ const createItem = createEndpoint("/item/:id", {
 })
 ```
 
+#### Configuration
+
+You can configure the open api schema by passing the `openAPI` option to the router.
+
+```ts
+const router = createRouter({
+    createItem
+}, {
+    openAPI: {
+        disabled: false, //default false
+        path: "/api/reference", //default /api/reference
+        scalar: {
+            title: "My API",
+            version: "1.0.0",
+            description: "My API Description",
+            theme: "dark" //default saturn
+        }
+    }
+})
+```
+
 ## License
 MIT
