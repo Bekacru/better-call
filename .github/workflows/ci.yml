@@ -29,12 +29,6 @@ jobs:
             - name: Build
               run: pnpm build
             
-            - name: Start Docker Containers
-              run: |
-                docker compose up -d
-                # Wait for services to be ready (optional)
-                sleep 10
-            
             - name: Lint
               run: pnpm lint
             

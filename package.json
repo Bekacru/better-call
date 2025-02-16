@@ -8,6 +8,8 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "test": "vitest",
+    "lint": "biome format",
+    "lint:fix": "biome format --fix",
     "format": "biome format --write",
     "typecheck": "tsc --noEmit",
     "bump": "bumpp",
