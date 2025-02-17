@@ -46,14 +46,7 @@ export function toResponse(data?: any, init?: ResponseInit): Response {
 		return toResponse(data.body, {
 			status: data.statusCode,
 			statusText: data.status.toString(),
-			headers: {
-				...(data.headers instanceof Headers
-					? Object.fromEntries(data.headers.entries())
-					: data?.headers),
-				...(init?.headers instanceof Headers
-					? Object.fromEntries(init.headers.entries())
-					: init?.headers),
-			},
+			headers: init?.headers || data.headers,
 		});
 	}
 	let body = data;
