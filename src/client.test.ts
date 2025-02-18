@@ -214,4 +214,58 @@ describe("client", () => {
 		});
 		expectTypeOf<Parameters<typeof client>[0]>().toMatchTypeOf<"@post/test">();
 	});
+
+	it("should infer response depending on options.throw", async () => {
+		const endpoint = createEndpoint(
+			"/test",
+			{
+				method: "POST",
+				body: z.object({
+					hello: z.string(),
+				}),
+			},
+			async () => {
+				return {
+					status: 200,
+					body: {
+						hello: "world",
+					},
+				};
+			},
+		);
+
+		const router = createRouter({
+			endpoint,
+		});
+
+		const client = createClient<typeof router>({
+			baseURL: "http://localhost:3000",
+			customFetchImpl: async () => {
+				return new Response(null);
+			},
+		});
+
+		const throwingClient = createClient<typeof router>({
+			baseURL: "http://localhost:3000",
+			customFetchImpl: async () => {
+				return new Response(null);
+			},
+			throw: true,
+		});
+
+		const response = await client("@post/test", {
+			body: {
+				hello: "world",
+			},
+		});
+
+		const throwingResponse = await throwingClient("@post/test", {
+			body: {
+				hello: "world",
+			},
+		});
+
+		expectTypeOf(response.data).toMatchTypeOf<{ body: { hello: string } } | null>();
+		expectTypeOf(throwingResponse).toMatchTypeOf<{ body: { hello: string } }>();
+	});
 });
