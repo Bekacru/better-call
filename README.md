@@ -459,7 +459,7 @@ const createItem = createEndpoint("/item/:id", {
         })
     }),
     metadata: {
-    openAPI: {
+    openapi: {
         requestBody: {
             content: {
                 "application/json": {
@@ -488,13 +488,13 @@ const createItem = createEndpoint("/item/:id", {
 
 #### Configuration
 
-You can configure the open api schema by passing the `openAPI` option to the router.
+You can configure the open api schema by passing the `openapi` option to the router.
 
 ```ts
 const router = createRouter({
     createItem
 }, {
-    openAPI: {
+    openapi: {
         disabled: false, //default false
         path: "/api/reference", //default /api/reference
         scalar: {

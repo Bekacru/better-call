@@ -50,7 +50,7 @@ export interface EndpointOptions {
 		/**
 		 * Open API definition
 		 */
-		openAPI?: {
+		openapi?: {
 			summary?: string;
 			description?: string;
 			tags?: string[];

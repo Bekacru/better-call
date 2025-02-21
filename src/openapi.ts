@@ -101,8 +101,8 @@ function getTypeFromZodType(zodType: ZodSchema) {
 
 function getParameters(options: EndpointOptions) {
 	const parameters: OpenAPIParameter[] = [];
-	if (options.metadata?.openAPI?.parameters) {
-		parameters.push(...options.metadata.openAPI.parameters);
+	if (options.metadata?.openapi?.parameters) {
+		parameters.push(...options.metadata.openapi.parameters);
 		return parameters;
 	}
 	if (options.query instanceof ZodObject) {
@@ -128,8 +128,8 @@ function getParameters(options: EndpointOptions) {
 }
 
 function getRequestBody(options: EndpointOptions): any {
-	if (options.metadata?.openAPI?.requestBody) {
-		return options.metadata.openAPI.requestBody;
+	if (options.metadata?.openapi?.requestBody) {
+		return options.metadata.openapi.requestBody;
 	}
 	if (!options.body) return undefined;
 	if (options.body instanceof ZodObject || options.body instanceof ZodOptional) {
@@ -281,16 +281,16 @@ export async function generator(
 		if (options.method === "GET") {
 			paths[value.path] = {
 				get: {
-					tags: ["Default", ...(options.metadata?.openAPI?.tags || [])],
-					description: options.metadata?.openAPI?.description,
-					operationId: options.metadata?.openAPI?.operationId,
+					tags: ["Default", ...(options.metadata?.openapi?.tags || [])],
+					description: options.metadata?.openapi?.description,
+					operationId: options.metadata?.openapi?.operationId,
 					security: [
 						{
 							bearerAuth: [],
 						},
 					],
 					parameters: getParameters(options),
-					responses: getResponse(options.metadata?.openAPI?.responses),
+					responses: getResponse(options.metadata?.openapi?.responses),
 				},
 			};
 		}
@@ -299,9 +299,9 @@ export async function generator(
 			const body = getRequestBody(options);
 			paths[value.path] = {
 				post: {
-					tags: ["Default", ...(options.metadata?.openAPI?.tags || [])],
-					description: options.metadata?.openAPI?.description,
-					operationId: options.metadata?.openAPI?.operationId,
+					tags: ["Default", ...(options.metadata?.openapi?.tags || [])],
+					description: options.metadata?.openapi?.description,
+					operationId: options.metadata?.openapi?.operationId,
 					security: [
 						{
 							bearerAuth: [],
@@ -323,7 +323,7 @@ export async function generator(
 									},
 								},
 							}),
-					responses: getResponse(options.metadata?.openAPI?.responses),
+					responses: getResponse(options.metadata?.openapi?.responses),
 				},
 			};
 		}

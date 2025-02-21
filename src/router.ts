@@ -31,7 +31,7 @@ export interface RouterConfig {
 	/**
 	 * Open API route configuration
 	 */
-	openAPI?: {
+	openapi?: {
 		/**
 		 * Disable openapi route
 		 *
@@ -76,20 +76,20 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 	endpoints: E,
 	config?: Config,
 ) => {
-	if (!config?.openAPI?.disabled) {
-		const openAPI = {
+	if (!config?.openapi?.disabled) {
+		const openapi = {
 			path: "/api/reference",
-			...config?.openAPI,
+			...config?.openapi,
 		};
 		//@ts-expect-error
-		endpoints["openAPI"] = createEndpoint(
-			openAPI.path,
+		endpoints["openapi"] = createEndpoint(
+			openapi.path,
 			{
 				method: "GET",
 			},
 			async (c) => {
 				const schema = await generator(endpoints);
-				return new Response(getHTML(schema, openAPI.scalar), {
+				return new Response(getHTML(schema, openapi.scalar), {
 					headers: {
 						"Content-Type": "text/html",
 					},

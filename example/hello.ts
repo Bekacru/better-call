@@ -10,7 +10,7 @@ const hello = createEndpoint(
 			name: z.string(),
 		}),
 		metadata: {
-			openAPI: {
+			openapi: {
 				responses: {
 					"200": {
 						description: "Welcome Page",
