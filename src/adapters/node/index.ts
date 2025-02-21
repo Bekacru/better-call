@@ -9,7 +9,7 @@ export function toNodeHandler(handler: Router["handler"]) {
 			req.headers["x-forwarded-proto"] || ((req.socket as any).encrypted ? "https" : "http");
 		const base = `${protocol}://${req.headers[":authority"] || req.headers.host}`;
 		const response = await handler(getRequest({ base, request: req }));
-		setResponse(res, response);
+		return setResponse(res, response);
 	};
 }
 
