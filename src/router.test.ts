@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createEndpoint, type Endpoint } from "./endpoint";
 import { createRouter } from "./router";
 import { z } from "zod";
+import { APIError } from "./error";
 
 describe("router", () => {
 	it("should be able to return simple response", async () => {
@@ -143,6 +144,21 @@ describe("router", () => {
 		});
 		const response = await router.handler(request).then((res) => res.json());
 		expect(response).toMatchObject({ id: "1" });
+	});
+
+	it("should handle API Errors", async () => {
+		const endpoint = createEndpoint(
+			"/",
+			{
+				method: "GET",
+			},
+			async () => {
+				throw new APIError("FORBIDDEN");
+			},
+		);
+		const router = createRouter({ endpoint });
+		const response = await router.handler(new Request("http://localhost"));
+		expect(response.status).toBe(403);
 	});
 });
 
