@@ -54,5 +54,5 @@ export async function getBody(request: Request) {
 }
 
 export function isAPIError(error: any) {
-	return error instanceof APIError || error.name === "APIError";
+	return error instanceof APIError || error?.name === "APIError";
 }
