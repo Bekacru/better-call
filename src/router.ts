@@ -2,7 +2,7 @@ import { createRouter as createRou3Router, addRoute, findRoute, findAllRoutes } 
 import { createEndpoint, type Endpoint } from "./endpoint";
 import { generator, getHTML } from "./openapi";
 import type { Middleware } from "./middleware";
-import { getBody } from "./utils";
+import { getBody, isAPIError } from "./utils";
 import { APIError } from "./error";
 import { toResponse } from "./to-response";
 
@@ -166,7 +166,7 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 			const response = (await handler(context)) as Response;
 			return response;
 		} catch (error) {
-			if (error instanceof APIError) {
+			if (isAPIError(error)) {
 				return toResponse(error);
 			}
 			console.error(`# SERVER_ERROR: `, error);

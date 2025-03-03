@@ -1,3 +1,5 @@
+import { APIError } from "./error";
+
 export async function getBody(request: Request) {
 	const contentType = request.headers.get("content-type") || "";
 
@@ -49,4 +51,8 @@ export async function getBody(request: Request) {
 	}
 
 	return await request.text();
+}
+
+export function isAPIError(error: any) {
+	return error instanceof APIError || error.name === "APIError";
 }

@@ -17,6 +17,7 @@ import type { CookieOptions, CookiePrefixOptions } from "./cookies";
 import { APIError, type _statusCode, type Status } from "./error";
 import type { OpenAPIParameter, OpenAPISchemaType } from "./openapi";
 import type { StandardSchemaV1 } from "./standard-schema";
+import { isAPIError } from "./utils";
 
 export interface EndpointOptions {
 	/**
@@ -319,7 +320,7 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 			path,
 		});
 		const response = await handler(internalContext as any).catch((e) => {
-			if (e instanceof APIError && context.asResponse) {
+			if (isAPIError(e) && context.asResponse) {
 				return e;
 			}
 			throw e;

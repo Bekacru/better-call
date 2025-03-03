@@ -1,4 +1,5 @@
 import { APIError } from "./error";
+import { isAPIError } from "./utils";
 
 function isJSONSerializable(value: any) {
 	if (value === undefined) {
@@ -42,7 +43,7 @@ export function toResponse(data?: any, init?: ResponseInit): Response {
 			status: data.status,
 		});
 	}
-	if (data instanceof APIError) {
+	if (isAPIError(data)) {
 		return toResponse(data.body, {
 			status: data.statusCode,
 			statusText: data.status.toString(),
