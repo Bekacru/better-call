@@ -20,17 +20,17 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.16.4",
-    "arktype": "^2.0.0",
-    "zod": "^3.24.1",
-    "valibot": "1.0.0-beta.15",
     "@biomejs/biome": "^1.8.3",
     "@types/bun": "latest",
     "@types/set-cookie-parser": "^2.4.10",
+    "arktype": "^2.0.0",
     "bumpp": "^9.4.1",
     "tsup": "^8.3.5",
     "type-fest": "^4.23.0",
     "typescript": "^5.6.0-beta",
-    "vitest": "^3.0.3"
+    "valibot": "1.0.0-beta.15",
+    "vitest": "^3.0.3",
+    "zod": "^3.24.1"
   },
   "dependencies": {
     "@better-fetch/fetch": "^1.1.4",
