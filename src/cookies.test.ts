@@ -6,9 +6,9 @@ import { parseCookies } from "./cookies";
 
 describe("parseCookies", () => {
 	it("should parse cookies", () => {
-		const cookies = parseCookies("test=test; test2=test2");
+		const cookies = parseCookies("test=test; test2=test 2");
 		expect(cookies.get("test")).toBe("test");
-		expect(cookies.get("test2")).toBe("test2");
+		expect(cookies.get("test2")).toBe("test 2");
 	});
 
 	it("should parse cookies with encoded values", () => {

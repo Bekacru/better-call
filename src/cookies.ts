@@ -117,7 +117,7 @@ export function parseCookies(str: string) {
 		throw new TypeError("argument str must be a string");
 	}
 
-	const obj: Map<string, string> = new Map();
+	const cookies: Map<string, string> = new Map();
 
 	let index = 0;
 	while (index < str.length) {
@@ -137,18 +137,18 @@ export function parseCookies(str: string) {
 		}
 
 		const key = str.slice(index, eqIdx).trim();
-		if (!obj.has(key)) {
+		if (!cookies.has(key)) {
 			let val = str.slice(eqIdx + 1, endIdx).trim();
 			if (val.codePointAt(0) === 0x22) {
 				val = val.slice(1, -1);
 			}
-			obj.set(key, tryDecode(val));
+			cookies.set(key, tryDecode(val));
 		}
 
 		index = endIdx + 1;
 	}
 
-	return obj;
+	return cookies;
 }
 
 const _serialize = (key: string, value: string, opt: CookieOptions = {}) => {
