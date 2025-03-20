@@ -56,3 +56,11 @@ export async function getBody(request: Request) {
 export function isAPIError(error: any) {
 	return error instanceof APIError || error?.name === "APIError";
 }
+
+export function tryDecode(str: string) {
+	try {
+		return str.includes("%") ? decodeURIComponent(str) : str;
+	} catch {
+		return str;
+	}
+}

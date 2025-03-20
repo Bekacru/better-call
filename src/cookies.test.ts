@@ -2,6 +2,21 @@ import { describe, expect, it } from "vitest";
 import { createEndpoint } from "./endpoint";
 import { z } from "zod";
 import { signCookieValue } from "./crypto";
+import { parseCookies } from "./cookies";
+
+describe("parseCookies", () => {
+	it("should parse cookies", () => {
+		const cookies = parseCookies("test=test; test2=test2");
+		expect(cookies.get("test")).toBe("test");
+		expect(cookies.get("test2")).toBe("test2");
+	});
+
+	it("should parse cookies with encoded values", () => {
+		const cookies = parseCookies("test=test; test2=test%202");
+		expect(cookies.get("test")).toBe("test");
+		expect(cookies.get("test2")).toBe("test 2");
+	});
+});
 
 describe("get-cookies", () => {
 	it("should get cookies", async () => {

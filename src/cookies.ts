@@ -1,5 +1,5 @@
-import { parse } from "cookie-es";
 import { signCookieValue } from "./crypto";
+import { tryDecode } from "./utils";
 
 export type CookiePrefixOptions = "host" | "secure";
 
@@ -104,8 +104,51 @@ export const getCookieKey = (key: string, prefix?: CookiePrefixOptions) => {
 	return finalKey;
 };
 
-export function parseCookies(cookieHeader: string) {
-	return new Map<string, string>(Object.entries(parse(cookieHeader)));
+/**
+ * Parse an HTTP Cookie header string and returning an object of all cookie
+ * name-value pairs.
+ *
+ * Inspired by https://github.com/unjs/cookie-es/blob/main/src/cookie/parse.ts
+ *
+ * @param str the string representing a `Cookie` header value
+ */
+export function parseCookies(str: string) {
+	if (typeof str !== "string") {
+		throw new TypeError("argument str must be a string");
+	}
+
+	const obj: Map<string, string> = new Map();
+
+	let index = 0;
+	while (index < str.length) {
+		const eqIdx = str.indexOf("=", index);
+
+		if (eqIdx === -1) {
+			break;
+		}
+
+		let endIdx = str.indexOf(";", index);
+
+		if (endIdx === -1) {
+			endIdx = str.length;
+		} else if (endIdx < eqIdx) {
+			index = str.lastIndexOf(";", eqIdx - 1) + 1;
+			continue;
+		}
+
+		const key = str.slice(index, eqIdx).trim();
+		if (!obj.has(key)) {
+			let val = str.slice(eqIdx + 1, endIdx).trim();
+			if (val.codePointAt(0) === 0x22) {
+				val = val.slice(1, -1);
+			}
+			obj.set(key, tryDecode(val));
+		}
+
+		index = endIdx + 1;
+	}
+
+	return obj;
 }
 
 const _serialize = (key: string, value: string, opt: CookieOptions = {}) => {

@@ -34,7 +34,6 @@
   },
   "dependencies": {
     "@better-fetch/fetch": "^1.1.4",
-    "cookie-es": "^2.0.0",
     "rou3": "^0.5.1",
     "set-cookie-parser": "^2.7.1",
     "uncrypto": "^0.1.3"
