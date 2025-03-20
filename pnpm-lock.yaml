@@ -11,6 +11,9 @@ importers:
       '@better-fetch/fetch':
         specifier: ^1.1.4
         version: 1.1.12
+      cookie-es:
+        specifier: ^2.0.0
+        version: 2.0.0
       rou3:
         specifier: ^0.5.1
         version: 0.5.1
@@ -735,6 +738,9 @@ packages:
   consola@3.4.0:
     resolution: {integrity: sha512-EiPU8G6dQG0GFHNR8ljnZFki/8a+cQwEQ+7wpxdChl02Q8HXlwEZWD5lqAF8vC2sEC3Tehr8hy7vErz88LHyUA==}
     engines: {node: ^14.18.0 || >=16.10.0}
+
+  cookie-es@2.0.0:
+    resolution: {integrity: sha512-RAj4E421UYRgqokKUmotqAwuplYw15qtdXfY+hGzgCJ/MBjCVZcSoHK/kH9kocfjRjcDME7IiDWR/1WX1TM2Pg==}
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -1893,6 +1899,8 @@ snapshots:
   confbox@0.1.8: {}
 
   consola@3.4.0: {}
+
+  cookie-es@2.0.0: {}
 
   cross-spawn@7.0.6:
     dependencies:

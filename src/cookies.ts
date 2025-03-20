@@ -1,3 +1,4 @@
+import { parse } from "cookie-es";
 import { signCookieValue } from "./crypto";
 
 export type CookiePrefixOptions = "host" | "secure";
@@ -104,14 +105,7 @@ export const getCookieKey = (key: string, prefix?: CookiePrefixOptions) => {
 };
 
 export function parseCookies(cookieHeader: string) {
-	const cookies = cookieHeader.split(";");
-	const cookieMap = new Map<string, string>();
-
-	cookies.forEach((cookie) => {
-		const [name, value] = cookie.trim().split("=");
-		cookieMap.set(name, decodeURIComponent(value));
-	});
-	return cookieMap;
+	return new Map<string, string>(Object.entries(parse(cookieHeader)));
 }
 
 const _serialize = (key: string, value: string, opt: CookieOptions = {}) => {
