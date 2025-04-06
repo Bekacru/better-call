@@ -55,37 +55,66 @@ export type RequiredOptionKeys<
 				params: true;
 			});
 
-export const createClient = <R extends Router | Router["endpoints"]>(options: ClientOptions) => {
-	const fetch = createFetch(options);
-	type API = R extends { endpoints: Record<string, Endpoint> } ? R["endpoints"] : R;
-	type Options = API extends {
-		[key: string]: infer T;
-	}
-		? T extends Endpoint
-			? {
-					[key in T["options"]["method"] extends "GET"
-						? T["path"]
-						: `@${T["options"]["method"] extends string ? Lowercase<T["options"]["method"]> : never}${T["path"]}`]: T;
-				}
-			: {}
-		: {};
+export function createClient<R extends Router | Router["endpoints"]>(
+	options: ClientOptions & { throw: true },
+): FetchClientReturn<R, true>;
 
-	type O = Prettify<UnionToIntersection<Options>>;
-	return async <OPT extends O, K extends keyof OPT, C extends InferContext<OPT[K]>>(
-		path: K,
-		...options: HasRequired<C> extends true
-			? [
-					WithRequired<
-						BetterFetchOption<C["body"], C["query"], C["params"]>,
-						keyof RequiredOptionKeys<C>
-					>,
-				]
-			: [BetterFetchOption<C["body"], C["query"], C["params"]>?]
-	): Promise<
-		BetterFetchResponse<Awaited<ReturnType<OPT[K] extends Endpoint ? OPT[K] : never>>>
-	> => {
+export function createClient<R extends Router | Router["endpoints"]>(
+	options: ClientOptions & { throw: false },
+): FetchClientReturn<R, false>;
+
+export function createClient<R extends Router | Router["endpoints"]>(
+	options: ClientOptions,
+): FetchClientReturn<R, false>;
+
+export function createClient<R extends Router | Router["endpoints"]>(
+	options: ClientOptions,
+): FetchClientReturn<R, any> {
+	const fetch = createFetch(options);
+
+	return async (path, ...options) => {
 		return (await fetch(path as string, {
 			...options[0],
 		})) as any;
 	};
-};
+}
+
+type FetchClientAPI<R extends Router | Router["endpoints"]> = R extends {
+	endpoints: Record<string, Endpoint>;
+}
+	? R["endpoints"]
+	: R;
+
+type FetchClientOptions<R extends Router | Router["endpoints"]> = FetchClientAPI<R> extends {
+	[key: string]: infer T;
+}
+	? T extends Endpoint
+		? {
+				[key in T["options"]["method"] extends "GET"
+					? T["path"]
+					: `@${T["options"]["method"] extends string ? Lowercase<T["options"]["method"]> : never}${T["path"]}`]: T;
+			}
+		: {}
+	: {};
+
+type FetchClientReturn<R extends Router | Router["endpoints"], Throw extends boolean> = <
+	OPT extends Prettify<UnionToIntersection<FetchClientOptions<R>>>,
+	K extends keyof OPT,
+	C extends InferContext<OPT[K]>,
+>(
+	path: K,
+	...options: HasRequired<C> extends true
+		? [
+				WithRequired<
+					BetterFetchOption<C["body"], C["query"], C["params"]>,
+					keyof RequiredOptionKeys<C>
+				>,
+			]
+		: [BetterFetchOption<C["body"], C["query"], C["params"]>?]
+) => Promise<
+	BetterFetchResponse<
+		Awaited<ReturnType<OPT[K] extends Endpoint ? OPT[K] : never>>,
+		unknown,
+		Throw
+	>
+>;
