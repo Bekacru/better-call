@@ -1,6 +1,6 @@
 {
   "name": "better-call",
-  "version": "1.0.5",
+  "version": "1.0.6-beta.1",
   "packageManager": "pnpm@9.15.0",
   "type": "module",
   "main": "./dist/index.cjs",
