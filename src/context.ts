@@ -3,7 +3,6 @@ import { _statusCode, APIError, type Status } from "./error";
 import type {
 	InferParamPath,
 	InferParamWildCard,
-	Input,
 	IsEmptyObject,
 	Prettify,
 	UnionToIntersection,
@@ -24,16 +23,24 @@ import type { StandardSchemaV1 } from "./standard-schema";
 export type HTTPMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 export type Method = HTTPMethod | "*";
 
-export type InferBodyInput<Options extends EndpointOptions | MiddlewareOptions> =
-	Options["metadata"] extends {
+export type InferBodyInput<
+	Options extends EndpointOptions | MiddlewareOptions,
+	Body = Options["metadata"] extends {
 		$Infer: {
-			body: infer Body;
+			body: infer B;
 		};
 	}
-		? Body
+		? B
 		: Options["body"] extends StandardSchemaV1
 			? StandardSchemaV1.InferInput<Options["body"]>
-			: undefined;
+			: undefined,
+> = undefined extends Body
+	? {
+			body?: Body;
+		}
+	: {
+			body: Body;
+		};
 
 export type InferBody<Options extends EndpointOptions | MiddlewareOptions> =
 	Options["metadata"] extends {
@@ -46,8 +53,9 @@ export type InferBody<Options extends EndpointOptions | MiddlewareOptions> =
 			? StandardSchemaV1.InferOutput<Options["body"]>
 			: any;
 
-export type InferQueryInput<Options extends EndpointOptions | MiddlewareOptions> =
-	Options["metadata"] extends {
+export type InferQueryInput<
+	Options extends EndpointOptions | MiddlewareOptions,
+	Query = Options["metadata"] extends {
 		$Infer: {
 			query: infer Query;
 		};
@@ -55,7 +63,14 @@ export type InferQueryInput<Options extends EndpointOptions | MiddlewareOptions>
 		? Query
 		: Options["query"] extends StandardSchemaV1
 			? StandardSchemaV1.InferInput<Options["query"]>
-			: Record<string, any> | undefined;
+			: Record<string, any> | undefined,
+> = undefined extends Query
+	? {
+			query?: Query;
+		}
+	: {
+			query: Query;
+		};
 
 export type InferQuery<Options extends EndpointOptions | MiddlewareOptions> =
 	Options["metadata"] extends {
@@ -74,12 +89,20 @@ export type InferMethod<Options extends EndpointOptions> = Options["method"] ext
 		? HTTPMethod
 		: Options["method"];
 
-export type InferInputMethod<Options extends EndpointOptions> =
-	Options["method"] extends Array<Method>
+export type InferInputMethod<
+	Options extends EndpointOptions,
+	Method = Options["method"] extends Array<any>
 		? Options["method"][number]
 		: Options["method"] extends "*"
 			? HTTPMethod
-			: Options["method"] | undefined;
+			: Options["method"] | undefined,
+> = undefined extends Method
+	? {
+			method?: Method;
+		}
+	: {
+			method: Method;
+		};
 
 export type InferParam<Path extends string> = IsEmptyObject<
 	InferParamPath<Path> & InferParamWildCard<Path>
@@ -87,14 +110,36 @@ export type InferParam<Path extends string> = IsEmptyObject<
 	? Record<string, any> | undefined
 	: Prettify<InferParamPath<Path> & InferParamWildCard<Path>>;
 
+export type InferParamInput<Path extends string> = IsEmptyObject<
+	InferParamPath<Path> & InferParamWildCard<Path>
+> extends true
+	? {
+			params?: Record<string, any>;
+		}
+	: {
+			params: Prettify<InferParamPath<Path> & InferParamWildCard<Path>>;
+		};
+
 export type InferRequest<Option extends EndpointOptions | MiddlewareOptions> =
-	Option["requireRequest"] extends true ? Request : Request | undefined;
+	Option["requireRequest"] extends true
+		? {
+				request: Request;
+			}
+		: {
+				request?: Request;
+			};
 
 export type InferHeaders<Option extends EndpointOptions | MiddlewareOptions> =
 	Option["requireHeaders"] extends true ? Headers : Headers | undefined;
 
 export type InferHeadersInput<Option extends EndpointOptions | MiddlewareOptions> =
-	Option["requireHeaders"] extends true ? HeadersInit : HeadersInit | undefined;
+	Option["requireHeaders"] extends true
+		? {
+				headers: HeadersInit;
+			}
+		: {
+				headers?: HeadersInit;
+			};
 
 export type InferUse<Opts extends EndpointOptions["use"]> = Opts extends Middleware[]
 	? UnionToIntersection<Awaited<ReturnType<Opts[number]>>>
@@ -106,48 +151,21 @@ export type InferMiddlewareBody<Options extends MiddlewareOptions> =
 export type InferMiddlewareQuery<Options extends MiddlewareOptions> =
 	Options["query"] extends StandardSchemaV1<infer T> ? T : Record<string, any> | undefined;
 
-export type InputContext<Path extends string, Options extends EndpointOptions> = Input<{
-	/**
-	 * Payload
-	 */
-	body: InferBodyInput<Options>;
-	/**
-	 * Request Method
-	 */
-	method: InferInputMethod<Options>;
-	/**
-	 * Query Params
-	 */
-	query: InferQueryInput<Options>;
-	/**
-	 * Dynamic Params
-	 */
-	params: InferParam<Path>;
-	/**
-	 * Request Object
-	 */
-	request: InferRequest<Options>;
-	/**
-	 * Headers
-	 */
-	headers: InferHeadersInput<Options>;
-	/**
-	 * Return a `Response` object
-	 */
-	asResponse?: boolean;
-	/**
-	 * include headers on the return
-	 */
-	returnHeaders?: boolean;
-	/**
-	 * Middlewares to use
-	 */
-	use?: Middleware[];
-	/**
-	 * Customize the path
-	 */
-	path?: string;
-}>;
+type StrictKeys<T, U extends T = T> = Exclude<keyof U, keyof T> extends never ? U : never;
+export type InputContext<
+	Path extends string,
+	Options extends EndpointOptions,
+> = InferBodyInput<Options> &
+	InferInputMethod<Options> &
+	InferQueryInput<Options> &
+	InferParamInput<Path> &
+	InferRequest<Options> &
+	InferHeadersInput<Options> & {
+		asResponse?: boolean;
+		returnHeaders?: boolean;
+		use?: Middleware[];
+		path?: string;
+	};
 
 export const createInternalContext = async (
 	context: InputContext<any, any>,

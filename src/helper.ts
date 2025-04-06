@@ -1,12 +1,3 @@
-/**
- * Improve this type if possible
- */
-export type Input<T> = {
-	[K in keyof T as T[K] extends never ? never : undefined extends T[K] ? never : K]: T[K];
-} & {
-	[K in keyof T as undefined extends T[K] ? K : never]?: T[K];
-};
-
 export type RequiredKeysOf<BaseType extends object> = Exclude<
 	{
 		[Key in keyof BaseType]: BaseType extends Record<Key, BaseType[Key]> ? Key : never;
