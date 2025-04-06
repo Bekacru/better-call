@@ -7,15 +7,19 @@ import {
 import {
 	createInternalContext,
 	type InferBody,
+	type InferBodyInput,
 	type InferHeaders,
+	type InferHeadersInput,
 	type InferMiddlewareBody,
 	type InferMiddlewareQuery,
 	type InferQuery,
+	type InferQueryInput,
 	type InferRequest,
+	type InferRequestInput,
 	type InferUse,
 	type InputContext,
 } from "./context";
-import type { Input, Prettify } from "./helper";
+import type { Prettify } from "./helper";
 
 export interface MiddlewareOptions extends Omit<EndpointOptions, "method"> {}
 
@@ -158,36 +162,14 @@ export function createMiddleware(optionsOrHandler: any, handler?: any) {
 	return internalHandler;
 }
 
-export type MiddlewareInputContext<Options extends MiddlewareOptions> = Input<{
-	/**
-	 * Payload
-	 */
-	body: InferBody<Options>;
-	/**
-	 * Query Params
-	 */
-	query: InferQuery<Options>;
-	/**
-	 * Request Object
-	 */
-	request: InferRequest<Options>;
-	/**
-	 * Headers
-	 */
-	headers: InferHeaders<Options>;
-	/**
-	 * Return a `Response` object
-	 */
-	asResponse?: boolean;
-	/**
-	 * include headers on the return
-	 */
-	returnHeaders?: boolean;
-	/**
-	 * Middlewares to use
-	 */
-	use?: Middleware[];
-}>;
+export type MiddlewareInputContext<Options extends MiddlewareOptions> = InferBodyInput<Options> &
+	InferQueryInput<Options> &
+	InferRequestInput<Options> &
+	InferHeadersInput<Options> & {
+		asResponse?: boolean;
+		returnHeaders?: boolean;
+		use?: Middleware[];
+	};
 
 export type Middleware<
 	Options extends MiddlewareOptions = MiddlewareOptions,

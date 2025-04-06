@@ -121,6 +121,9 @@ export type InferParamInput<Path extends string> = IsEmptyObject<
 		};
 
 export type InferRequest<Option extends EndpointOptions | MiddlewareOptions> =
+	Option["requireRequest"] extends true ? Request : Request | undefined;
+
+export type InferRequestInput<Option extends EndpointOptions | MiddlewareOptions> =
 	Option["requireRequest"] extends true
 		? {
 				request: Request;
@@ -159,7 +162,7 @@ export type InputContext<
 	InferInputMethod<Options> &
 	InferQueryInput<Options> &
 	InferParamInput<Path> &
-	InferRequest<Options> &
+	InferRequestInput<Options> &
 	InferHeadersInput<Options> & {
 		asResponse?: boolean;
 		returnHeaders?: boolean;
