@@ -370,6 +370,24 @@ createEndpoint.create = <E extends { use?: Middleware[] }>(opts?: E) => {
 	};
 };
 
+createEndpoint.modify = (
+	original: Endpoint,
+	modifications?: {
+		path?: Endpoint["path"];
+		options?: Endpoint["options"];
+		handler?: (context: EndpointContext<Endpoint["path"], Endpoint["options"]>) => Promise<any>;
+	}
+) => {
+	return createEndpoint(
+		modifications?.path ?? original.path,
+		{
+			...original.options,
+			...(modifications?.options || {})
+		},
+		modifications?.handler ?? original
+	);
+};
+
 export type Endpoint<
 	Path extends string = string,
 	Options extends EndpointOptions = EndpointOptions,
