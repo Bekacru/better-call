@@ -317,7 +317,6 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 			? [Context & { asResponse?: AsResponse; returnHeaders?: ReturnHeaders }]
 			: [(Context & { asResponse?: AsResponse; returnHeaders?: ReturnHeaders })?]
 	) => {
-		type C = typeof inputCtx;
 		const context = (inputCtx[0] || {}) as InputContext<any, any>;
 		const internalContext = await createInternalContext(context, {
 			options,
@@ -330,6 +329,12 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 			throw e;
 		});
 		const headers = internalContext.responseHeaders;
+		type ResultType = [AsResponse] extends [true]
+			? Response
+			: [ReturnHeaders] extends [true]
+				? { headers: Headers; response: R }
+				: R;
+
 		return (
 			context.asResponse
 				? toResponse(response, {
@@ -341,14 +346,7 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 							response,
 						}
 					: response
-		) as AsResponse extends true
-			? Response
-			: ReturnHeaders extends true
-				? {
-						headers: Headers;
-						response: R;
-					}
-				: R;
+		) as ResultType;
 	};
 	internalHandler.options = options;
 	internalHandler.path = path;
