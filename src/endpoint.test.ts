@@ -603,3 +603,157 @@ const c = createEndpoint(
 		};
 	},
 );
+
+describe("modify", () => {
+	it("should create a new endpoint with modified path", async () => {
+		const endpoint = createEndpoint(
+			"/original",
+			{
+				method: "GET",
+			},
+			async () => {
+				return { message: "original" };
+			}
+		);
+
+		const modified = createEndpoint.modify(endpoint, {
+			path: "/modified"
+		});
+
+		expect(modified.path).toEqual("/modified");
+		expect(modified.options).toEqual(endpoint.options);
+		expect(await modified()).toEqual(await endpoint());
+	});
+
+	it("should create a new endpoint with modified options", async () => {
+		const endpoint = createEndpoint(
+			"/test",
+			{
+				method: "GET",
+			},
+			async () => {
+				return { message: "original" };
+			}
+		);
+
+		const modified = createEndpoint.modify(endpoint, {
+			options: {
+				method: "POST",
+			},
+		});
+
+		expect(modified.path).toEqual(endpoint.path);
+		expect(modified.options).toEqual({
+			method: "POST",
+		});
+		expect(await modified()).toEqual(await endpoint());
+	});
+
+	it("should create a new endpoint with modified handler", async () => {
+		const endpoint = createEndpoint(
+			"/test",
+			{
+				method: "GET",
+			},
+			async () => {
+				return { message: "original" };
+			}
+		);
+
+		const modified = createEndpoint.modify(endpoint, {
+			handler: async () => {
+				return { message: "modified" };
+			},
+		});
+
+		expect(modified.path).toEqual(endpoint.path);
+		expect(modified.options).toEqual(endpoint.options);
+		expect(await modified()).toEqual({
+			message: "modified",
+		});
+	});
+
+	it("should create a new endpoint with multiple modifications", async () => {
+		const endpoint = createEndpoint(
+			"/original",
+			{
+				method: "GET",
+			},
+			async () => {
+				return { message: "original" };
+			}
+		);
+
+		const modified = createEndpoint.modify(endpoint, {
+			path: "/modified",
+			options: {
+				method: "POST",
+			},
+			handler: async () => {
+				return { message: "modified" };
+			},
+		});
+
+		expect(modified.path).toEqual("/modified");
+		expect(modified.options).toEqual({
+			method: "POST",
+		});
+		expect(await modified()).toEqual({
+			message: "modified",
+		});
+	});
+
+	it("should preserve middleware from original endpoint", async () => {
+		const creator = createEndpoint.create({
+			use: [
+				createMiddleware(async () => {
+					return {
+						hello: "world",
+					};
+				}),
+			],
+		});
+		const endpoint = creator(
+			"/path",
+			{
+				method: "POST",
+				use: [
+					createMiddleware(async () => {
+						return {
+							test: "payload",
+						};
+					}),
+				],
+			},
+			async (c) => {
+				return {
+					...c.context,
+					handler: "original",
+				};
+			},
+		);
+
+		const modified = createEndpoint.modify(endpoint, {
+			path: "/modified",
+			handler: async (c) => {
+				return {
+					...c.context,
+					handler: "modified",
+				};
+			},
+		});
+
+		expect(modified.path).toEqual("/modified");
+		expect(modified.options).toEqual(endpoint.options);
+		expect(await endpoint()).toEqual({
+			hello: "world",
+			test: "payload",
+			handler: "original",
+		});
+		expect(await modified()).toEqual({
+			hello: "world",
+			test: "payload",
+			handler: "modified",
+		});
+	});
+});
