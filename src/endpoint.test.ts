@@ -592,14 +592,24 @@ describe("creator", () => {
 	});
 });
 
-const c = createEndpoint(
-	"/",
-	{
-		method: "GET",
-	},
-	async () => {
-		return {
-			hello: "world",
-		};
-	},
-);
+describe("onAPIError", () => {
+	it("should call onAPIError", async () => {
+		let error: APIError | undefined;
+		const endpoint = createEndpoint(
+			"/path",
+			{
+				method: "POST",
+				onAPIError: async (e) => {
+					console.log("onAPIError", e);
+					error = e;
+				},
+			},
+			async (c) => {
+				throw c.error("UNAUTHORIZED");
+			},
+		);
+		await endpoint().catch(() => {});
+		expect(error).toBeDefined();
+		expect(error?.status).toBe("UNAUTHORIZED");
+	});
+});

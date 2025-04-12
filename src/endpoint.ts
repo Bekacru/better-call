@@ -144,6 +144,13 @@ export interface EndpointOptions {
 	 * List of middlewares to use
 	 */
 	use?: Middleware[];
+	/**
+	 * A callback to run before any API error is throw or returned
+	 *
+	 * @param e - The API error
+	 * @returns - The response to return
+	 */
+	onAPIError?: (e: APIError) => void | Promise<void>;
 }
 
 export type EndpointContext<Path extends string, Options extends EndpointOptions, Context = {}> = {
@@ -322,9 +329,15 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 			options,
 			path,
 		});
-		const response = await handler(internalContext as any).catch((e) => {
-			if (isAPIError(e) && context.asResponse) {
-				return e;
+		const response = await handler(internalContext as any).catch(async (e) => {
+			if (isAPIError(e)) {
+				const onAPIError = options.onAPIError;
+				if (onAPIError) {
+					await onAPIError(e);
+				}
+				if (context.asResponse) {
+					return e;
+				}
 			}
 			throw e;
 		});
