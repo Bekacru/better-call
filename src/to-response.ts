@@ -53,6 +53,9 @@ export function toResponse(data?: any, init?: ResponseInit): Response {
 	let body = data;
 	let headers = new Headers(init?.headers);
 	if (!data) {
+		if (data === null) {
+			body = JSON.stringify(null);
+		}
 		headers.set("content-type", "application/json");
 	} else if (typeof data === "string") {
 		body = data;
