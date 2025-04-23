@@ -126,6 +126,29 @@ describe("router", () => {
 		expect(response).toMatchObject({ name: "hello" });
 	});
 
+	it("should work with request with a query param with multiple values", async () => {
+		const endpoint = createEndpoint(
+			"/post",
+			{
+				method: "POST",
+				query: z.object({
+					name: z.array(z.string()),
+				}),
+			},
+			async (c) => {
+				return c.query;
+			},
+		);
+		const router = createRouter({
+			endpoint,
+		});
+		const request = new Request("http://localhost/post?name=hello&name=world", {
+			method: "POST",
+		});
+		const response = await router.handler(request).then((res) => res.json());
+		expect(response).toMatchObject({ name: ["hello", "world"] });
+	});
+
 	it("should work with request with dynamic param", async () => {
 		const endpoint = createEndpoint(
 			"/post/:id",
