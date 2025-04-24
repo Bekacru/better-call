@@ -135,6 +135,19 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 			return new Response(null, { status: 404, statusText: "Not Found" });
 		}
 
+		const query: Record<string, string | string[]> = {};
+		url.searchParams.forEach((value, key) => {
+			if (key in query) {
+				if (Array.isArray(query[key])) {
+					(query[key] as string[]).push(value);
+				} else {
+					query[key] = [query[key] as string, value];
+				}
+			} else {
+				query[key] = value;
+			}
+		});
+
 		const handler = route.data as Endpoint;
 		const context = {
 			path,
@@ -143,7 +156,7 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 			params: route.params ? (JSON.parse(JSON.stringify(route.params)) as any) : {},
 			request: request,
 			body: await getBody(handler.options.cloneRequest ? request.clone() : request),
-			query: Object.fromEntries(url.searchParams),
+			query,
 			_flag: "router" as const,
 			asResponse: true,
 			context: config?.routerContext,
