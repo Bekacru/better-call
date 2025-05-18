@@ -45,6 +45,10 @@ export interface EndpointOptions {
 	 */
 	cloneRequest?: boolean;
 	/**
+	 * If true the body will be undefined
+	 */
+	disableBody?: boolean;
+	/**
 	 * Endpoint metadata
 	 */
 	metadata?: {

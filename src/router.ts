@@ -155,7 +155,7 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 			headers: request.headers,
 			params: route.params ? (JSON.parse(JSON.stringify(route.params)) as any) : {},
 			request: request,
-			body: await getBody(handler.options.cloneRequest ? request.clone() : request),
+			body: handler.options.disableBody ? undefined : await getBody(handler.options.cloneRequest ? request.clone() : request),
 			query,
 			_flag: "router" as const,
 			asResponse: true,
