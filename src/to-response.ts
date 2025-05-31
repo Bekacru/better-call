@@ -75,7 +75,12 @@ export function toResponse(data?: any, init?: ResponseInit): Response {
 		body = data;
 		headers.set("Content-Type", "application/octet-stream");
 	} else if (isJSONSerializable(data)) {
-		body = JSON.stringify(data);
+		body = JSON.stringify(data, (key, value) => {
+			if (typeof value === "bigint") {
+				return value.toString();
+			}
+			return value;
+		});
 		headers.set("Content-Type", "application/json");
 	}
 
