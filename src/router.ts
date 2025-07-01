@@ -126,7 +126,9 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 		const path = config?.basePath ? url.pathname.split(config.basePath)[1] : url.pathname;
 
 		if (!path?.length) {
-			config?.onError?.(new Error("NOT_FOUND"));
+			const errorWithNoStack = new Error("NOT_FOUND");
+			errorWithNoStack.stack = undefined;
+			config?.onError?.(errorWithNoStack);
 			return new Response(null, { status: 404, statusText: "Not Found" });
 		}
 
