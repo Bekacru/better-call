@@ -183,6 +183,25 @@ describe("router", () => {
 		const response = await router.handler(new Request("http://localhost"));
 		expect(response.status).toBe(403);
 	});
+
+	it("should work with duplicate base path", async () => {
+		const endpoint = createEndpoint(
+			"/test/api/v1/test",
+			{
+				method: "GET",
+			},
+			async (c) => {
+				return c.path;
+			},
+		);
+		const router = createRouter({ endpoint }, { basePath: "/api/v1" });
+		const response = await router.handler(
+			new Request("http://localhost/api/v1/test/api/v1/test"),
+		);
+		expect(response.status).toBe(200);
+		const text = await response.text();
+		expect(text).toBe("/test/api/v1/test");
+	});
 });
 
 describe("route middleware", () => {
