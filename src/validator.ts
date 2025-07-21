@@ -14,6 +14,7 @@ type ValidationResponse =
 			data: null;
 			error: {
 				message: string;
+				issues: readonly StandardSchemaV1.Issue[];
 			};
 	  };
 
@@ -56,13 +57,13 @@ export async function runValidation(
 	if (options.requireHeaders && !context.headers) {
 		return {
 			data: null,
-			error: { message: "Headers is required" },
+			error: { message: "Headers is required", issues: [] },
 		};
 	}
 	if (options.requireRequest && !context.request) {
 		return {
 			data: null,
-			error: { message: "Request is required" },
+			error: { message: "Request is required", issues: [] },
 		};
 	}
 	return {
@@ -72,13 +73,8 @@ export async function runValidation(
 }
 
 export function fromError(error: readonly StandardSchemaV1.Issue[], validating: string) {
-	const errorMessages: string[] = [];
-
-	for (const issue of error) {
-		const message = issue.message;
-		errorMessages.push(message);
-	}
 	return {
 		message: `Invalid ${validating} parameters`,
+		issues: error,
 	};
 }

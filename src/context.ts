@@ -1,5 +1,5 @@
 import type { EndpointOptions } from "./endpoint";
-import { _statusCode, APIError, type Status } from "./error";
+import { _statusCode, APIError, ValidationError, type Status } from "./error";
 import type {
 	InferParamPath,
 	InferParamWildCard,
@@ -183,10 +183,7 @@ export const createInternalContext = async (
 	const headers = new Headers();
 	const { data, error } = await runValidation(options, context);
 	if (error) {
-		throw new APIError(400, {
-			message: error.message,
-			code: "VALIDATION_ERROR",
-		});
+		throw new ValidationError(error.message, error.issues);
 	}
 	const requestHeaders: Headers | null =
 		"headers" in context
