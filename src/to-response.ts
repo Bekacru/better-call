@@ -24,6 +24,16 @@ function isJSONSerializable(value: any) {
 	);
 }
 
+export type JSONResponse = {
+	body: Record<string, any>;
+	routerResponse: ResponseInit | undefined;
+	_flag: "json";
+};
+
+function isJSONResponse(value: any): value is JSONResponse {
+	return "_flag" in value && value._flag === "json";
+}
+
 export function toResponse(data?: any, init?: ResponseInit): Response {
 	if (data instanceof Response) {
 		if (init?.headers instanceof Headers) {
@@ -33,19 +43,22 @@ export function toResponse(data?: any, init?: ResponseInit): Response {
 		}
 		return data;
 	}
-	if (data?._flag === "json") {
+	if (isJSONResponse(data)) {
+		const body = data.body;
 		const routerResponse = data.routerResponse;
 		if (routerResponse instanceof Response) {
 			return routerResponse;
 		}
-		return toResponse(data.body, {
-			headers: data.headers,
-			status: data.status,
+		return toResponse(body, {
+			...routerResponse,
+			headers: init?.headers ?? routerResponse?.headers,
+			status: init?.status ?? routerResponse?.status,
+			statusText: init?.statusText ?? routerResponse?.statusText,
 		});
 	}
 	if (isAPIError(data)) {
 		return toResponse(data.body, {
-			status: data.statusCode,
+			status: init?.status ?? data.statusCode,
 			statusText: data.status.toString(),
 			headers: init?.headers || data.headers,
 		});

@@ -366,6 +366,51 @@ describe("response", () => {
 				test: "response",
 			});
 		});
+
+		it("should return a js object response with 201 status", async () => {
+			const endpoint = createEndpoint(
+				"/path",
+				{
+					method: "POST",
+					status: 201,
+				},
+				async (ctx) => {
+					return ctx.json(
+						{ test: "response" },
+						{
+							status: 201,
+						},
+					);
+				},
+			);
+			const response = await endpoint({
+				asResponse: true,
+			});
+			await expect(response.json()).resolves.toMatchObject({
+				test: "response",
+			});
+			expect(response.status).toBe(201);
+		});
+	});
+
+	it("should return a js object response (asResponse)", async () => {
+		const endpoint = createEndpoint(
+			"/path",
+			{
+				method: "POST",
+				status: 200,
+			},
+			async (ctx) => {
+				return ctx.json({ test: "response" });
+			},
+		);
+		const response = await endpoint({
+			asResponse: true,
+		});
+		await expect(response.json()).resolves.toMatchObject({
+			test: "response",
+		});
+		expect(response.status).toBe(200);
 	});
 
 	describe("as-response", () => {
