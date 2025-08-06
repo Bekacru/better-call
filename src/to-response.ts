@@ -41,7 +41,7 @@ function safeStringify(
 		// Then handle circular references
 		if (typeof value === "object" && value !== null) {
 			if (seen.has(value)) {
-			    return `[Circular ref${seen.get(value)}]`;
+				return `[Circular ref${seen.get(value)}]`;
 			}
 			seen.set(value, id++);
 		}
