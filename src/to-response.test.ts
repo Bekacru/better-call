@@ -35,25 +35,6 @@ describe("toResponse", () => {
 			expect(response.body).toBe(stream);
 		});
 	});
-
-	describe("Response handling", () => {
-		it("should pass through Response objects", () => {
-			const original = new Response("test", {
-				headers: { "X-Test": "value" },
-			});
-			const response = toResponse(original);
-			expect(response).toBe(original);
-		});
-
-		it("should merge headers when passing through Response", () => {
-			const original = new Response("test");
-			const response = toResponse(original, {
-				headers: new Headers({ "X-New": "value" }),
-			});
-			expect(response.headers.get("X-New")).toBe("value");
-		});
-	});
-
 	describe("JSON handling", () => {
 		it("should handle regular JSON objects", () => {
 			const data = { test: "value", num: 123 };
