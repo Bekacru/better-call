@@ -143,7 +143,7 @@ describe("types", async () => {
 			"/path",
 			{
 				method: "POST",
-				body: z.record(z.string()),
+				body: z.record(z.string(), z.string()),
 				metadata: {
 					$Infer: {
 						body: {} as {
@@ -206,7 +206,7 @@ describe("types", async () => {
 			"/path",
 			{
 				method: "POST",
-				body: z.record(z.string()),
+				body: z.record(z.string(), z.string()),
 				metadata: {
 					$Infer: {
 						query: {} as {

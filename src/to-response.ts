@@ -24,13 +24,51 @@ function isJSONSerializable(value: any) {
 	);
 }
 
+function safeStringify(
+	obj: any,
+	replacer?: (key: string, value: any) => any,
+	space?: string | number,
+): string {
+	let id = 0;
+	const seen = new WeakMap<object, number>(); // ref -> counter
+
+	const safeReplacer = (key: string, value: any) => {
+		// Handle bigint first
+		if (typeof value === "bigint") {
+			return value.toString();
+		}
+
+		// Then handle circular references
+		if (typeof value === "object" && value !== null) {
+			if (seen.has(value)) {
+				return `[Circular ref-${seen.get(value)}]`;
+			}
+			seen.set(value, id++);
+		}
+
+		// Finally apply any custom replacer
+		if (replacer) {
+			return replacer(key, value);
+		}
+
+		return value;
+	};
+
+	return JSON.stringify(obj, safeReplacer, space);
+}
+
 export type JSONResponse = {
 	body: Record<string, any>;
 	routerResponse: ResponseInit | undefined;
+	status?: number;
+	headers?: Record<string, string> | Headers;
 	_flag: "json";
 };
 
 function isJSONResponse(value: any): value is JSONResponse {
+	if (!value || typeof value !== "object") {
+		return false;
+	}
 	return "_flag" in value && value._flag === "json";
 }
 
@@ -43,16 +81,23 @@ export function toResponse(data?: any, init?: ResponseInit): Response {
 		}
 		return data;
 	}
-	if (isJSONResponse(data)) {
+	const isJSON = isJSONResponse(data);
+	if (isJSON) {
 		const body = data.body;
 		const routerResponse = data.routerResponse;
 		if (routerResponse instanceof Response) {
 			return routerResponse;
 		}
-		return toResponse(body, {
+		const headers = new Headers({
+			...routerResponse?.headers,
+			...data.headers,
+			...init?.headers,
+			"Content-Type": "application/json",
+		});
+		return new Response(JSON.stringify(body), {
 			...routerResponse,
-			headers: init?.headers ?? routerResponse?.headers,
-			status: init?.status ?? routerResponse?.status,
+			headers,
+			status: data.status ?? init?.status ?? routerResponse?.status,
 			statusText: init?.statusText ?? routerResponse?.statusText,
 		});
 	}
@@ -88,12 +133,7 @@ export function toResponse(data?: any, init?: ResponseInit): Response {
 		body = data;
 		headers.set("Content-Type", "application/octet-stream");
 	} else if (isJSONSerializable(data)) {
-		body = JSON.stringify(data, (key, value) => {
-			if (typeof value === "bigint") {
-				return value.toString();
-			}
-			return value;
-		});
+		body = safeStringify(data);
 		headers.set("Content-Type", "application/json");
 	}
 
