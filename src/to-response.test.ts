@@ -10,25 +10,25 @@ describe("toResponse", () => {
 			await expect(response.text()).resolves.toBe("hello world");
 		});
 
-		it("should handle binary data", () => {
+		it("should handle binary data", async () => {
 			const buffer = new Uint8Array([1, 2, 3]).buffer;
 			const response = toResponse(buffer);
 			expect(response.headers.get("Content-Type")).toBe("application/octet-stream");
-			expect(response.arrayBuffer()).resolves.toEqual(buffer);
+			await expect(response.arrayBuffer()).resolves.toEqual(buffer);
 		});
 
-		it("should handle Blob data", () => {
+		it("should handle Blob data", async () => {
 			const blob = new Blob(["test"], { type: "text/custom" });
 			const response = toResponse(blob);
 			expect(response.headers.get("Content-Type")).toBe("text/custom");
 		});
-		it("should handle URLSearchParams", () => {
+		it("should handle URLSearchParams", async () => {
 			const params = new URLSearchParams("test=value");
 			const response = toResponse(params);
 			expect(response.headers.get("Content-Type")).toBe("application/x-www-form-urlencoded");
-			expect(response.text()).resolves.toBe("test=value");
+			await expect(response.text()).resolves.toBe("test=value");
 		});
-		it("should handle ReadableStream", () => {
+		it("should handle ReadableStream", async () => {
 			const stream = new ReadableStream();
 			const response = toResponse(stream);
 			expect(response.headers.get("Content-Type")).toBe("application/octet-stream");
@@ -36,14 +36,14 @@ describe("toResponse", () => {
 		});
 	});
 	describe("JSON handling", () => {
-		it("should handle regular JSON objects", () => {
+		it("should handle regular JSON objects", async () => {
 			const data = { test: "value", num: 123 };
 			const response = toResponse(data);
 			expect(response.headers.get("Content-Type")).toBe("application/json");
-			expect(response.text()).resolves.toBe(JSON.stringify(data));
+			await expect(response.text()).resolves.toBe(JSON.stringify(data));
 		});
 
-		it("should handle objects with toJSON method", () => {
+		it("should handle objects with toJSON method", async () => {
 			const data = {
 				value: 123,
 				toJSON() {
@@ -52,17 +52,17 @@ describe("toResponse", () => {
 			};
 			const response = toResponse(data);
 			expect(response.headers.get("Content-Type")).toBe("application/json");
-			expect(response.text()).resolves.toBe(JSON.stringify({ serialized: 123 }));
+			await expect(response.text()).resolves.toBe(JSON.stringify({ serialized: 123 }));
 		});
 
-		it("should handle bigint values", () => {
+		it("should handle bigint values", async () => {
 			const data = { id: BigInt(9007199254740991) };
 			const response = toResponse(data);
 			expect(response.headers.get("Content-Type")).toBe("application/json");
-			expect(response.text()).resolves.toBe('{"id":"9007199254740991"}');
+			await expect(response.text()).resolves.toBe('{"id":"9007199254740991"}');
 		});
 
-		it("should handle circular references", () => {
+		it("should handle circular references", async () => {
 			interface CircularObj {
 				self?: CircularObj;
 			}
@@ -71,10 +71,10 @@ describe("toResponse", () => {
 
 			const response = toResponse(circular);
 			expect(response.headers.get("Content-Type")).toBe("application/json");
-			expect(response.text()).resolves.toBe('{"self":"[Circular ref-0]"}');
+			await expect(response.text()).resolves.toBe('{"self":"[Circular ref-0]"}');
 		});
 
-		it("should handle nested bigints inside circular references", () => {
+		it("should handle nested bigints inside circular references", async () => {
 			interface CircularObj {
 				id: bigint;
 				self?: CircularObj;
@@ -87,27 +87,27 @@ describe("toResponse", () => {
 			obj.circular.self = obj.circular;
 
 			const response = toResponse(obj);
-			expect(response.text()).resolves.toBe(
-				'{"circular":{"id":"123","self":"[Circular ref-0]"}}',
+			await expect(response.text()).resolves.toBe(
+				'{"circular":{"id":"123","self":"[Circular ref-1]"}}',
 			);
 		});
 
-		it("should handle arrays with circular refs and bigints", () => {
+		it("should handle arrays with circular refs and bigints", async () => {
 			const arr: (bigint | any[])[] = [BigInt(123)];
 			arr.push(arr);
 
 			const response = toResponse(arr);
-			expect(response.text()).resolves.toBe('["123","[Circular ref-0]"]');
+			await expect(response.text()).resolves.toBe('["123","[Circular ref-0]"]');
 		});
 	});
 
 	describe("Error handling", () => {
-		it("should handle APIError", () => {
+		it("should handle APIError", async () => {
 			const error = new APIError("NOT_FOUND", { message: "Resource not found" });
 			const response = toResponse(error);
 			expect(response.status).toBe(404);
 			expect(response.statusText).toBe("NOT_FOUND");
-			expect(response.text()).resolves.toContain("Resource not found");
+			await expect(response.text()).resolves.toContain("Resource not found");
 		});
 
 		it("should handle APIError with custom headers", () => {
@@ -131,7 +131,7 @@ describe("toResponse", () => {
 			expect(response).toBe(flaggedData.routerResponse);
 		});
 
-		it.only("should handle _flag=json without Response", () => {
+		it("should handle _flag=json without Response", async () => {
 			const flaggedData = {
 				_flag: "json",
 				body: { test: "value" },
@@ -142,7 +142,7 @@ describe("toResponse", () => {
 			expect(response instanceof Response).toBe(true);
 			expect(response.status).toBe(201);
 			expect(response.headers.get("X-Test")).toBe("value");
-			expect(response.text()).resolves.toBe(JSON.stringify({ test: "value" }));
+			await expect(response.text()).resolves.toBe(JSON.stringify({ test: "value" }));
 		});
 	});
 
