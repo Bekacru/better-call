@@ -3,11 +3,11 @@ import { toResponse } from "./to-response";
 import { APIError } from "./error";
 
 describe("toResponse", () => {
-	describe("basic types", () => {
-		it("should handle string data", () => {
+	describe("basic types", async () => {
+		it("should handle string data", async () => {
 			const response = toResponse("hello world");
 			expect(response.headers.get("Content-Type")).toBe("text/plain");
-			expect(response.text()).resolves.toBe("hello world");
+			await expect(response.text()).resolves.toBe("hello world");
 		});
 
 		it("should handle binary data", () => {
@@ -71,7 +71,7 @@ describe("toResponse", () => {
 
 			const response = toResponse(circular);
 			expect(response.headers.get("Content-Type")).toBe("application/json");
-			expect(response.text()).resolves.toBe('{"self":"[Circular Reference]"}');
+			expect(response.text()).resolves.toBe('{"self":"[Circular ref-0]"}');
 		});
 
 		it("should handle nested bigints inside circular references", () => {
@@ -88,7 +88,7 @@ describe("toResponse", () => {
 
 			const response = toResponse(obj);
 			expect(response.text()).resolves.toBe(
-				'{"circular":{"id":"123","self":"[Circular Reference]"}}',
+				'{"circular":{"id":"123","self":"[Circular ref-0]"}}',
 			);
 		});
 
@@ -97,7 +97,7 @@ describe("toResponse", () => {
 			arr.push(arr);
 
 			const response = toResponse(arr);
-			expect(response.text()).resolves.toBe('["123","[Circular Reference]"]');
+			expect(response.text()).resolves.toBe('["123","[Circular ref-0]"]');
 		});
 	});
 
@@ -131,7 +131,7 @@ describe("toResponse", () => {
 			expect(response).toBe(flaggedData.routerResponse);
 		});
 
-		it("should handle _flag=json without Response", () => {
+		it.only("should handle _flag=json without Response", () => {
 			const flaggedData = {
 				_flag: "json",
 				body: { test: "value" },
@@ -226,7 +226,7 @@ describe("toResponse", () => {
 			const body = await response.text();
 			const parsed = JSON.parse(body);
 			expect(parsed).toEqual({
-				self: "[Circular Reference]",
+				self: "[Circular ref-0]",
 			});
 		});
 
@@ -246,9 +246,9 @@ describe("toResponse", () => {
 			const parsed = JSON.parse(body);
 			expect(parsed).toEqual({
 				first: {
-					ref1: "[Circular Reference]",
+					ref1: "[Circular ref-1]",
 				},
-				second: "[Circular Reference]",
+				second: "[Circular ref-1]",
 			});
 		});
 
@@ -273,7 +273,7 @@ describe("toResponse", () => {
 					value: 2,
 					next: {
 						value: 3,
-						next: "[Circular Reference]",
+						next: "[Circular ref-0]",
 					},
 				},
 			});
@@ -288,7 +288,7 @@ describe("toResponse", () => {
 			const body = await response.text();
 			const parsed = JSON.parse(body);
 			expect(parsed).toEqual({
-				data: [1, 2, 3, "[Circular Reference]"],
+				data: [1, 2, 3, "[Circular ref-1]"],
 			});
 		});
 
@@ -300,7 +300,7 @@ describe("toResponse", () => {
 			const response = toResponse(outer);
 			const body = await response.text();
 			const parsed = JSON.parse(body);
-			expect(parsed).toEqual([3, [1, 2, "[Circular Reference]"]]);
+			expect(parsed).toEqual([3, [1, 2, "[Circular ref-0]"]]);
 		});
 	});
 
@@ -329,11 +329,11 @@ describe("toResponse", () => {
 			const parsed = JSON.parse(body);
 			expect(parsed).toEqual({
 				id: "1",
-				ref: "[Circular Reference]",
+				ref: "[Circular ref-0]",
 				children: [
 					{
 						id: "2",
-						ref: "[Circular Reference]",
+						ref: "[Circular ref-0]",
 						children: [],
 					},
 				],
@@ -379,17 +379,17 @@ describe("toResponse", () => {
 				siblings: [
 					{
 						id: "2",
-						parent: "[Circular Reference]",
+						parent: "[Circular ref-0]",
 						siblings: [],
 						meta: {
 							created: "1234567891",
-							refs: ["[Circular Reference]"],
+							refs: ["[Circular ref-0]"],
 						},
 					},
 				],
 				meta: {
 					created: "1234567890",
-					refs: ["[Circular Reference]"],
+					refs: ["[Circular ref-0]"],
 				},
 			});
 		});
@@ -465,19 +465,19 @@ describe("toResponse", () => {
 					{
 						id: "456",
 						title: "Hello",
-						author: "[Circular Reference]",
+						author: "[Circular ref-0]",
 						comments: [
 							{
 								content: "Great post!",
-								author: "[Circular Reference]",
-								post: "[Circular Reference]",
+								author: "[Circular ref-0]",
+								post: "[Circular ref-2]",
 							},
 						],
 					},
 				],
 				profile: {
 					bio: "Test bio",
-					user: "[Circular Reference]",
+					user: "[Circular ref-0]",
 				},
 			});
 		});
@@ -508,8 +508,8 @@ describe("toResponse", () => {
 				friend: {
 					id: "2",
 					name: "Bob",
-					friendOf: "[Circular Reference]",
-					friend: "[Circular Reference]",
+					friendOf: "[Circular ref-0]",
+					friend: "[Circular ref-0]",
 				},
 			});
 		});

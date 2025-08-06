@@ -41,7 +41,7 @@ function safeStringify(
 		// Then handle circular references
 		if (typeof value === "object" && value !== null) {
 			if (seen.has(value)) {
-				return `[Circular ref${seen.get(value)}]`;
+				return `[Circular ref-${seen.get(value)}]`;
 			}
 			seen.set(value, id++);
 		}
@@ -60,10 +60,15 @@ function safeStringify(
 export type JSONResponse = {
 	body: Record<string, any>;
 	routerResponse: ResponseInit | undefined;
+	status?: number;
+	headers?: Record<string, string> | Headers;
 	_flag: "json";
 };
 
 function isJSONResponse(value: any): value is JSONResponse {
+	if (!value || typeof value !== "object") {
+		return false;
+	}
 	return "_flag" in value && value._flag === "json";
 }
 
@@ -76,16 +81,23 @@ export function toResponse(data?: any, init?: ResponseInit): Response {
 		}
 		return data;
 	}
-	if (isJSONResponse(data)) {
+	const isJSON = isJSONResponse(data);
+	if (isJSON) {
 		const body = data.body;
 		const routerResponse = data.routerResponse;
 		if (routerResponse instanceof Response) {
 			return routerResponse;
 		}
-		return toResponse(body, {
+		const headers = new Headers({
+			...routerResponse?.headers,
+			...data.headers,
+			...init?.headers,
+			"Content-Type": "application/json",
+		});
+		return new Response(JSON.stringify(body), {
 			...routerResponse,
-			headers: init?.headers ?? routerResponse?.headers,
-			status: init?.status ?? routerResponse?.status,
+			headers,
+			status: data.status ?? init?.status ?? routerResponse?.status,
 			statusText: init?.statusText ?? routerResponse?.statusText,
 		});
 	}
