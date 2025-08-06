@@ -24,25 +24,35 @@ function isJSONSerializable(value: any) {
 	);
 }
 
-function safeStringify(obj: any, replacer?: (key: string, value: any) => any, space?: string | number): string {
+function safeStringify(
+	obj: any,
+	replacer?: (key: string, value: any) => any,
+	space?: string | number,
+): string {
 	const seen = new WeakSet();
-	
+
 	const safeReplacer = (key: string, value: any) => {
-		if (typeof value === 'object' && value !== null) {
+		// Handle bigint first
+		if (typeof value === "bigint") {
+			return value.toString();
+		}
+
+		// Then handle circular references
+		if (typeof value === "object" && value !== null) {
 			if (seen.has(value)) {
-				return '[Circular Reference]';
+				return "[Circular Reference]";
 			}
 			seen.add(value);
 		}
-		
-		// Call the original replacer if provided
+
+		// Finally apply any custom replacer
 		if (replacer) {
 			return replacer(key, value);
 		}
-		
+
 		return value;
 	};
-	
+
 	return JSON.stringify(obj, safeReplacer, space);
 }
 
@@ -97,12 +107,7 @@ export function toResponse(data?: any, init?: ResponseInit): Response {
 		body = data;
 		headers.set("Content-Type", "application/octet-stream");
 	} else if (isJSONSerializable(data)) {
-		body = safeStringify(data, (key, value) => {
-			if (typeof value === "bigint") {
-				return value.toString();
-			}
-			return value;
-		});
+		body = safeStringify(data);
 		headers.set("Content-Type", "application/json");
 	}
 
