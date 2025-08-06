@@ -29,7 +29,8 @@ function safeStringify(
 	replacer?: (key: string, value: any) => any,
 	space?: string | number,
 ): string {
-	const seen = new WeakSet();
+	let id = 0;
+	const seen = new WeakMap<object, number>(); // ref -> counter
 
 	const safeReplacer = (key: string, value: any) => {
 		// Handle bigint first
@@ -40,9 +41,9 @@ function safeStringify(
 		// Then handle circular references
 		if (typeof value === "object" && value !== null) {
 			if (seen.has(value)) {
-				return "[Circular Reference]";
+			    return `[Circular ref${seen.get(value)}]`;
 			}
-			seen.add(value);
+			seen.set(value, id++);
 		}
 
 		// Finally apply any custom replacer
