@@ -73,8 +73,15 @@ export async function runValidation(
 }
 
 export function fromError(error: readonly StandardSchemaV1.Issue[], validating: string) {
+	const message = error
+		.map((e) => {
+			return `[${e.path?.length ? `${validating}.` + e.path.map((x) => (typeof x === "object" ? x.key : x)).join(".") : validating}] ${e.message}`;
+		})
+		.join("; ");
+	console.log(message);
+
 	return {
-		message: `Invalid ${validating} parameters`,
+		message,
 		issues: error,
 	};
 }

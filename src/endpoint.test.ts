@@ -27,7 +27,7 @@ describe("validation", (it) => {
 				//@ts-expect-error
 				body: { name: 1 },
 			}),
-		).rejects.toThrowError("Invalid body parameters");
+		).rejects.toThrowError("[body.name] Invalid type: Expected string but received 1");
 	});
 
 	it("should validate query and throw validation error", async () => {
@@ -49,7 +49,7 @@ describe("validation", (it) => {
 				//@ts-expect-error
 				query: { name: 1 },
 			}),
-		).rejects.toThrowError(`Invalid query parameters`);
+		).rejects.toThrowError(`[query.name] Invalid type: Expected string but received 1`);
 	});
 
 	it("should validate the body and return the body", async () => {
