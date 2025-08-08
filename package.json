@@ -1,6 +1,6 @@
 {
   "name": "better-call",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "packageManager": "pnpm@9.15.0",
   "type": "module",
   "repository": {
@@ -34,7 +34,7 @@
     "typescript": "^5.6.0-beta",
     "valibot": "1.0.0-beta.15",
     "vitest": "^3.1.1",
-    "zod": "^3.24.1"
+    "zod": "^4.0.1"
   },
   "dependencies": {
     "@better-fetch/fetch": "^1.1.4",

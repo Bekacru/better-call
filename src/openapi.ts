@@ -1,4 +1,4 @@
-import { ZodObject, ZodOptional, ZodSchema } from "zod";
+import { ZodObject, ZodOptional, ZodType } from "zod";
 import type { Endpoint, EndpointOptions } from "./endpoint";
 
 export type OpenAPISchemaType = "string" | "number" | "integer" | "boolean" | "array" | "object";
@@ -82,7 +82,7 @@ export interface Path {
 }
 const paths: Record<string, Path> = {};
 
-function getTypeFromZodType(zodType: ZodSchema) {
+function getTypeFromZodType(zodType: ZodType<any>) {
 	switch (zodType.constructor.name) {
 		case "ZodString":
 			return "string";
@@ -107,7 +107,7 @@ function getParameters(options: EndpointOptions) {
 	}
 	if (options.query instanceof ZodObject) {
 		Object.entries(options.query.shape).forEach(([key, value]) => {
-			if (value instanceof ZodSchema) {
+			if (value instanceof ZodObject) {
 				parameters.push({
 					name: key,
 					in: "query",
@@ -139,7 +139,7 @@ function getRequestBody(options: EndpointOptions): any {
 		const properties: Record<string, any> = {};
 		const required: string[] = [];
 		Object.entries(shape).forEach(([key, value]) => {
-			if (value instanceof ZodSchema) {
+			if (value instanceof ZodObject) {
 				properties[key] = {
 					type: getTypeFromZodType(value),
 					description: value.description,
