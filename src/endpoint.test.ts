@@ -511,7 +511,7 @@ describe("response", () => {
 				"/endpoint",
 				{
 					method: "POST",
-					body: z.string().min(10).max(1), // Impossible to satisfy
+					body: z.string().min(1000),
 					onValidationError({ issues, message }) {
 						expect(typeof message).toBe("string");
 						expect(issues.length).toBeGreaterThan(0);
@@ -527,7 +527,7 @@ describe("response", () => {
 				},
 			);
 			try {
-				const response = await endpoint({ body: "Hello world!" });
+				const response = await endpoint({ body: "I'm less than 1000 characters" });
 				// This ensures that there is an error thrown.
 				expect(response).not.toBeCalled();
 			} catch (error) {
