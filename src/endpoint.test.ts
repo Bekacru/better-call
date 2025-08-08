@@ -505,6 +505,39 @@ describe("response", () => {
 				message: "error message",
 			});
 		});
+
+		it("custom validation errors", async () => {
+			const endpoint = createEndpoint(
+				"/endpoint",
+				{
+					method: "POST",
+					body: z.string().min(10).max(1), // Impossible to satisfy
+					onValidationError({ issues, message }) {
+						expect(typeof message).toBe("string");
+						expect(issues.length).toBeGreaterThan(0);
+						throw new APIError("I'M_A_TEAPOT", {
+							message: "Such a useful error status.",
+						});
+					},
+				},
+				async (c) => {
+					return c.json({
+						success: false, // Should never recieve this.
+					});
+				},
+			);
+			try {
+				const response = await endpoint({ body: "Hello world!" });
+				// This ensures that there is an error thrown.
+				expect(response).not.toBeCalled();
+			} catch (error) {
+				expect(error).toBeInstanceOf(APIError);
+				if (!(error instanceof APIError)) return;
+				// Ensure it's the validation error we defined.
+				expect(error.status).toBe("I'M_A_TEAPOT");
+				expect(error.message).toBe("Such a useful error status.");
+			}
+		});
 	});
 	describe("json", async () => {
 		it("should return the json directly", async () => {
