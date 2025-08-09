@@ -1,3 +1,5 @@
+import type { StandardSchemaV1 } from "./standard-schema";
+
 export const _statusCode = {
 	OK: 200,
 	CREATED: 201,
@@ -143,5 +145,19 @@ export class APIError extends Error {
 				}
 			: undefined;
 		this.stack = "";
+	}
+}
+
+export class ValidationError extends APIError {
+	constructor(
+		public message: string,
+		public issues: readonly StandardSchemaV1.Issue[],
+	) {
+		super(400, {
+			message: message,
+			code: "VALIDATION_ERROR",
+		});
+
+		this.issues = issues;
 	}
 }
