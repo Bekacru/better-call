@@ -499,6 +499,28 @@ describe("response", () => {
 		});
 	});
 
+	describe("set-cookies", () => {
+		it("should set cookies", async () => {
+			const endpoint = createEndpoint(
+				"/endpoint",
+				{
+					method: "POST",
+				},
+				async (c) => {
+					c.setCookie("hello", "world");
+				},
+			);
+
+			const response = await endpoint({
+				returnCookies:true
+			});
+
+			expect(response.cookies).toHaveLength(1);
+			expect(response.cookies?.at(0)?.name).toBe("hello");
+			expect(response.cookies?.at(0)?.value).toBe("world");
+		});
+	});
+
 	describe("API Error", () => {
 		it("should throw API Error", async () => {
 			const endpoint = createEndpoint(
