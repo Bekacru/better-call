@@ -166,6 +166,7 @@ export type InputContext<
 	InferHeadersInput<Options> & {
 		asResponse?: boolean;
 		returnHeaders?: boolean;
+		returnCookies?: boolean;
 		use?: Middleware[];
 		path?: string;
 	};

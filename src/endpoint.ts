@@ -13,7 +13,12 @@ import {
 	type InputContext,
 	type Method,
 } from "./context";
-import { parseCookies, type CookieOptions, type CookiePrefixOptions } from "./cookies";
+import {
+	extractSetCookes,
+	type SetCookies,
+	type CookieOptions,
+	type CookiePrefixOptions,
+} from "./cookies";
 import { APIError, type _statusCode, type Status } from "./error";
 import type { OpenAPIParameter, OpenAPISchemaType } from "./openapi";
 import type { StandardSchemaV1 } from "./standard-schema";
@@ -320,13 +325,27 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 	handler: (context: EndpointContext<Path, Options>) => Promise<R>,
 ) => {
 	type Context = InputContext<Path, Options>;
+
 	const internalHandler = async <
 		AsResponse extends boolean = false,
 		ReturnHeaders extends boolean = false,
+		ReturnCookies extends boolean = false,
 	>(
 		...inputCtx: HasRequiredKeys<Context> extends true
-			? [Context & { asResponse?: AsResponse; returnHeaders?: ReturnHeaders }]
-			: [(Context & { asResponse?: AsResponse; returnHeaders?: ReturnHeaders })?]
+			? [
+					Context & {
+						asResponse?: AsResponse;
+						returnHeaders?: ReturnHeaders;
+						returnCookies?: ReturnCookies;
+					},
+				]
+			: [
+					(Context & {
+						asResponse?: AsResponse;
+						returnHeaders?: ReturnHeaders;
+						returnCookies?: ReturnCookies;
+					})?,
+				]
 	) => {
 		const context = (inputCtx[0] || {}) as InputContext<any, any>;
 		const internalContext = await createInternalContext(context, {
@@ -346,39 +365,41 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 			throw e;
 		});
 		const headers = internalContext.responseHeaders;
+
 		type ResultType = [AsResponse] extends [true]
 			? Response
-			: [ReturnHeaders] extends [true]
-				? { headers: Headers; response: R }
-				: R;
+			: [ReturnHeaders, ReturnCookies] extends [true, true]
+				? { response: R; headers: Headers; cookies: SetCookies | null }
+				: [ReturnHeaders, ReturnCookies] extends [true, false]
+					? { response: R; headers: Headers }
+					: [ReturnHeaders, ReturnCookies] extends [false, true]
+						? { response: R; cookies: SetCookies | null }
+						: R;
 
 		if (context.asResponse) {
-			return toResponse(response, {
-				headers,
-			});
-		} else {
-			if (context.returnHeaders && context.returnCookies) {
-				const setCookie = headers.get("set-cookie");
-				return {
-					response,
-					headers,
-					cookies: setCookie ? parseCookies(setCookie) : null,
-				} as ResultType;
-			}
-			if (context.returnHeaders) {
-				return { response, headers } as ResultType;
-			}
-
-			if (context.returnCookies) {
-				const setCookie = headers.get("set-cookie");
-				return {
-					response,
-					cookies: setCookie ? parseCookies(setCookie) : null,
-				} as ResultType;
-			}
-
-			return response as ResultType;
+			return toResponse(response, { headers }) as ResultType;
 		}
+
+		if (context.returnHeaders && context.returnCookies) {
+			return {
+				response,
+				headers,
+				cookies: extractSetCookes(headers),
+			} as ResultType;
+		}
+
+		if (context.returnHeaders) {
+			return { response, headers } as ResultType;
+		}
+
+		if (context.returnCookies) {
+			return {
+				response,
+				cookies: extractSetCookes(headers),
+			} as ResultType;
+		}
+
+		return response as ResultType;
 	};
 	internalHandler.options = options;
 	internalHandler.path = path;

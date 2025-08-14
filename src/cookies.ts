@@ -243,18 +243,18 @@ export const serializeSignedCookie = async (
 	return _serialize(key, value, opt);
 };
 
-export type ParsedSetCookie = {
+export type SetCookie = {
 	name: string;
 	value: string;
 } & CookieOptions;
 
-export function parseSetCookie(header: string): ParsedSetCookie {
+export function parseSetCookie(header: string): SetCookie {
 	const parts = header.split(";").map((p) => p.trim());
 	const [nameValue, ...attributes] = parts;
 	const [name, rawValue] = nameValue.split("=");
 	const value = decodeURIComponent(rawValue);
 
-	const cookie: ParsedSetCookie = { name, value };
+	const cookie: SetCookie = { name, value };
 
 	for (const attr of attributes) {
 		if (attr.includes("=")) {
@@ -289,4 +289,10 @@ export function parseSetCookie(header: string): ParsedSetCookie {
 	}
 
 	return cookie;
+}
+
+export type SetCookies = SetCookie[];
+
+export function extractSetCookes(headers: Headers): SetCookies {
+	return headers.getSetCookie().map((c) => parseSetCookie(c));
 }
