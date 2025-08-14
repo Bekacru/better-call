@@ -13,7 +13,7 @@ import {
 	type InputContext,
 	type Method,
 } from "./context";
-import type { CookieOptions, CookiePrefixOptions } from "./cookies";
+import { parseCookies, type CookieOptions, type CookiePrefixOptions } from "./cookies";
 import { APIError, type _statusCode, type Status } from "./error";
 import type { OpenAPIParameter, OpenAPISchemaType } from "./openapi";
 import type { StandardSchemaV1 } from "./standard-schema";
@@ -352,18 +352,33 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 				? { headers: Headers; response: R }
 				: R;
 
-		return (
-			context.asResponse
-				? toResponse(response, {
-						headers,
-					})
-				: context.returnHeaders
-					? {
-							headers,
-							response,
-						}
-					: response
-		) as ResultType;
+		if (context.asResponse) {
+			return toResponse(response, {
+				headers,
+			});
+		} else {
+			if (context.returnHeaders && context.returnCookies) {
+				const setCookie = headers.get("set-cookie");
+				return {
+					response,
+					headers,
+					cookies: setCookie ? parseCookies(setCookie) : null,
+				} as ResultType;
+			}
+			if (context.returnHeaders) {
+				return { response, headers } as ResultType;
+			}
+
+			if (context.returnCookies) {
+				const setCookie = headers.get("set-cookie");
+				return {
+					response,
+					cookies: setCookie ? parseCookies(setCookie) : null,
+				} as ResultType;
+			}
+
+			return response as ResultType;
+		}
 	};
 	internalHandler.options = options;
 	internalHandler.path = path;
