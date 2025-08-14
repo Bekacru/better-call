@@ -309,3 +309,81 @@ describe("set-cookies", () => {
 		expect(response2).toBe("test");
 	});
 });
+
+describe("return-cookies", () => {
+	it("should return cookies when returnCookies is true", async () => {
+		const endpoint = createEndpoint("/", { method: "POST" }, async (c) => {
+			c.setCookie("test", "test");
+		});
+
+		const response = await endpoint({ returnCookies: true });
+		expect(response.cookies).toHaveLength(1);
+		expect(response.cookies?.[0].name).toBe("test");
+		expect(response.cookies?.[0].value).toBe("test");
+	});
+
+	it("should return multiple cookies when returnCookies is true", async () => {
+		const endpoint = createEndpoint("/", { method: "POST" }, async (c) => {
+			c.setCookie("test", "test");
+			c.setCookie("test2", "test2");
+			c.setCookie("test3", "test3");
+		});
+
+		const response = await endpoint({ returnCookies: true });
+		expect(response.cookies).toHaveLength(3);
+		const names = response.cookies?.map((c) => c.name);
+		expect(names).toContain("test");
+		expect(names).toContain("test2");
+		expect(names).toContain("test3");
+	});
+
+	it("should return cookies with options applied", async () => {
+		const endpoint = createEndpoint("/", { method: "POST" }, async (c) => {
+			c.setCookie("test", "test", {
+				secure: true,
+				httpOnly: true,
+				path: "/",
+			});
+		});
+
+		const response = await endpoint({ returnCookies: true });
+		const cookie = response.cookies?.[0];
+		expect(cookie?.name).toBe("test");
+		expect(cookie?.value).toBe("test");
+		expect(cookie?.path).toBe("/");
+		expect(cookie?.secure).toBe(true);
+		expect(cookie?.httpOnly).toBe(true);
+	});
+
+	it("should return headers and cookies when both returnHeaders and returnCookies are true", async () => {
+		const endpoint = createEndpoint("/", { method: "POST" }, async (c) => {
+			c.setCookie("test", "test");
+			c.setCookie("test2", "test2");
+		});
+
+		const response = await endpoint({ returnHeaders: true, returnCookies: true });
+		expect(response.headers.get("set-cookie")).toBe("test=test, test2=test2");
+		expect(response.cookies).toHaveLength(2);
+		const names = response.cookies?.map((c) => c.name);
+		expect(names).toContain("test");
+		expect(names).toContain("test2");
+	});
+
+	it("should set a signed cookie and return it via returnCookies", async () => {
+		const secret = "test-secret";
+
+		const endpoint = createEndpoint("/", { method: "POST" }, async (c) => {
+			await c.setSignedCookie("session", "abc123", secret);
+		});
+
+		const response = await endpoint({ returnCookies: true });
+
+		expect(response.cookies).toHaveLength(1);
+		const cookie = response.cookies?.[0];
+		expect(cookie?.name).toBe("session");
+		expect(cookie?.value).toContain("abc123.");
+
+		const signature = cookie?.value.split(".")[1];
+		expect(signature?.length).toBeGreaterThan(10);
+	});
+});
