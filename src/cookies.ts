@@ -242,3 +242,51 @@ export const serializeSignedCookie = async (
 	value = await signCookieValue(value, secret);
 	return _serialize(key, value, opt);
 };
+
+export type ParsedSetCookie = {
+	name: string;
+	value: string;
+} & CookieOptions;
+
+export function parseSetCookie(header: string): ParsedSetCookie {
+	const parts = header.split(";").map((p) => p.trim());
+	const [nameValue, ...attributes] = parts;
+	const [name, rawValue] = nameValue.split("=");
+	const value = decodeURIComponent(rawValue);
+
+	const cookie: ParsedSetCookie = { name, value };
+
+	for (const attr of attributes) {
+		if (attr.includes("=")) {
+			const [k, v] = attr.split("=");
+			const key = k.toLowerCase();
+			switch (key) {
+				case "domain":
+					cookie.domain = v;
+					break;
+				case "path":
+					cookie.path = v;
+					break;
+				case "max-age":
+					cookie.maxAge = Number(v);
+					break;
+				case "expires":
+					cookie.expires = new Date(v);
+					break;
+				case "samesite":
+					cookie.sameSite = v as CookieOptions["sameSite"];
+					break;
+				case "prefix":
+					cookie.prefix = v as CookiePrefixOptions;
+					break;
+			}
+		} else {
+			const flag = attr.toLowerCase();
+			if (flag === "httponly") cookie.httpOnly = true;
+			else if (flag === "secure") cookie.secure = true;
+			else if (flag === "partitioned") cookie.partitioned = true;
+		}
+	}
+
+	return cookie;
+}
