@@ -3,7 +3,6 @@ import { createEndpoint, type Endpoint } from "./endpoint";
 import { generator, getHTML } from "./openapi";
 import type { Middleware } from "./middleware";
 import { getBody, isAPIError } from "./utils";
-import { APIError } from "./error";
 import { toResponse } from "./to-response";
 
 export interface RouterConfig {

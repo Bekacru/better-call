@@ -1,3 +1,72 @@
+// https://github.com/nodejs/node/blob/360f7cc7867b43344aac00564286b895e15f21d7/lib/internal/errors.js#L246C1-L261C2
+function isErrorStackTraceLimitWritable() {
+	const desc = Object.getOwnPropertyDescriptor(Error, "stackTraceLimit");
+	if (desc === undefined) {
+		return Object.isExtensible(Error);
+	}
+
+	return Object.prototype.hasOwnProperty.call(desc, "writable")
+		? desc.writable
+		: desc.set !== undefined;
+}
+
+class ErrorWithStack extends Error {
+	constructor() {
+		super();
+		this.name = "ErrorWithStack";
+	}
+}
+
+/**
+ * Hide internal stack frames from the error stack trace.
+ */
+function hideInternalStackFrames(stack: string): string {
+	const lines = stack.split("\n    at ");
+	if (lines.length <= 1) {
+		return stack;
+	}
+	lines.splice(1, 1);
+	return lines.join("\n    at ");
+}
+
+// https://github.com/nodejs/node/blob/360f7cc7867b43344aac00564286b895e15f21d7/lib/internal/errors.js#L411-L432
+function makeErrorForHideStackFrame<B extends new (...args: any[]) => Error>(
+	Base: B,
+	clazz: any,
+): {
+	new (...args: ConstructorParameters<B>): InstanceType<B> & { errorWithStack: ErrorWithStack };
+} {
+	class HideStackFramesError extends Base {
+		#errorWithStack: ErrorWithStack;
+
+		constructor(...args: any[]) {
+			if (isErrorStackTraceLimitWritable()) {
+				const limit = Error.stackTraceLimit;
+				Error.stackTraceLimit = 0;
+				super(...args);
+				Error.stackTraceLimit = limit;
+			} else {
+				super(...args);
+			}
+			this.#errorWithStack = new ErrorWithStack();
+			this.#errorWithStack.stack = hideInternalStackFrames(this.#errorWithStack.stack ?? "");
+		}
+
+		// use `getter` here to avoid the stack trace being captured by loggers
+		get errorWithStack() {
+			return this.#errorWithStack;
+		}
+
+		// This is a workaround for wpt tests that expect that the error
+		// constructor has a `name` property of the base class.
+		get ["constructor"]() {
+			return clazz;
+		}
+	}
+
+	return HideStackFramesError as any;
+}
+
 export const _statusCode = {
 	OK: 200,
 	CREATED: 201,
@@ -116,19 +185,27 @@ export type Status =
 	| 510
 	| 511;
 
-export class APIError extends Error {
+class InternalAPIError extends Error {
 	constructor(
 		public status: keyof typeof _statusCode | Status = "INTERNAL_SERVER_ERROR",
 		public body:
 			| ({
 					message?: string;
 					code?: string;
+					cause?: unknown;
 			  } & Record<string, any>)
 			| undefined = undefined,
 		public headers: HeadersInit = {},
 		public statusCode = typeof status === "number" ? status : _statusCode[status],
 	) {
-		super(body?.message);
+		super(
+			body?.message,
+			body?.cause
+				? {
+						cause: body.cause,
+					}
+				: undefined,
+		);
 		this.name = "APIError";
 		this.status = status;
 		this.headers = headers;
@@ -142,6 +219,8 @@ export class APIError extends Error {
 					...body,
 				}
 			: undefined;
-		this.stack = "";
 	}
 }
+
+export type APIError = InstanceType<typeof InternalAPIError>;
+export const APIError = makeErrorForHideStackFrame(InternalAPIError, Error);
