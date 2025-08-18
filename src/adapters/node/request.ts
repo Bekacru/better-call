@@ -108,15 +108,16 @@ export function getRequest({
 	// If body was already parsed by Express body-parser middleware
 	if (maybeConsumedReq.body !== undefined) {
 		// Convert parsed body back to a ReadableStream
-		const bodyContent = typeof maybeConsumedReq.body === 'string'
-			? maybeConsumedReq.body
-			: JSON.stringify(maybeConsumedReq.body);
+		const bodyContent =
+			typeof maybeConsumedReq.body === "string"
+				? maybeConsumedReq.body
+				: JSON.stringify(maybeConsumedReq.body);
 
 		body = new ReadableStream({
 			start(controller) {
 				controller.enqueue(new TextEncoder().encode(bodyContent));
 				controller.close();
-			}
+			},
 		});
 	} else {
 		// Otherwise, get the raw body stream

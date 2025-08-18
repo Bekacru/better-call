@@ -30,13 +30,13 @@ describe("Express Integration with body-parser", () => {
 				// Echo back the body
 				return {
 					received: body,
-					message: "Body processed successfully"
+					message: "Body processed successfully",
 				};
-			}
+			},
 		);
 
 		const router = createRouter({
-			testEndpoint
+			testEndpoint,
 		});
 
 		// Set up Express app with body-parser BEFORE better-call
@@ -54,7 +54,7 @@ describe("Express Integration with body-parser", () => {
 		// Verify the response
 		expect(response.body).toEqual({
 			received: { name: "John", age: 30 },
-			message: "Body processed successfully"
+			message: "Body processed successfully",
 		});
 	});
 
@@ -66,11 +66,11 @@ describe("Express Integration with body-parser", () => {
 			},
 			async ({ body }) => {
 				return `Received: ${body}`;
-			}
+			},
 		);
 
 		const router = createRouter({
-			echoEndpoint
+			echoEndpoint,
 		});
 
 		const testApp = express();
@@ -96,22 +96,22 @@ describe("Express Integration with body-parser", () => {
 			async ({ body }) => {
 				return {
 					created: true,
-					user: body
+					user: body,
 				};
-			}
+			},
 		);
 
 		const router = createRouter({
-			apiEndpoint
+			apiEndpoint,
 		});
 
 		const mainApp = express();
 		const apiRouter = express.Router();
-		
+
 		// Apply body-parser to the subrouter
 		apiRouter.use(bodyParser.json());
 		apiRouter.use(toNodeHandler(router.handler));
-		
+
 		// Mount the subrouter at /api/v1
 		mainApp.use("/api/v1", apiRouter);
 
@@ -123,7 +123,7 @@ describe("Express Integration with body-parser", () => {
 
 		expect(response.body).toEqual({
 			created: true,
-			user: { username: "testuser", email: "test@example.com" }
+			user: { username: "testuser", email: "test@example.com" },
 		});
 	});
 
@@ -137,17 +137,17 @@ describe("Express Integration with body-parser", () => {
 				return {
 					signature: headers?.get("x-signature") || null,
 					payload: body,
-					processed: true
+					processed: true,
 				};
-			}
+			},
 		);
 
 		const router = createRouter({
-			webhookEndpoint
+			webhookEndpoint,
 		});
 
 		const testApp = express();
-		
+
 		// Multiple middleware before better-call
 		testApp.use((req, res, next) => {
 			req.headers["x-signature"] = "test-signature";
@@ -165,7 +165,7 @@ describe("Express Integration with body-parser", () => {
 		expect(response.body).toEqual({
 			signature: "test-signature",
 			payload: { event: "payment.completed", amount: 100 },
-			processed: true
+			processed: true,
 		});
 	});
 
@@ -180,13 +180,13 @@ describe("Express Integration with body-parser", () => {
 				return {
 					itemCount: data.items?.length || 0,
 					firstItem: data.items?.[0],
-					lastItem: data.items?.[data.items.length - 1]
+					lastItem: data.items?.[data.items.length - 1],
 				};
-			}
+			},
 		);
 
 		const router = createRouter({
-			dataEndpoint
+			dataEndpoint,
 		});
 
 		const testApp = express();
@@ -197,8 +197,8 @@ describe("Express Integration with body-parser", () => {
 			items: Array.from({ length: 1000 }, (_, i) => ({
 				id: i,
 				name: `Item ${i}`,
-				value: Math.random()
-			}))
+				value: Math.random(),
+			})),
 		};
 
 		const response = await request(testApp)
@@ -221,13 +221,13 @@ describe("Express Integration with body-parser", () => {
 			async ({ body }) => {
 				return {
 					bodyReceived: body !== null && body !== undefined,
-					bodyContent: body
+					bodyContent: body,
 				};
-			}
+			},
 		);
 
 		const router = createRouter({
-			rawEndpoint
+			rawEndpoint,
 		});
 
 		const testApp = express();
