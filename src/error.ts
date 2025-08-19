@@ -46,7 +46,7 @@ export function makeErrorForHideStackFrame<B extends new (...args: any[]) => Err
 			}
 			const stack = new Error().stack;
 			if (stack) {
-				this.#hiddenStack = hideInternalStackFrames(stack);
+				this.#hiddenStack = hideInternalStackFrames(stack.replace(/^Error/, this.name));
 			}
 		}
 

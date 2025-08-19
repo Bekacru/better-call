@@ -37,10 +37,10 @@ describe("APIError", () => {
 				  statusCode: 500
 				}"
 			`);
-			const stack = (e as InstanceType<typeof APIError>).errorWithStack.stack;
+			const stack = (e as InstanceType<typeof APIError>).errorStack;
 			expect(stack).toMatch(
 				new RegExp(
-					"ErrorWithStack:\\s*\\n" +
+					"APIError:\\s*\\n" +
 						"\\s+at testError \\(.*/error\\.test\\.ts:\\d+:\\d+\\)\\n" +
 						"\\s+at deepTestError \\(.*/error\\.test\\.ts:\\d+:\\d+\\)",
 					"s",
