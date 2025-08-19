@@ -100,11 +100,35 @@ export function getRequest({
 	// Build the full path as baseUrl + url when available to preserve the full route.
 	const baseUrl = (request as any)?.baseUrl as string | undefined;
 	const fullPath = baseUrl ? baseUrl + request.url : request.url;
+
+	// Check if body has already been parsed by Express middleware
+	const maybeConsumedReq = request as any;
+	let body = undefined;
+
+	// If body was already parsed by Express body-parser middleware
+	if (maybeConsumedReq.body !== undefined) {
+		// Convert parsed body back to a ReadableStream
+		const bodyContent =
+			typeof maybeConsumedReq.body === "string"
+				? maybeConsumedReq.body
+				: JSON.stringify(maybeConsumedReq.body);
+
+		body = new ReadableStream({
+			start(controller) {
+				controller.enqueue(new TextEncoder().encode(bodyContent));
+				controller.close();
+			},
+		});
+	} else {
+		// Otherwise, get the raw body stream
+		body = get_raw_body(request, bodySizeLimit);
+	}
+
 	return new Request(base + fullPath, {
 		// @ts-expect-error
 		duplex: "half",
 		method: request.method,
-		body: get_raw_body(request, bodySizeLimit),
+		body,
 		headers: request.headers as Record<string, string>,
 	});
 }
