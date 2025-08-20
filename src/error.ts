@@ -221,7 +221,7 @@ class InternalAPIError extends Error {
 	}
 }
 
-export class ValidationError extends APIError {
+export class ValidationError extends InternalAPIError {
 	constructor(
 		public message: string,
 		public issues: readonly StandardSchemaV1.Issue[],
