@@ -105,23 +105,27 @@ export function getRequest({
 	const maybeConsumedReq = request as any;
 	let body = undefined;
 
-	// If body was already parsed by Express body-parser middleware
-	if (maybeConsumedReq.body !== undefined) {
-		// Convert parsed body back to a ReadableStream
-		const bodyContent =
-			typeof maybeConsumedReq.body === "string"
-				? maybeConsumedReq.body
-				: JSON.stringify(maybeConsumedReq.body);
+	const method = request.method;
+	// Request with GET/HEAD method cannot have body.
+	if (method !== "GET" && method !== "HEAD") {
+		// If body was already parsed by Express body-parser middleware
+		if (maybeConsumedReq.body !== undefined) {
+			// Convert parsed body back to a ReadableStream
+			const bodyContent =
+				typeof maybeConsumedReq.body === "string"
+					? maybeConsumedReq.body
+					: JSON.stringify(maybeConsumedReq.body);
 
-		body = new ReadableStream({
-			start(controller) {
-				controller.enqueue(new TextEncoder().encode(bodyContent));
-				controller.close();
-			},
-		});
-	} else {
-		// Otherwise, get the raw body stream
-		body = get_raw_body(request, bodySizeLimit);
+			body = new ReadableStream({
+				start(controller) {
+					controller.enqueue(new TextEncoder().encode(bodyContent));
+					controller.close();
+				},
+			});
+		} else {
+			// Otherwise, get the raw body stream
+			body = get_raw_body(request, bodySizeLimit);
+		}
 	}
 
 	return new Request(base + fullPath, {

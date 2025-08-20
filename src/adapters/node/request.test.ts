@@ -144,4 +144,103 @@ describe("getRequest", () => {
 			JSON.stringify({ event: "user.created", data: { id: 1, name: "Test" } }),
 		);
 	});
+
+	it("should not include body for GET requests", async () => {
+		const socket = new Socket();
+		const req = new IncomingMessage(socket) as any;
+
+		req.url = "/api/users";
+		req.method = "GET";
+		req.headers = {
+			host: "localhost:3000",
+			"content-type": "application/json",
+			"content-length": "20",
+		};
+		req.httpVersionMajor = 1;
+
+		// Mock the stream events
+		req.on = vi.fn();
+		req.pause = vi.fn();
+		req.resume = vi.fn();
+		req.destroy = vi.fn();
+		req.destroyed = false;
+
+		const request = getRequest({
+			request: req,
+			base: "http://localhost:3000",
+		});
+
+		expect(request).toBeInstanceOf(Request);
+		expect(request.url).toBe("http://localhost:3000/api/users");
+		expect(request.method).toBe("GET");
+
+		// Body should be null for GET requests
+		expect(request.body).toBeNull();
+
+		// Stream handlers should not be set up for GET requests
+		expect(req.on).not.toHaveBeenCalled();
+	});
+
+	it("should not include body for HEAD requests", async () => {
+		const socket = new Socket();
+		const req = new IncomingMessage(socket) as any;
+
+		req.url = "/api/health";
+		req.method = "HEAD";
+		req.headers = {
+			host: "localhost:3000",
+			"content-type": "application/json",
+			"content-length": "50",
+		};
+		req.httpVersionMajor = 1;
+
+		// Mock the stream events
+		req.on = vi.fn();
+		req.pause = vi.fn();
+		req.resume = vi.fn();
+		req.destroy = vi.fn();
+		req.destroyed = false;
+
+		const request = getRequest({
+			request: req,
+			base: "http://localhost:3000",
+		});
+
+		expect(request).toBeInstanceOf(Request);
+		expect(request.url).toBe("http://localhost:3000/api/health");
+		expect(request.method).toBe("HEAD");
+
+		// Body should be null for HEAD requests
+		expect(request.body).toBeNull();
+
+		// Stream handlers should not be set up for HEAD requests
+		expect(req.on).not.toHaveBeenCalled();
+	});
+
+	it("should ignore pre-parsed body for GET requests", async () => {
+		const socket = new Socket();
+		const req = new IncomingMessage(socket) as any;
+
+		req.url = "/api/search";
+		req.method = "GET";
+		req.headers = {
+			host: "localhost:3000",
+			"content-type": "application/json",
+		};
+
+		// Even if Express somehow attached a body to a GET request, it should be ignored
+		req.body = { query: "test", limit: 10 };
+
+		const request = getRequest({
+			request: req,
+			base: "http://localhost:3000",
+		});
+
+		expect(request).toBeInstanceOf(Request);
+		expect(request.url).toBe("http://localhost:3000/api/search");
+		expect(request.method).toBe("GET");
+
+		// Body should be null for GET requests even if req.body exists
+		expect(request.body).toBeNull();
+	});
 });
