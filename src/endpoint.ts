@@ -33,6 +33,10 @@ export interface EndpointOptions {
 	 */
 	query?: StandardSchemaV1;
 	/**
+	 * Error Schema
+	 */
+	error?: StandardSchemaV1;
+	/**
 	 * If true headers will be required to be passed in the context
 	 */
 	requireHeaders?: boolean;

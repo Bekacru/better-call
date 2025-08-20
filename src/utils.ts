@@ -53,7 +53,7 @@ export async function getBody(request: Request) {
 	return await request.text();
 }
 
-export function isAPIError(error: any) {
+export function isAPIError(error: any): error is APIError {
 	return error instanceof APIError || error?.name === "APIError";
 }
 
