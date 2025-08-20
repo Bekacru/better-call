@@ -10,17 +10,10 @@ function isErrorStackTraceLimitWritable() {
 		: desc.set !== undefined;
 }
 
-class ErrorWithStack extends Error {
-	constructor() {
-		super();
-		this.name = "ErrorWithStack";
-	}
-}
-
 /**
  * Hide internal stack frames from the error stack trace.
  */
-function hideInternalStackFrames(stack: string): string {
+export function hideInternalStackFrames(stack: string): string {
 	const lines = stack.split("\n    at ");
 	if (lines.length <= 1) {
 		return stack;
@@ -30,14 +23,17 @@ function hideInternalStackFrames(stack: string): string {
 }
 
 // https://github.com/nodejs/node/blob/360f7cc7867b43344aac00564286b895e15f21d7/lib/internal/errors.js#L411-L432
-function makeErrorForHideStackFrame<B extends new (...args: any[]) => Error>(
+/**
+ * Creates a custom error class that hides stack frames.
+ */
+export function makeErrorForHideStackFrame<B extends new (...args: any[]) => Error>(
 	Base: B,
 	clazz: any,
 ): {
-	new (...args: ConstructorParameters<B>): InstanceType<B> & { errorWithStack: ErrorWithStack };
+	new (...args: ConstructorParameters<B>): InstanceType<B> & { errorStack: string | undefined };
 } {
 	class HideStackFramesError extends Base {
-		#errorWithStack: ErrorWithStack;
+		#hiddenStack: string | undefined;
 
 		constructor(...args: any[]) {
 			if (isErrorStackTraceLimitWritable()) {
@@ -48,13 +44,15 @@ function makeErrorForHideStackFrame<B extends new (...args: any[]) => Error>(
 			} else {
 				super(...args);
 			}
-			this.#errorWithStack = new ErrorWithStack();
-			this.#errorWithStack.stack = hideInternalStackFrames(this.#errorWithStack.stack ?? "");
+			const stack = new Error().stack;
+			if (stack) {
+				this.#hiddenStack = hideInternalStackFrames(stack.replace(/^Error/, this.name));
+			}
 		}
 
 		// use `getter` here to avoid the stack trace being captured by loggers
-		get errorWithStack() {
-			return this.#errorWithStack;
+		get errorStack() {
+			return this.#hiddenStack;
 		}
 
 		// This is a workaround for wpt tests that expect that the error
