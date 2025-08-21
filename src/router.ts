@@ -194,15 +194,19 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 			return response;
 		} catch (error) {
 			if (config?.onError) {
-				const errorResponse = await config.onError(error);
+				try {
+					const errorResponse = await config.onError(error);
 
-				if (errorResponse instanceof Response) {
-					return toResponse(errorResponse);
-				} else if (isAPIError(errorResponse)) {
-					return toResponse(errorResponse);
+					if (errorResponse instanceof Response) {
+						return toResponse(errorResponse);
+					}
+				} catch (error) {
+					if (isAPIError(error)) {
+						return toResponse(error);
+					}
+
+					throw error;
 				}
-
-				throw errorResponse;
 			}
 
 			if (config?.throwError) {
