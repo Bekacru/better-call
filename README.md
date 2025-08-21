@@ -314,9 +314,41 @@ const router = createRouter({
 
 **basePath**: The base path for the router. All paths will be relative to this path.
 
-**onError**: The router will call this function if an error occurs in the middleware or the endpoint.
+**onError**: The router will call this function if an error occurs in the middleware or the endpoint. This function receives the error as a parameter and can return different types of values:
 
-**throwError**: If true, the router will throw an error if an error occurs in the middleware or the endpoint.
+- If it returns a `Response` object, the router will use it as the HTTP response.
+- If it returns an `APIError`, the router will convert it to an appropriate HTTP response.
+- If it throws a new error, the router will propagate this error to higher-level handlers.
+- If it returns nothing (void), the router will proceed with default error handling.
+
+```ts
+const router = createRouter({
+    /**
+     * This error handler can be set as async function or not.
+     */
+    onError: async (error) => {
+        // Log the error
+        console.error("An error occurred:", error);
+        
+        // Return a custom response
+        return new Response(JSON.stringify({ message: "Something went wrong" }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" }
+        });
+    }
+});
+```
+
+**throwError**: If true, the router will throw an error if an error occurs in the middleware or the endpoint. If false (default), the router will handle errors internally:
+
+- For `APIError` instances, it will convert them to appropriate HTTP responses.
+- For other errors, it will return a 500 Internal Server Error response.
+
+```ts
+const router = createRouter({
+    throwError: true // Errors will be propagated to higher-level handlers
+});
+```
 
 #### Node Adapter
 
