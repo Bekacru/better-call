@@ -1,9 +1,9 @@
-import { createRouter as createRou3Router, addRoute, findRoute, findAllRoutes } from "rou3";
-import { createEndpoint, type Endpoint } from "./endpoint";
-import { generator, getHTML } from "./openapi";
+import { addRoute, createRouter as createRou3Router, findAllRoutes, findRoute } from "rou3";
+import { type Endpoint, createEndpoint } from "./endpoint";
 import type { Middleware } from "./middleware";
-import { getBody, isAPIError } from "./utils";
+import { generator, getHTML } from "./openapi";
 import { toResponse } from "./to-response";
+import { getBody, isAPIError } from "./utils";
 
 export interface RouterConfig {
 	throwError?: boolean;
@@ -193,9 +193,26 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 			const response = (await handler(context)) as Response;
 			return response;
 		} catch (error) {
+			if (config?.onError) {
+				const errorResponse = await config.onError(error);
+
+				if (errorResponse instanceof Response) {
+					return toResponse(errorResponse);
+				} else if (isAPIError(errorResponse)) {
+					return toResponse(errorResponse);
+				}
+
+				throw errorResponse;
+			}
+
+			if (config?.throwError) {
+				throw error;
+			}
+
 			if (isAPIError(error)) {
 				return toResponse(error);
 			}
+
 			console.error(`# SERVER_ERROR: `, error);
 			return new Response(null, {
 				status: 500,
