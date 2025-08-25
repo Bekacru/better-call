@@ -20,6 +20,7 @@ import {
 	type InputContext,
 } from "./context";
 import type { Prettify } from "./helper";
+import { extractSetCookes } from "./cookies";
 
 export interface MiddlewareOptions extends Omit<EndpointOptions, "method"> {}
 
@@ -151,12 +152,20 @@ export function createMiddleware(optionsOrHandler: any, handler?: any) {
 		}
 		const response = await _handler(internalContext as any);
 		const headers = internalContext.responseHeaders;
-		return context.returnHeaders
-			? {
-					headers,
-					response,
-				}
-			: response;
+
+		if (context.returnHeaders && context.returnCookies) {
+			return { response, headers, cookies: extractSetCookes(headers) }
+		}
+
+		if (context.returnHeaders) {
+			return { response, headers }
+		}
+
+		if (context.returnCookies) {
+			return { response, cookies: extractSetCookes(headers) }
+		}
+
+		return response;
 	};
 	internalHandler.options = typeof optionsOrHandler === "function" ? {} : optionsOrHandler;
 	return internalHandler;
@@ -168,6 +177,7 @@ export type MiddlewareInputContext<Options extends MiddlewareOptions> = InferBod
 	InferHeadersInput<Options> & {
 		asResponse?: boolean;
 		returnHeaders?: boolean;
+		returnCookies?: boolean;
 		use?: Middleware[];
 	};
 
