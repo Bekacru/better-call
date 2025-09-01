@@ -43,5 +43,5 @@ export type InferParamWildCard<Path> = Path extends
 	: Path extends `${infer _Start}/*`
 		? { [K in "_"]: string }
 		: Path extends `${infer _Start}/${infer Rest}`
-			? InferParamPath<Rest>
+			? InferParamWildCard<Rest>
 			: {};
