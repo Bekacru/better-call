@@ -7,7 +7,7 @@ import type {
 	Prettify,
 	UnionToIntersection,
 } from "./helper";
-import type { Middleware, MiddlewareOptions } from "./middleware";
+import type { Middleware, MiddlewareContext, MiddlewareOptions } from "./middleware";
 import { runValidation } from "./validator";
 import {
 	getCookieKey,
@@ -107,7 +107,7 @@ export type InferInputMethod<
 export type InferParam<Path extends string> = IsEmptyObject<
 	InferParamPath<Path> & InferParamWildCard<Path>
 > extends true
-	? Record<string, any> | undefined
+	? {}
 	: Prettify<InferParamPath<Path> & InferParamWildCard<Path>>;
 
 export type InferParamInput<Path extends string> = IsEmptyObject<
