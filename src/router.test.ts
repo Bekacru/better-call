@@ -4,6 +4,7 @@ import { createRouter } from "./router";
 import { z } from "zod";
 import { APIError } from "./error";
 import { getRequest } from "./adapters/node/request";
+import { toResponse } from "./to-response";
 
 describe("router", () => {
 	it("should be able to return simple response", async () => {
@@ -248,5 +249,154 @@ describe("route middleware", () => {
 		const response = await router.handler(new Request("http://localhost"));
 		const json = await response.json();
 		expect(json).toMatchObject({ name: "hello" });
+	});
+});
+
+describe("error handling", () => {
+	it("should use onError callback when provided", async () => {
+		const endpoint = createEndpoint(
+			"/",
+			{
+				method: "GET",
+			},
+			async () => {
+				throw new Error("Test error");
+			},
+		);
+
+		let errorCaught = false;
+		const customResponse = new Response("Custom error response", { status: 418 });
+		
+		const router = createRouter(
+			{ endpoint },
+			{ 
+				onError: (e) => {
+					errorCaught = true;
+					return customResponse;
+				}
+			}
+		);
+
+		const response = await router.handler(new Request("http://localhost"));
+		expect(errorCaught).toBe(true);
+		expect(response).toBe(customResponse);
+		expect(response.status).toBe(418);
+	});
+
+	it("should handle APIError converted to Response from onError callback", async () => {
+		const endpoint = createEndpoint(
+			"/",
+			{
+				method: "GET",
+			},
+			async () => {
+				throw new Error("Test error");
+			},
+		);
+
+		let errorCaught = false;
+		const apiError = new APIError("BAD_REQUEST", { message: "Custom API error" });
+		
+		const router = createRouter(
+			{ endpoint },
+			{ 
+				onError: (e) => {
+					errorCaught = true;
+					// Convert APIError to Response
+					return toResponse(apiError);
+				}
+			}
+		);
+
+		const response = await router.handler(new Request("http://localhost"));
+		expect(errorCaught).toBe(true);
+		expect(response.status).toBe(400);
+		const body = await response.json();
+		expect(body.message).toBe("Custom API error");
+	});
+
+	it("should throw custom error from onError callback", async () => {
+		const endpoint = createEndpoint(
+			"/",
+			{
+				method: "GET",
+			},
+			async () => {
+				throw new Error("Original error");
+			},
+		);
+
+		const newError = new Error("New error from onError");
+		
+		const router = createRouter(
+			{ endpoint },
+			{ 
+				onError: (e) => {
+					// Throw the error in the callback
+					throw newError;
+				}
+			}
+		);
+
+		await expect(async () => {
+			await router.handler(new Request("http://localhost"));
+		}).rejects.toThrow(newError);
+	});
+
+	it("should re-throw error when throwError is true", async () => {
+		const testError = new Error("Test error");
+		const endpoint = createEndpoint(
+			"/",
+			{
+				method: "GET",
+			},
+			async () => {
+				throw testError;
+			},
+		);
+
+		const router = createRouter(
+			{ endpoint },
+			{ throwError: true }
+		);
+
+		await expect(async () => {
+			await router.handler(new Request("http://localhost"));
+		}).rejects.toThrow(testError);
+	});
+
+	it("should return 500 response when no error handling is provided", async () => {
+		const endpoint = createEndpoint(
+			"/",
+			{
+				method: "GET",
+			},
+			async () => {
+				throw new Error("Test error");
+			},
+		);
+
+		const router = createRouter({ endpoint });
+		const response = await router.handler(new Request("http://localhost"));
+		expect(response.status).toBe(500);
+	});
+
+	it("should handle APIError directly when no onError is provided", async () => {
+		const apiError = new APIError("NOT_FOUND", { message: "Resource not found" });
+		const endpoint = createEndpoint(
+			"/",
+			{
+				method: "GET",
+			},
+			async () => {
+				throw apiError;
+			},
+		);
+
+		const router = createRouter({ endpoint });
+		const response = await router.handler(new Request("http://localhost"));
+		expect(response.status).toBe(404);
+		const body = await response.json();
+		expect(body.message).toBe("Resource not found");
 	});
 });

@@ -314,9 +314,48 @@ const router = createRouter({
 
 **basePath**: The base path for the router. All paths will be relative to this path.
 
-**onError**: The router will call this function if an error occurs in the middleware or the endpoint.
+**onError**: The router will call this function if an error occurs in the middleware or the endpoint. This function receives the error as a parameter and can return different types of values:
 
-**throwError**: If true, the router will throw an error if an error occurs in the middleware or the endpoint.
+- If it returns a `Response` object, the router will use it as the HTTP response.
+- If it throws a new error, the router will handle it based on its type (if it's an `APIError`, it will be converted to a response; otherwise, it will be re-thrown).
+- If it returns nothing (void), the router will proceed with default error handling (checking `throwError` setting).
+
+```ts
+const router = createRouter({
+    /**
+     * This error handler can be set as async function or not.
+     */
+    onError: async (error) => {
+        // Log the error
+        console.error("An error occurred:", error);
+        
+        // Return a custom response
+        return new Response(JSON.stringify({ message: "Something went wrong" }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" }
+        });
+    }
+});
+```
+
+**throwError**: If true, the router will throw an error if an error occurs in the middleware or the endpoint. If false (default), the router will handle errors internally. This setting is still relevant even when `onError` is provided, as it determines the behavior when:
+
+1. No `onError` handler is provided, or
+2. The `onError` handler returns void (doesn't return a Response or throw an error)
+
+- For `APIError` instances, it will convert them to appropriate HTTP responses.
+- For other errors, it will return a 500 Internal Server Error response.
+
+```ts
+const router = createRouter({
+    throwError: true, // Errors will be propagated to higher-level handlers
+    onError: (error) => {
+        // Log the error but let throwError handle it
+        console.error("An error occurred:", error);
+        // No return value, so throwError setting will determine behavior
+    }
+});
+```
 
 #### Node Adapter
 
