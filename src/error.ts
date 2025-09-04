@@ -55,15 +55,14 @@ export function makeErrorForHideStackFrame<B extends new (...args: any[]) => Err
 		get errorStack() {
 			return this.#hiddenStack;
 		}
-
-		// This is a workaround for wpt tests that expect that the error
-		// constructor has a `name` property of the base class.
-		get ["constructor"]() {
-			return {
-				name,
-			};
-		}
 	}
+
+	Object.defineProperty(HideStackFramesError, "constructor", {
+		value: clazz,
+		writable: false,
+		enumerable: false,
+		configurable: true,
+	})
 
 	return HideStackFramesError as any;
 }
