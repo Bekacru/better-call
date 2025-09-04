@@ -55,11 +55,13 @@ export function makeErrorForHideStackFrame<B extends new (...args: any[]) => Err
 			return this.#hiddenStack;
 		}
 
-		// This is a workaround for wpt tests that expect that the error
-		// constructor has a `name` property of the base class.
-		get ["constructor"]() {
-			return clazz;
-		}
+		// fixme: this will cause solid runtime to crash because it tries to transpile it to wrong code
+		//  we should probably just remove this, it's not that important
+		// // This is a workaround for wpt tests that expect that the error
+		// // constructor has a `name` property of the base class.
+		// get ["constructor"]() {
+		// 	return clazz;
+		// }
 	}
 
 	return HideStackFramesError as any;
