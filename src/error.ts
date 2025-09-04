@@ -57,8 +57,9 @@ export function makeErrorForHideStackFrame<B extends new (...args: any[]) => Err
 	}
 
 	Object.defineProperty(HideStackFramesError.prototype, "constructor", {
-		value: clazz,
-		writable: false,
+		get() {
+			return clazz;
+		},
 		enumerable: false,
 		configurable: true,
 	});
