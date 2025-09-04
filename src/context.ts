@@ -107,7 +107,7 @@ export type InferInputMethod<
 export type InferParam<Path extends string> = IsEmptyObject<
 	InferParamPath<Path> & InferParamWildCard<Path>
 > extends true
-	? {}
+	? Record<string, any> | undefined
 	: Prettify<InferParamPath<Path> & InferParamWildCard<Path>>;
 
 export type InferParamInput<Path extends string> = IsEmptyObject<
