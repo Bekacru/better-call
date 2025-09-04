@@ -62,7 +62,7 @@ export function makeErrorForHideStackFrame<B extends new (...args: any[]) => Err
 		writable: false,
 		enumerable: false,
 		configurable: true,
-	})
+	});
 
 	return HideStackFramesError as any;
 }
