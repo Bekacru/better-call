@@ -32,7 +32,6 @@ export function makeErrorForHideStackFrame<B extends new (...args: any[]) => Err
 ): {
 	new (...args: ConstructorParameters<B>): InstanceType<B> & { errorStack: string | undefined };
 } {
-	const name = clazz.name;
 	class HideStackFramesError extends Base {
 		#hiddenStack: string | undefined;
 
@@ -57,7 +56,7 @@ export function makeErrorForHideStackFrame<B extends new (...args: any[]) => Err
 		}
 	}
 
-	Object.defineProperty(HideStackFramesError, "constructor", {
+	Object.defineProperty(HideStackFramesError.prototype, "constructor", {
 		value: clazz,
 		writable: false,
 		enumerable: false,
