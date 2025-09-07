@@ -278,6 +278,16 @@ describe("types", async () => {
 		);
 	});
 
+	it("default GET method", async () => {
+		createEndpoint(
+			"/api/*",
+			async (ctx) => {
+				expectTypeOf(ctx.params).toEqualTypeOf<{ _: string }>();
+			},
+		);
+
+	});
+
 	it("method", async () => {
 		createEndpoint(
 			"/test",
