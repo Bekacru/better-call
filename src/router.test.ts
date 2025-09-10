@@ -266,15 +266,15 @@ describe("error handling", () => {
 
 		let errorCaught = false;
 		const customResponse = new Response("Custom error response", { status: 418 });
-		
+
 		const router = createRouter(
 			{ endpoint },
-			{ 
+			{
 				onError: (e) => {
 					errorCaught = true;
 					return customResponse;
-				}
-			}
+				},
+			},
 		);
 
 		const response = await router.handler(new Request("http://localhost"));
@@ -296,16 +296,16 @@ describe("error handling", () => {
 
 		let errorCaught = false;
 		const apiError = new APIError("BAD_REQUEST", { message: "Custom API error" });
-		
+
 		const router = createRouter(
 			{ endpoint },
-			{ 
+			{
 				onError: (e) => {
 					errorCaught = true;
 					// Convert APIError to Response
 					return toResponse(apiError);
-				}
-			}
+				},
+			},
 		);
 
 		const response = await router.handler(new Request("http://localhost"));
@@ -327,15 +327,15 @@ describe("error handling", () => {
 		);
 
 		const newError = new Error("New error from onError");
-		
+
 		const router = createRouter(
 			{ endpoint },
-			{ 
+			{
 				onError: (e) => {
 					// Throw the error in the callback
 					throw newError;
-				}
-			}
+				},
+			},
 		);
 
 		await expect(async () => {
@@ -355,10 +355,7 @@ describe("error handling", () => {
 			},
 		);
 
-		const router = createRouter(
-			{ endpoint },
-			{ throwError: true }
-		);
+		const router = createRouter({ endpoint }, { throwError: true });
 
 		await expect(async () => {
 			await router.handler(new Request("http://localhost"));
