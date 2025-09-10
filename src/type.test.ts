@@ -6,12 +6,12 @@ describe("infer param", () => {
 	it("empty path", () => {
 		expectTypeOf<InferParamPath<"/">>().toEqualTypeOf<{}>();
 		expectTypeOf<InferParamWildCard<"/">>().toEqualTypeOf<{}>();
-		expectTypeOf<InferParam<"/">>().toEqualTypeOf<{}>();
+		expectTypeOf<InferParam<"/">>().toEqualTypeOf<Record<string, any> | undefined>();
 	});
 	it("static path", () => {
 		expectTypeOf<InferParamPath<"/static/path">>().toEqualTypeOf<{}>();
 		expectTypeOf<InferParamWildCard<"/static/path">>().toEqualTypeOf<{}>();
-		expectTypeOf<InferParam<"/static/path">>().toEqualTypeOf<{}>();
+		expectTypeOf<InferParam<"/static/path">>().toEqualTypeOf<Record<string, any> | undefined>();
 	});
 	it("single param", () => {
 		expectTypeOf<InferParamPath<"/user/:id">>().toEqualTypeOf<{ id: string }>();
