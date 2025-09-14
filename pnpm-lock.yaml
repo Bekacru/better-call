@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@better-auth/utils':
+        specifier: ^0.3.0
+        version: 0.3.0
       '@better-fetch/fetch':
         specifier: ^1.1.4
         version: 1.1.12
@@ -95,6 +98,9 @@ packages:
 
   '@ark/util@0.35.0':
     resolution: {integrity: sha512-KxhwMOGMoV605zcqoBVyNFEtKAc3PKy95IWmVz9dwuUzIQ+sh7Bk9KEnlGPXcPAD8DCDs/10deHeO1kfWWONvg==}
+
+  '@better-auth/utils@0.3.0':
+    resolution: {integrity: sha512-W+Adw6ZA6mgvnSnhOki270rwJ42t4XzSK6YWGF//BbVXL6SwCLWfyzBc1lN2m/4RM28KubdBKQ4X5VMoLRNPQw==}
 
   '@better-fetch/fetch@1.1.12':
     resolution: {integrity: sha512-B3bfloI/2UBQWIATRN6qmlORrvx3Mp0kkNjmXLv0b+DtbtR+pP4/I5kQA/rDUv+OReLywCCldf6co4LdDmh8JA==}
@@ -1811,6 +1817,8 @@ snapshots:
       '@ark/util': 0.35.0
 
   '@ark/util@0.35.0': {}
+
+  '@better-auth/utils@0.3.0': {}
 
   '@better-fetch/fetch@1.1.12': {}
 
