@@ -43,6 +43,7 @@
     "zod": "^4.0.1"
   },
   "dependencies": {
+    "@better-auth/utils": "^0.3.0",
     "@better-fetch/fetch": "^1.1.4",
     "rou3": "^0.5.1",
     "set-cookie-parser": "^2.7.1",
