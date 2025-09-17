@@ -318,11 +318,22 @@ export type EndpointContext<Path extends string, Options extends EndpointOptions
 	) => APIError;
 };
 
-export const createEndpoint = <Path extends string, Options extends EndpointOptions, R>(
+export function createEndpoint<Path extends string, R>(
+	path: Path,
+	handler: (context: EndpointContext<Path, { method: "GET" }>) => Promise<R>,
+): Endpoint<Path, { method: "GET" }, (inputCtx?: InputContext<Path, { method: "GET" }>) => Promise<R>>;
+export function createEndpoint<Path extends string, Options extends EndpointOptions, R>(
 	path: Path,
 	options: Options,
 	handler: (context: EndpointContext<Path, Options>) => Promise<R>,
-) => {
+): Endpoint<Path, Options, (inputCtx?: InputContext<Path, Options>) => Promise<R>>;
+export function createEndpoint<Path extends string, Options extends EndpointOptions, R>(
+	path: Path,
+	optionsOrHandler: Options | ((context: EndpointContext<Path, Options>) => Promise<R>),
+	handlerOrUndefined?: (context: EndpointContext<Path, Options>) => Promise<R>,
+) {
+	const options = (handlerOrUndefined ? optionsOrHandler : { method: "GET" }) as Options;
+	const handler = (handlerOrUndefined || optionsOrHandler) as (context: EndpointContext<Path, Options>) => Promise<R>;
 	type Context = InputContext<Path, Options>;
 	const internalHandler = async <
 		AsResponse extends boolean = false,
@@ -375,11 +386,22 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 };
 
 createEndpoint.create = <E extends { use?: Middleware[] }>(opts?: E) => {
-	return <Path extends string, Opts extends EndpointOptions, R>(
+	function create<Path extends string, R>(
+		path: Path,
+		handler: (ctx: EndpointContext<Path, { method: "GET" }, InferUse<E["use"]>>) => Promise<R>,
+	): Endpoint<Path, { method: "GET" }, (inputCtx?: InputContext<Path, { method: "GET" }>) => Promise<R>>;
+	function create<Path extends string, Opts extends EndpointOptions, R>(
 		path: Path,
 		options: Opts,
 		handler: (ctx: EndpointContext<Path, Opts, InferUse<E["use"]>>) => Promise<R>,
-	) => {
+	): Endpoint<Path, Opts, (inputCtx?: InputContext<Path, Opts>) => Promise<R>>;
+	function create<Path extends string, Opts extends EndpointOptions, R>(
+		path: Path,
+		optionsOrHandler: Opts | ((ctx: EndpointContext<Path, Opts, InferUse<E["use"]>>) => Promise<R>),
+		handlerOrUndefined?: (ctx: EndpointContext<Path, Opts, InferUse<E["use"]>>) => Promise<R>,
+	) {
+		const options = (handlerOrUndefined ? optionsOrHandler : { method: "GET" }) as Opts;
+		const handler = (handlerOrUndefined || optionsOrHandler) as (ctx: EndpointContext<Path, Opts, InferUse<E["use"]>>) => Promise<R>;
 		return createEndpoint(
 			path,
 			{
@@ -388,7 +410,8 @@ createEndpoint.create = <E extends { use?: Middleware[] }>(opts?: E) => {
 			},
 			handler,
 		);
-	};
+	}
+	return create;
 };
 
 export type Endpoint<
