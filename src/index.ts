@@ -8,3 +8,4 @@ export * from "./context";
 export * from "./to-response";
 export * from "./helper";
 export * from "./standard-schema";
+export { type EndpointDefinition, declareEndpoint } from "./shared";
