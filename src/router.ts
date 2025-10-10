@@ -122,21 +122,20 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 
 	const processRequest = async (request: Request) => {
 		const url = new URL(request.url);
-		const path = config?.basePath
-			? url.pathname
-					.split(config.basePath)
-					.reduce((acc, curr, index) => {
-						if (index !== 0) {
-							if (index > 1) {
-								acc.push(`${config.basePath}${curr}`);
-							} else {
-								acc.push(curr);
-							}
-						}
-						return acc;
-					}, [] as string[])
-					.join("")
-			: url.pathname;
+		const rawPath = url.pathname;
+		let matchPath = rawPath;
+		let ctxPath = rawPath;
+		if (config?.basePath) {
+			const basePath = config.basePath;
+			if (rawPath.startsWith(basePath)) {
+				matchPath = rawPath.slice(basePath.length) || "/";
+				ctxPath = matchPath;
+			} else {
+				matchPath = rawPath;
+				ctxPath = `${basePath}${rawPath}`;
+			}
+		}
+		const path = matchPath;
 
 		if (!path?.length) {
 			return new Response(null, { status: 404, statusText: "Not Found" });
@@ -162,7 +161,7 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 
 		const handler = route.data as Endpoint;
 		const context = {
-			path,
+			path: ctxPath,
 			method: request.method as "GET",
 			headers: request.headers,
 			params: route.params ? (JSON.parse(JSON.stringify(route.params)) as any) : {},
