@@ -241,9 +241,7 @@ describe("router", () => {
 			},
 		);
 		const router = createRouter({ endpoint }, { basePath: "/other-app" });
-		const response = await router.handler(
-			new Request("http://localhost/api/auth/get-session"),
-		);
+		const response = await router.handler(new Request("http://localhost/api/auth/get-session"));
 		expect(response.status).toBe(200);
 		const text = await response.text();
 		expect(text).toBe("/other-app/api/auth/get-session");
