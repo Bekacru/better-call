@@ -230,6 +230,7 @@ describe("router", () => {
 		};
 		const req = getRequest({ base, request: fakeReq });
 		expect(new URL(req.url).href).toBe("http://localhost:3000/auth/callback");
+	});
 	it("should preserve basePath when missing in proxied request", async () => {
 		const endpoint = createEndpoint(
 			"/api/auth/get-session",
