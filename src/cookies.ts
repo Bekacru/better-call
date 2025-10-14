@@ -112,40 +112,37 @@ export const getCookieKey = (key: string, prefix?: CookiePrefixOptions) => {
  *
  * @param str the string representing a `Cookie` header value
  */
-export function parseCookies(str: string) {
+export function parseCookies(str: string): Map<string, string> {
 	if (typeof str !== "string") {
 		throw new TypeError("argument str must be a string");
 	}
 
 	const cookies: Map<string, string> = new Map();
+	if (!str) {
+		return cookies;
+	}
 
-	let index = 0;
-	while (index < str.length) {
-		const eqIdx = str.indexOf("=", index);
+	const pairs = str.split(/[;,]\s*/);
+
+	for (const pair of pairs) {
+		const eqIdx = pair.indexOf("=");
 
 		if (eqIdx === -1) {
-			break;
-		}
-
-		let endIdx = str.indexOf(";", index);
-
-		if (endIdx === -1) {
-			endIdx = str.length;
-		} else if (endIdx < eqIdx) {
-			index = str.lastIndexOf(";", eqIdx - 1) + 1;
 			continue;
 		}
 
-		const key = str.slice(index, eqIdx).trim();
+		const key = pair.slice(0, eqIdx).trim();
+
 		if (!cookies.has(key)) {
-			let val = str.slice(eqIdx + 1, endIdx).trim();
+			let val = pair.slice(eqIdx + 1).trim();
+
 			if (val.codePointAt(0) === 0x22) {
+				// 0x22 is the code for "
 				val = val.slice(1, -1);
 			}
+
 			cookies.set(key, tryDecode(val));
 		}
-
-		index = endIdx + 1;
 	}
 
 	return cookies;

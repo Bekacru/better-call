@@ -16,6 +16,21 @@ describe("parseCookies", () => {
 		expect(cookies.get("test")).toBe("test");
 		expect(cookies.get("test2")).toBe("test 2");
 	});
+
+	it("should parse comma-separated cookies from browser environments", () => {
+		const cookies = parseCookies("test=test, test2=test 2");
+		expect(cookies.size).toBe(2);
+		expect(cookies.get("test")).toBe("test");
+		expect(cookies.get("test2")).toBe("test 2");
+	});
+
+	it("should parse mixed comma and semicolon separated cookies", () => {
+		const cookies = parseCookies("a=1; b=2, c=3,d=4; e=5");
+		expect(cookies.size).toBe(5);
+		expect(cookies.get("a")).toBe("1");
+		expect(cookies.get("b")).toBe("2");
+		expect(cookies.get("c")).toBe("3");
+	});
 });
 
 describe("get-cookies", () => {
