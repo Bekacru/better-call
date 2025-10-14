@@ -112,7 +112,7 @@ export const getCookieKey = (key: string, prefix?: CookiePrefixOptions) => {
  *
  * @param str the string representing a `Cookie` header value
  */
-export function parseCookies(str: string): Map<string, string> {
+export function parseCookies(str: string) {
 	if (typeof str !== "string") {
 		throw new TypeError("argument str must be a string");
 	}
