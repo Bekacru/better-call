@@ -1003,7 +1003,7 @@ describe("wrap", () => {
 			return {
 				...result,
 				count: result.count * 2,
-				transformed: true
+				transformed: true,
 			};
 		});
 

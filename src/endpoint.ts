@@ -349,20 +349,20 @@ export const createEndpoint = <
 			options,
 			path,
 		});
-		const response: Awaited<R> = await internalHandler[originalHandlerSymbol](internalContext as any).catch(
-			async (e) => {
-				if (isAPIError(e)) {
-					const onAPIError = options.onAPIError;
-					if (onAPIError) {
-						await onAPIError(e);
-					}
-					if (context.asResponse) {
-						return e;
-					}
+		const response: Awaited<R> = await internalHandler[originalHandlerSymbol](
+			internalContext as any,
+		).catch(async (e) => {
+			if (isAPIError(e)) {
+				const onAPIError = options.onAPIError;
+				if (onAPIError) {
+					await onAPIError(e);
 				}
-				throw e;
-			},
-		);
+				if (context.asResponse) {
+					return e;
+				}
+			}
+			throw e;
+		});
 		const headers = internalContext.responseHeaders;
 		type ResultType = AsResponse extends true
 			? Response
@@ -384,13 +384,13 @@ export const createEndpoint = <
 		) as ResultType;
 	};
 	internalHandler[originalHandlerSymbol] = handler;
-	internalHandler.wrap = <T>(fn: (
-		context: EndpointContext<Path, Options>,
-		original: (context: EndpointContext<Path, Options>) => Promise<R>,
-	) => T) => {
-		const wrappedFn = async (
+	internalHandler.wrap = <T>(
+		fn: (
 			context: EndpointContext<Path, Options>,
-		) => {
+			original: (context: EndpointContext<Path, Options>) => Promise<R>,
+		) => T,
+	) => {
+		const wrappedFn = async (context: EndpointContext<Path, Options>) => {
 			return fn(context, internalHandler[originalHandlerSymbol]);
 		};
 		return createEndpoint(path, options, wrappedFn);
