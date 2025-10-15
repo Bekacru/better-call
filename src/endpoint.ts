@@ -318,10 +318,14 @@ export type EndpointContext<Path extends string, Options extends EndpointOptions
 	) => APIError;
 };
 
-export const createEndpoint = <Path extends string, Options extends EndpointOptions, R>(
+export const createEndpoint = <
+	Path extends string,
+	Options extends EndpointOptions,
+	R extends Promise<any>,
+>(
 	path: Path,
 	options: Options,
-	handler: (context: EndpointContext<Path, Options>) => Promise<R>,
+	handler: (context: EndpointContext<Path, Options>) => R,
 ) => {
 	type Context = InputContext<Path, Options>;
 	const internalHandler = async <
@@ -331,13 +335,19 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 		...inputCtx: HasRequiredKeys<Context> extends true
 			? [Context & { asResponse?: AsResponse; returnHeaders?: ReturnHeaders }]
 			: [(Context & { asResponse?: AsResponse; returnHeaders?: ReturnHeaders })?]
-	) => {
+	): Promise<
+		AsResponse extends true
+			? Response
+			: ReturnHeaders extends true
+				? { headers: Headers; response: Awaited<R> }
+				: Awaited<R>
+	> => {
 		const context = (inputCtx[0] || {}) as InputContext<any, any>;
 		const internalContext = await createInternalContext(context, {
 			options,
 			path,
 		});
-		const response = await handler(internalContext as any).catch(async (e) => {
+		const response: Awaited<R> = await handler(internalContext as any).catch(async (e) => {
 			if (isAPIError(e)) {
 				const onAPIError = options.onAPIError;
 				if (onAPIError) {
@@ -350,11 +360,11 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 			throw e;
 		});
 		const headers = internalContext.responseHeaders;
-		type ResultType = [AsResponse] extends [true]
+		type ResultType = AsResponse extends true
 			? Response
-			: [ReturnHeaders] extends [true]
-				? { headers: Headers; response: R }
-				: R;
+			: ReturnHeaders extends true
+				? { headers: Headers; response: Awaited<R> }
+				: Awaited<R>;
 
 		return (
 			context.asResponse
@@ -375,10 +385,10 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 };
 
 createEndpoint.create = <E extends { use?: Middleware[] }>(opts?: E) => {
-	return <Path extends string, Opts extends EndpointOptions, R>(
+	return <Path extends string, Opts extends EndpointOptions, R extends Promise<any>>(
 		path: Path,
 		options: Opts,
-		handler: (ctx: EndpointContext<Path, Opts, InferUse<E["use"]>>) => Promise<R>,
+		handler: (ctx: EndpointContext<Path, Opts, InferUse<E["use"]>>) => R,
 	) => {
 		return createEndpoint(
 			path,
