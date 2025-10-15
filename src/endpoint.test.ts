@@ -674,7 +674,6 @@ describe("wrap", () => {
 			},
 		);
 
-		// Original handler
 		const response1 = await endpoint({
 			body: { name: "Alice" },
 		});
@@ -682,12 +681,10 @@ describe("wrap", () => {
 			message: "Hello Alice",
 		});
 
-		// Wrap with new handler
 		const wrapped = endpoint.wrap((c) => {
 			return { message: `Wrapped: ${c.body.name}` };
 		});
 
-		// New wrapped handler
 		const response2 = await wrapped({
 			body: { name: "Bob" },
 		});
@@ -713,16 +710,12 @@ describe("wrap", () => {
 		const wrapped = endpoint.wrap((ctx) => {
 			return { age: ctx.body.age * 2 };
 		});
-
-		// Should still validate
 		await expect(
 			wrapped({
 				//@ts-expect-error
 				body: { age: "not a number" },
 			}),
 		).rejects.toThrowError("Invalid body parameters");
-
-		// Should work with valid data
 		const response = await wrapped({
 			body: { age: 25 },
 		});
@@ -970,9 +963,7 @@ describe("wrap", () => {
 			},
 		);
 
-		// Wrap without calling original
 		const wrapped = endpoint.wrap((c, original) => {
-			// Intentionally not calling original
 			return { wrapped: true, ignored: "original" };
 		});
 
