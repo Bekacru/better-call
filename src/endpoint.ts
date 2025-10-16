@@ -318,23 +318,6 @@ export type EndpointContext<Path extends string, Options extends EndpointOptions
 	) => APIError;
 };
 
-interface Endpoint<Path extends string, Options extends EndpointOptions, R extends Promise<any>> {
-	(context: InputContext<Path, Options> & { asResponse?: true }): Promise<Response>;
-	(
-		context?: InputContext<Path, Options> & { asResponse?: false; returnHeaders?: false },
-	): Promise<Awaited<R>>;
-	(
-		context: InputContext<Path, Options> & { asResponse?: false; returnHeaders: true },
-	): Promise<{ headers: Headers; response: Awaited<R> }>;
-	wrap: <T>(
-		fn: (
-			context: EndpointContext<Path, Options>,
-			original: (context: EndpointContext<Path, Options>) => Promise<R>,
-		) => T,
-	) => Endpoint<Path, Options, R>;
-	options: Options;
-}
-
 export const createEndpoint = <
 	Path extends string,
 	Options extends EndpointOptions,
@@ -343,7 +326,7 @@ export const createEndpoint = <
 	path: Path,
 	options: Options,
 	handler: (context: EndpointContext<Path, Options>) => R,
-): Endpoint<Path, Options, R> => {
+) => {
 	type Context = InputContext<Path, Options>;
 	const internalHandler = async <
 		AsResponse extends boolean = false,
@@ -409,7 +392,7 @@ export const createEndpoint = <
 	};
 	internalHandler.options = options;
 	internalHandler.path = path;
-	return internalHandler as unknown as Endpoint<Path, Options, R>;
+	return internalHandler;
 };
 
 createEndpoint.create = <E extends { use?: Middleware[] }>(opts?: E) => {
@@ -427,4 +410,13 @@ createEndpoint.create = <E extends { use?: Middleware[] }>(opts?: E) => {
 			handler,
 		);
 	};
+};
+
+export type Endpoint<
+	Path extends string = string,
+	Options extends EndpointOptions = EndpointOptions,
+	Handler extends (inputCtx: any) => Promise<any> = (inputCtx: any) => Promise<any>,
+> = Handler & {
+	options: Options;
+	path: Path;
 };

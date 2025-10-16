@@ -17,8 +17,9 @@
     "format": "biome format --write",
     "typecheck": "tsc --noEmit",
     "bump": "bumpp",
-    "build": "tsdown",
-    "dev": "tsdown --watch",
+    "build": "tsup --dts --clean",
+    "dev": "tsup --watch",
+    "dev:dts": "tsup --watch --dts",
     "serve": "bun --hot example/hello.ts"
   },
   "devDependencies": {
@@ -34,7 +35,7 @@
     "bumpp": "^9.4.1",
     "express": "^5.1.0",
     "supertest": "^7.1.4",
-    "tsdown": "^0.15.7",
+    "tsup": "^8.3.5",
     "type-fest": "^4.23.0",
     "typescript": "^5.6.0-beta",
     "valibot": "1.0.0-beta.15",

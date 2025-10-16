@@ -1,4 +1,4 @@
-import { defineConfig } from "tsdown";
+import { defineConfig } from "tsup";
 
 export default defineConfig({
 	entry: {
@@ -6,8 +6,9 @@ export default defineConfig({
 		client: "src/client.ts",
 		node: "src/adapters/node/index.ts",
 	},
-	dts: true,
+	splitting: false,
 	sourcemap: true,
 	format: ["esm", "cjs"],
 	target: "es2022",
+	bundle: true,
 });
