@@ -2,7 +2,7 @@ import { describe, expect, expectTypeOf, it } from "vitest";
 import { createClient } from "../src/client";
 import { z } from "zod";
 import { createEndpoint } from "./endpoint";
-import { createRouter } from "./router";
+import { createRouter, type Router } from "./router";
 import { createMiddleware } from "./middleware";
 
 describe("client", () => {
