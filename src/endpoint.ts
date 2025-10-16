@@ -326,7 +326,7 @@ export const createEndpoint = <
 	path: Path,
 	options: Options,
 	handler: (context: EndpointContext<Path, Options>) => R,
-) => {
+): StrictEndpoint<Path, Options, R> => {
 	type Context = InputContext<Path, Options>;
 	const internalHandler = async <
 		AsResponse extends boolean = false,
@@ -392,7 +392,7 @@ export const createEndpoint = <
 	};
 	internalHandler.options = options;
 	internalHandler.path = path;
-	return internalHandler;
+	return internalHandler as unknown as StrictEndpoint<Path, Options, R>;
 };
 
 createEndpoint.create = <E extends { use?: Middleware[] }>(opts?: E) => {
@@ -410,6 +410,27 @@ createEndpoint.create = <E extends { use?: Middleware[] }>(opts?: E) => {
 			handler,
 		);
 	};
+};
+
+export type StrictEndpoint<
+	Path extends string = string,
+	Options extends EndpointOptions = EndpointOptions,
+	R extends Promise<any> = Promise<any>,
+> = {
+	(context: InputContext<Path, Options> & { asResponse: true }): Promise<Response>;
+	(context: InputContext<Path, Options> & { asResponse: false; returnHeaders?: false }): R;
+	(
+		context: InputContext<Path, Options> & { asResponse?: false; returnHeaders: true },
+	): Promise<{ headers: Headers; response: Awaited<R> }>;
+	(context?: InputContext<Path, Options>): R;
+	wrap: <T>(
+		fn: (
+			context: EndpointContext<Path, Options>,
+			original: (context: EndpointContext<Path, Options>) => Promise<any>,
+		) => T,
+	) => StrictEndpoint<Path, Options, Promise<T>>;
+	options: Options;
+	path: Path;
 };
 
 export type Endpoint<
