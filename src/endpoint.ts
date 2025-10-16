@@ -375,17 +375,6 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 					: response
 		) as ResultType;
 	};
-	internalHandler.wrap = <T>(
-		fn: (
-			context: EndpointContext<Path, Options>,
-			original: (context: EndpointContext<Path, Options>) => Promise<R>,
-		) => T,
-	) => {
-		const wrappedFn = async (context: EndpointContext<Path, Options>) => {
-			return fn(context, handler);
-		};
-		return createEndpoint(path, options, wrappedFn);
-	};
 	internalHandler.options = options;
 	internalHandler.path = path;
 	return internalHandler as unknown as StrictEndpoint<Path, Options, R>;
@@ -417,12 +406,6 @@ export type StrictEndpoint<Path extends string, Options extends EndpointOptions,
 		context: InputContext<Path, Options> & { asResponse?: false; returnHeaders: true },
 	): Promise<{ headers: Headers; response: Awaited<R> }>;
 	(context?: InputContext<Path, Options>): Promise<R>;
-	wrap: <T>(
-		fn: (
-			context: EndpointContext<Path, Options>,
-			original: (context: EndpointContext<Path, Options>) => Promise<any>,
-		) => T,
-	) => StrictEndpoint<Path, Options, Promise<T>>;
 	options: Options;
 	path: Path;
 };
