@@ -318,14 +318,10 @@ export type EndpointContext<Path extends string, Options extends EndpointOptions
 	) => APIError;
 };
 
-export const createEndpoint = <
-	Path extends string,
-	Options extends EndpointOptions,
-	R extends Promise<any>,
->(
+export const createEndpoint = <Path extends string, Options extends EndpointOptions, R>(
 	path: Path,
 	options: Options,
-	handler: (context: EndpointContext<Path, Options>) => R,
+	handler: (context: EndpointContext<Path, Options>) => Promise<R>,
 ): StrictEndpoint<Path, Options, R> => {
 	type Context = InputContext<Path, Options>;
 	const internalHandler = async <
@@ -347,7 +343,7 @@ export const createEndpoint = <
 			options,
 			path,
 		});
-		const response: Awaited<R> = await handler(internalContext as any).catch(async (e) => {
+		const response = await handler(internalContext as any).catch(async (e) => {
 			if (isAPIError(e)) {
 				const onAPIError = options.onAPIError;
 				if (onAPIError) {
@@ -412,17 +408,15 @@ createEndpoint.create = <E extends { use?: Middleware[] }>(opts?: E) => {
 	};
 };
 
-export type StrictEndpoint<
-	Path extends string = string,
-	Options extends EndpointOptions = EndpointOptions,
-	R extends Promise<any> = Promise<any>,
-> = {
+export type StrictEndpoint<Path extends string, Options extends EndpointOptions, R = any> = {
 	(context: InputContext<Path, Options> & { asResponse: true }): Promise<Response>;
-	(context: InputContext<Path, Options> & { asResponse: false; returnHeaders?: false }): R;
+	(
+		context: InputContext<Path, Options> & { asResponse: false; returnHeaders?: false },
+	): Promise<R>;
 	(
 		context: InputContext<Path, Options> & { asResponse?: false; returnHeaders: true },
 	): Promise<{ headers: Headers; response: Awaited<R> }>;
-	(context?: InputContext<Path, Options>): R;
+	(context?: InputContext<Path, Options>): Promise<R>;
 	wrap: <T>(
 		fn: (
 			context: EndpointContext<Path, Options>,
