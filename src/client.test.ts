@@ -216,4 +216,36 @@ describe("client", () => {
 		});
 		expectTypeOf<Parameters<typeof client>[0]>().toMatchTypeOf<"@post/test">();
 	});
+
+	it("should not require an empty object", async () => {
+		const router = createRouter({
+			endpoint: createEndpoint(
+				"/test",
+				{
+					method: "POST",
+				},
+				async (ctx) => {
+					return { status: 200, body: { hello: "world" } };
+				},
+			),
+			getEndpoint: createEndpoint(
+				"/test2",
+				{
+					method: "GET",
+				},
+				async (ctx) => {
+					return { status: 200, body: { hello: "world" } };
+				},
+			),
+		});
+		const client = createClient<typeof router>({
+			baseURL: "http://localhost:3000",
+			customFetchImpl: async (url, init) => {
+				return new Response(null);
+			},
+		});
+		expectTypeOf<Parameters<typeof client>[0]>().toExtend<"@post/test" | "/test2">();
+		client("@post/test");
+		client("/test2");
+	});
 });
