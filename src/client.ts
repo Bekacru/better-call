@@ -9,15 +9,27 @@ type HasRequired<
 		query?: any;
 		params?: any;
 	},
-> = HasRequiredKeys<T> extends true
-	? HasRequiredKeys<T["body"]> extends false
-		? HasRequiredKeys<T["query"]> extends false
-			? HasRequiredKeys<T["params"]> extends false
-				? false
-				: true
-			: true
-		: true
-	: true;
+> = T["body"] extends object
+	? HasRequiredKeys<T["body"]> extends true
+		? true
+		: T["query"] extends object
+			? HasRequiredKeys<T["query"]> extends true
+				? true
+				: T["params"] extends object
+					? HasRequiredKeys<T["params"]>
+					: false
+			: T["params"] extends object
+				? HasRequiredKeys<T["params"]>
+				: false
+	: T["query"] extends object
+		? HasRequiredKeys<T["query"]> extends true
+			? true
+			: T["params"] extends object
+				? HasRequiredKeys<T["params"]>
+				: false
+		: T["params"] extends object
+			? HasRequiredKeys<T["params"]>
+			: false;
 
 type InferContext<T> = T extends (ctx: infer Ctx) => any
 	? Ctx extends object
