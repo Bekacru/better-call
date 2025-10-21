@@ -224,5 +224,12 @@ class InternalAPIError extends Error {
 	}
 }
 
+export class BetterCallError extends Error {
+	constructor(message: string) {
+		super(message);
+		this.name = "BetterCallError";
+	}
+}
+
 export type APIError = InstanceType<typeof InternalAPIError>;
 export const APIError = makeErrorForHideStackFrame(InternalAPIError, Error);

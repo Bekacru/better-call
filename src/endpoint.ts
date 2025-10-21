@@ -1,6 +1,6 @@
 import type { HasRequiredKeys, Prettify } from "./helper";
 import { toResponse } from "./to-response";
-import { type Middleware } from "./middleware";
+import type { Middleware } from "./middleware";
 import {
 	createInternalContext,
 	type InferBody,
@@ -14,20 +14,12 @@ import {
 	type Method,
 } from "./context";
 import type { CookieOptions, CookiePrefixOptions } from "./cookies";
-import { APIError, type _statusCode, type Status } from "./error";
+import { type APIError, type _statusCode, type Status, BetterCallError } from "./error";
 import type { OpenAPIParameter, OpenAPISchemaType } from "./openapi";
 import type { StandardSchemaV1 } from "./standard-schema";
 import { isAPIError } from "./utils";
 
-export interface EndpointOptions {
-	/**
-	 * Request Method
-	 */
-	method: Method | Method[];
-	/**
-	 * Body Schema
-	 */
-	body?: StandardSchemaV1;
+export interface EndpointBaseOptions {
 	/**
 	 * Query Schema
 	 */
@@ -160,6 +152,50 @@ export interface EndpointOptions {
 	 */
 	onAPIError?: (e: APIError) => void | Promise<void>;
 }
+
+export type EndpointBodyMethodOptions =
+	| {
+			/**
+			 * Request Method
+			 */
+			method: "POST" | "PUT" | "DELETE" | "PATCH" | ("POST" | "PUT" | "DELETE" | "PATCH")[];
+			/**
+			 * Body Schema
+			 */
+			body?: StandardSchemaV1;
+	  }
+	| {
+			/**
+			 * Request Method
+			 */
+			method: "GET" | "HEAD" | ("GET" | "HEAD")[];
+			/**
+			 * Body Schema
+			 */
+			body?: never;
+	  }
+	| {
+			/**
+			 * Request Method
+			 */
+			method: "*";
+			/**
+			 * Body Schema
+			 */
+			body?: StandardSchemaV1;
+	  }
+	| {
+			/**
+			 * Request Method
+			 */
+			method: ("POST" | "PUT" | "DELETE" | "PATCH" | "GET" | "HEAD")[];
+			/**
+			 * Body Schema
+			 */
+			body?: StandardSchemaV1;
+	  };
+
+export type EndpointOptions = EndpointBaseOptions & EndpointBodyMethodOptions;
 
 export type EndpointContext<Path extends string, Options extends EndpointOptions, Context = {}> = {
 	/**
@@ -323,6 +359,9 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 	options: Options,
 	handler: (context: EndpointContext<Path, Options>) => Promise<R>,
 ): StrictEndpoint<Path, Options, R> => {
+	if ((options.method === "GET" || options.method === "HEAD") && options.body) {
+		throw new BetterCallError("Body is not allowed with GET or HEAD methods");
+	}
 	type Context = InputContext<Path, Options>;
 	const internalHandler = async <
 		AsResponse extends boolean = false,
