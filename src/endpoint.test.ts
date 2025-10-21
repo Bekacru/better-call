@@ -1,7 +1,7 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { createEndpoint } from "./endpoint";
 import { z } from "zod";
-import { APIError } from "./error";
+import { APIError, BetterCallError } from "./error";
 import { createMiddleware } from "./middleware";
 import * as v from "valibot";
 
@@ -10,7 +10,7 @@ describe("validation", (it) => {
 		const endpoint = createEndpoint(
 			"/test",
 			{
-				method: "GET",
+				method: "POST",
 				body: v.object({
 					name: v.string(),
 				}),
@@ -56,7 +56,7 @@ describe("validation", (it) => {
 		const endpoint = createEndpoint(
 			"/test",
 			{
-				method: "GET",
+				method: "POST",
 				body: z.object({
 					name: z.string().transform((val) => `${val}-validated`),
 				}),
@@ -94,6 +94,24 @@ describe("validation", (it) => {
 		});
 		expect(response.name).toBe("test-validated");
 	});
+
+	it("should throw BetterCallError if body is not allowed with GET or HEAD", async () => {
+		expect(() =>
+			createEndpoint(
+				"/test",
+				//@ts-expect-error - body should not be allowed with GET or HEAD
+				{
+					method: "GET",
+					body: z.object({
+						name: z.string(),
+					}),
+				},
+				async (ctx) => {
+					return ctx.body;
+				},
+			),
+		).toThrowError(BetterCallError);
+	});
 });
 
 describe("types", async () => {
@@ -101,7 +119,7 @@ describe("types", async () => {
 		createEndpoint(
 			"/test",
 			{
-				method: "GET",
+				method: "POST",
 				body: z.object({
 					name: z.string(),
 				}),
@@ -114,7 +132,7 @@ describe("types", async () => {
 		createEndpoint(
 			"/test",
 			{
-				method: "GET",
+				method: "POST",
 				body: z.object({
 					name: z.string().optional(),
 				}),
@@ -127,7 +145,7 @@ describe("types", async () => {
 		createEndpoint(
 			"/test",
 			{
-				method: "GET",
+				method: "POST",
 				body: z
 					.object({
 						name: z.string(),
@@ -328,6 +346,38 @@ describe("types", async () => {
 		expectTypeOf(jsonResponse1).toEqualTypeOf<{ name: string }>();
 		const objResponse1 = await endpoint1({ asResponse: true });
 		expectTypeOf(objResponse1).toEqualTypeOf<Response>();
+	});
+
+	it("shouldn't allow GET or HEAD with body", async () => {
+		createEndpoint(
+			"/path",
+			//@ts-expect-error - body should not be allowed with GET or HEAD
+			{
+				method: "GET",
+				body: z.object({
+					name: z.string(),
+				}),
+			},
+			async (ctx) => {
+				return ctx.body;
+			},
+		);
+
+		createEndpoint(
+			"/path",
+			//@ts-expect-error - body should not be allowed with HEAD
+			{
+				method: "HEAD",
+				body: z.object({
+					name: z.string(),
+				}),
+			},
+			async (ctx) => {
+				throw ctx.error("BAD_REQUEST", {
+					message: "Body is not allowed with HEAD",
+				});
+			},
+		);
 	});
 });
 
