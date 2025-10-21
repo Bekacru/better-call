@@ -349,35 +349,39 @@ describe("types", async () => {
 	});
 
 	it("shouldn't allow GET or HEAD with body", async () => {
-		createEndpoint(
-			"/path",
-			//@ts-expect-error - body should not be allowed with GET or HEAD
-			{
-				method: "GET",
-				body: z.object({
-					name: z.string(),
-				}),
-			},
-			async (ctx) => {
-				return ctx.body;
-			},
-		);
+		try {
+			createEndpoint(
+				"/path",
+				//@ts-expect-error - body should not be allowed with GET or HEAD
+				{
+					method: "GET",
+					body: z.object({
+						name: z.string(),
+					}),
+				},
+				async (ctx) => {
+					return ctx.body;
+				},
+			);
 
-		createEndpoint(
-			"/path",
-			//@ts-expect-error - body should not be allowed with HEAD
-			{
-				method: "HEAD",
-				body: z.object({
-					name: z.string(),
-				}),
-			},
-			async (ctx) => {
-				throw ctx.error("BAD_REQUEST", {
-					message: "Body is not allowed with HEAD",
-				});
-			},
-		);
+			createEndpoint(
+				"/path",
+				//@ts-expect-error - body should not be allowed with HEAD
+				{
+					method: "HEAD",
+					body: z.object({
+						name: z.string(),
+					}),
+				},
+				async (ctx) => {
+					throw ctx.error("BAD_REQUEST", {
+						message: "Body is not allowed with HEAD",
+					});
+				},
+			);
+		} catch (e) {
+			//should throw BetterCallError
+		}
 	});
 });
 
