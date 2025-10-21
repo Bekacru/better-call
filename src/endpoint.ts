@@ -360,7 +360,7 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 	handler: (context: EndpointContext<Path, Options>) => Promise<R>,
 ): StrictEndpoint<Path, Options, R> => {
 	if ((options.method === "GET" || options.method === "HEAD") && options.body) {
-		throw new BetterCallError("Body is not allowed with GET or HEAD");
+		throw new BetterCallError("Body is not allowed with GET or HEAD methods");
 	}
 	type Context = InputContext<Path, Options>;
 	const internalHandler = async <
