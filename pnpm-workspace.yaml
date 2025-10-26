@@ -1,0 +1,13 @@
+packages:
+  - packages/**
+  - example
+
+catalog:
+  '@better-fetch/fetch': ^1.1.4
+  tsdown: ^0.15.7
+  typescript: ^5.9.3
+  vitest: ^3.2.4
+  zod: ^4.1.12
+  nanostores: ^1.0.1
+
+neverBuiltDependencies: []

@@ -7,7 +7,7 @@ import type {
 	Prettify,
 	UnionToIntersection,
 } from "./helper";
-import type { Middleware, MiddlewareContext, MiddlewareOptions } from "./middleware";
+import type { Middleware, MiddlewareOptions } from "./middleware";
 import { runValidation } from "./validator";
 import {
 	getCookieKey,
@@ -83,11 +83,12 @@ export type InferQuery<Options extends EndpointOptions | MiddlewareOptions> =
 			? StandardSchemaV1.InferOutput<Options["query"]>
 			: Record<string, any> | undefined;
 
-export type InferMethod<Options extends EndpointOptions> = Options["method"] extends Array<Method>
-	? Options["method"][number]
-	: Options["method"] extends "*"
-		? HTTPMethod
-		: Options["method"];
+export type InferMethod<Options extends EndpointOptions> =
+	Options["method"] extends Array<Method>
+		? Options["method"][number]
+		: Options["method"] extends "*"
+			? HTTPMethod
+			: Options["method"];
 
 export type InferInputMethod<
 	Options extends EndpointOptions,
@@ -123,38 +124,45 @@ export type InferParamInput<Path extends string> = IsEmptyObject<
 export type InferRequest<Option extends EndpointOptions | MiddlewareOptions> =
 	Option["requireRequest"] extends true ? Request : Request | undefined;
 
-export type InferRequestInput<Option extends EndpointOptions | MiddlewareOptions> =
-	Option["requireRequest"] extends true
-		? {
-				request: Request;
-			}
-		: {
-				request?: Request;
-			};
+export type InferRequestInput<
+	Option extends EndpointOptions | MiddlewareOptions,
+> = Option["requireRequest"] extends true
+	? {
+			request: Request;
+		}
+	: {
+			request?: Request;
+		};
 
 export type InferHeaders<Option extends EndpointOptions | MiddlewareOptions> =
 	Option["requireHeaders"] extends true ? Headers : Headers | undefined;
 
-export type InferHeadersInput<Option extends EndpointOptions | MiddlewareOptions> =
-	Option["requireHeaders"] extends true
-		? {
-				headers: HeadersInit;
-			}
-		: {
-				headers?: HeadersInit;
-			};
+export type InferHeadersInput<
+	Option extends EndpointOptions | MiddlewareOptions,
+> = Option["requireHeaders"] extends true
+	? {
+			headers: HeadersInit;
+		}
+	: {
+			headers?: HeadersInit;
+		};
 
-export type InferUse<Opts extends EndpointOptions["use"]> = Opts extends Middleware[]
-	? UnionToIntersection<Awaited<ReturnType<Opts[number]>>>
-	: {};
+export type InferUse<Opts extends EndpointOptions["use"]> =
+	Opts extends Middleware[]
+		? UnionToIntersection<Awaited<ReturnType<Opts[number]>>>
+		: {};
 
 export type InferMiddlewareBody<Options extends MiddlewareOptions> =
 	Options["body"] extends StandardSchemaV1<infer T> ? T : any;
 
 export type InferMiddlewareQuery<Options extends MiddlewareOptions> =
-	Options["query"] extends StandardSchemaV1<infer T> ? T : Record<string, any> | undefined;
+	Options["query"] extends StandardSchemaV1<infer T>
+		? T
+		: Record<string, any> | undefined;
 
-type StrictKeys<T, U extends T = T> = Exclude<keyof U, keyof T> extends never ? U : never;
+type StrictKeys<T, U extends T = T> = Exclude<keyof U, keyof T> extends never
+	? U
+	: never;
 export type InputContext<
 	Path extends string,
 	Options extends EndpointOptions,
@@ -187,16 +195,18 @@ export const createInternalContext = async (
 			code: "VALIDATION_ERROR",
 		});
 	}
-	const requestHeaders: Headers =
+	const requestHeaders: Headers | null =
 		"headers" in context
 			? context.headers instanceof Headers
 				? context.headers
 				: new Headers(context.headers)
 			: "request" in context && context.request instanceof Request
 				? context.request.headers
-				: new Headers();
-	const requestCookies = requestHeaders.get("cookie");
-	const parsedCookies = requestCookies ? parseCookies(requestCookies) : undefined;
+				: null;
+	const requestCookies = requestHeaders?.get("cookie");
+	const parsedCookies = requestCookies
+		? parseCookies(requestCookies)
+		: undefined;
 	const internalContext = {
 		...context,
 		body: data.body,
@@ -222,7 +232,11 @@ export const createInternalContext = async (
 			}
 			return parsedCookies?.get(finalKey) || null;
 		},
-		getSignedCookie: async (key: string, secret: string, prefix?: CookiePrefixOptions) => {
+		getSignedCookie: async (
+			key: string,
+			secret: string,
+			prefix?: CookiePrefixOptions,
+		) => {
 			const finalKey = getCookieKey(key, prefix);
 			if (!finalKey) {
 				return null;
@@ -241,7 +255,11 @@ export const createInternalContext = async (
 				return null;
 			}
 			const secretKey = await getCryptoKey(secret);
-			const isVerified = await verifySignature(signature, signedValue, secretKey);
+			const isVerified = await verifySignature(
+				signature,
+				signedValue,
+				secretKey,
+			);
 			return isVerified ? signedValue : false;
 		},
 		setCookie: (key: string, value: string, options?: CookieOptions) => {

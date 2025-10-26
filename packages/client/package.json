@@ -1,0 +1,60 @@
+{
+  "name": "@better-call/client",
+  "version": "1.0.25-beta.3",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Bekacru/better-call",
+    "path": "packages/client"
+  },
+  "keywords": [],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "test": "vitest",
+    "typecheck": "tsc --project tsconfig.json"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "better-rpc-dev-source": "./src/index.ts",
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "./dist/index.d.ts"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "@better-call/core": "workspace:*"
+  },
+  "dependencies": {
+    "@better-fetch/fetch": "catalog:",
+    "nanostores": "catalog:"
+  },
+  "devDependencies": {
+    "@better-call/core": "workspace:*",
+    "happy-dom": "^20.0.8",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "zod": "catalog:"
+  },
+  "files": [
+    "dist"
+  ]
+}

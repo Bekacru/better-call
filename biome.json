@@ -1,15 +1,58 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
-	"formatter": {
-		"enabled": true,
-		"indentStyle": "tab",
-		"lineWidth": 100,
-		"indentWidth": 4
-	},
-	"linter": {
-		"enabled": false
-	},
-	"files": {
-		"ignore": ["dist", ".next", ".svelte-kit", "package.json", ".contentlayer"]
-	}
+  "root": true,
+  "$schema": "https://biomejs.dev/schemas/2.2.7/schema.json",
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "tab"
+  },
+  "assist": { "actions": { "source": { "organizeImports": "off" } } },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": false,
+      "suspicious": {
+        "noImplicitAnyLet": "warn",
+        "noDuplicateObjectKeys": "warn",
+        "noTsIgnore": "error",
+        "noDebugger": "error"
+      },
+      "performance": {
+        "noDelete": "error"
+      },
+      "complexity": {
+        "noUselessSwitchCase": "warn",
+        "noUselessTypeConstraint": "warn"
+      },
+      "correctness": {
+        "noUnusedImports": "warn"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.json"],
+      "formatter": {
+        "indentStyle": "space",
+        "indentWidth": 2
+      }
+    }
+  ],
+  "files": {
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/build",
+      "!**/.next",
+      "!**/.svelte-kit",
+      "!**/.contentlayer",
+      "!**/.turbo",
+      "!**/.nuxt",
+      "!**/.source",
+      "!**/.expo",
+      "!**/.cache",
+      "!**/playwright-report",
+      "!**/.output",
+      "!**/.tmp"
+    ]
+  }
 }

@@ -11,10 +11,14 @@ import {
 	type InferRequest,
 	type InferUse,
 	type InputContext,
-	type Method,
 } from "./context";
 import type { CookieOptions, CookiePrefixOptions } from "./cookies";
-import { type APIError, type _statusCode, type Status, BetterCallError } from "./error";
+import {
+	type APIError,
+	type _statusCode,
+	type Status,
+	BetterCallError,
+} from "./error";
 import type { OpenAPIParameter, OpenAPISchemaType } from "./openapi";
 import type { StandardSchemaV1 } from "./standard-schema";
 import { isAPIError } from "./utils";
@@ -158,7 +162,12 @@ export type EndpointBodyMethodOptions =
 			/**
 			 * Request Method
 			 */
-			method: "POST" | "PUT" | "DELETE" | "PATCH" | ("POST" | "PUT" | "DELETE" | "PATCH")[];
+			method:
+				| "POST"
+				| "PUT"
+				| "DELETE"
+				| "PATCH"
+				| ("POST" | "PUT" | "DELETE" | "PATCH")[];
 			/**
 			 * Body Schema
 			 */
@@ -197,7 +206,11 @@ export type EndpointBodyMethodOptions =
 
 export type EndpointOptions = EndpointBaseOptions & EndpointBodyMethodOptions;
 
-export type EndpointContext<Path extends string, Options extends EndpointOptions, Context = {}> = {
+export type EndpointContext<
+	Path extends string,
+	Options extends EndpointOptions,
+	Context = {},
+> = {
 	/**
 	 * Method
 	 *
@@ -354,7 +367,11 @@ export type EndpointContext<Path extends string, Options extends EndpointOptions
 	) => APIError;
 };
 
-export const createEndpoint = <Path extends string, Options extends EndpointOptions, R>(
+export const createEndpoint = <
+	Path extends string,
+	const Options extends EndpointOptions,
+	R,
+>(
 	path: Path,
 	options: Options,
 	handler: (context: EndpointContext<Path, Options>) => Promise<R>,
@@ -369,7 +386,12 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 	>(
 		...inputCtx: HasRequiredKeys<Context> extends true
 			? [Context & { asResponse?: AsResponse; returnHeaders?: ReturnHeaders }]
-			: [(Context & { asResponse?: AsResponse; returnHeaders?: ReturnHeaders })?]
+			: [
+					(Context & {
+						asResponse?: AsResponse;
+						returnHeaders?: ReturnHeaders;
+					})?,
+				]
 	): Promise<
 		AsResponse extends true
 			? Response
@@ -420,7 +442,11 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 };
 
 createEndpoint.create = <E extends { use?: Middleware[] }>(opts?: E) => {
-	return <Path extends string, Opts extends EndpointOptions, R extends Promise<any>>(
+	return <
+		Path extends string,
+		Opts extends EndpointOptions,
+		R extends Promise<any>,
+	>(
 		path: Path,
 		options: Opts,
 		handler: (ctx: EndpointContext<Path, Opts, InferUse<E["use"]>>) => R,
@@ -436,13 +462,25 @@ createEndpoint.create = <E extends { use?: Middleware[] }>(opts?: E) => {
 	};
 };
 
-export type StrictEndpoint<Path extends string, Options extends EndpointOptions, R = any> = {
-	(context: InputContext<Path, Options> & { asResponse: true }): Promise<Response>;
+export type StrictEndpoint<
+	Path extends string,
+	Options extends EndpointOptions,
+	R = any,
+> = {
 	(
-		context: InputContext<Path, Options> & { asResponse: false; returnHeaders?: false },
+		context: InputContext<Path, Options> & { asResponse: true },
+	): Promise<Response>;
+	(
+		context: InputContext<Path, Options> & {
+			asResponse: false;
+			returnHeaders?: false;
+		},
 	): Promise<R>;
 	(
-		context: InputContext<Path, Options> & { asResponse?: false; returnHeaders: true },
+		context: InputContext<Path, Options> & {
+			asResponse?: false;
+			returnHeaders: true;
+		},
 	): Promise<{ headers: Headers; response: Awaited<R> }>;
 	(context?: InputContext<Path, Options>): Promise<R>;
 	options: Options;
@@ -452,7 +490,9 @@ export type StrictEndpoint<Path extends string, Options extends EndpointOptions,
 export type Endpoint<
 	Path extends string = string,
 	Options extends EndpointOptions = EndpointOptions,
-	Handler extends (inputCtx: any) => Promise<any> = (inputCtx: any) => Promise<any>,
+	Handler extends (inputCtx: any) => Promise<any> = (
+		inputCtx: any,
+	) => Promise<any>,
 > = Handler & {
 	options: Options;
 	path: Path;

@@ -41,8 +41,8 @@ describe("APIError", () => {
 			expect(stack).toMatch(
 				new RegExp(
 					"APIError:\\s*\\n" +
-						"\\s+at testError \\(.*/error\\.test\\.ts:\\d+:\\d+\\)\\n" +
-						"\\s+at deepTestError \\(.*/error\\.test\\.ts:\\d+:\\d+\\)",
+						"\\s+at testError \\(.+error\\.test\\.ts:\\d+:\\d+\\)\\n" +
+						"\\s+at deepTestError \\(.+error\\.test\\.ts:\\d+:\\d+\\)",
 					"s",
 				),
 			);

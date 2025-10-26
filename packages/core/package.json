@@ -1,0 +1,59 @@
+{
+  "name": "@better-call/core",
+  "version": "1.0.25-beta.3",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Bekacru/better-call",
+    "path": "packages/core"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "vitest",
+    "typecheck": "tsc --project tsconfig.json",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "clean": "rm -rf ./node_modules"
+  },
+  "devDependencies": {
+    "@better-call/node": "workspace:^",
+    "arktype": "^2.0.0",
+    "tsdown": "catalog:",
+    "type-fest": "^4.23.0",
+    "typescript": "catalog:",
+    "valibot": "1.0.0-beta.15",
+    "vitest": "catalog:",
+    "zod": "catalog:"
+  },
+  "dependencies": {
+    "@better-auth/utils": "^0.3.0",
+    "rou3": "^0.5.1"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "better-call-dev-source": "./src/index.ts",
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "./dist/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist"
+  ]
+}

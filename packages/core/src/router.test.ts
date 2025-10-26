@@ -3,7 +3,7 @@ import { createEndpoint, type Endpoint } from "./endpoint";
 import { createRouter } from "./router";
 import { z } from "zod";
 import { APIError } from "./error";
-import { getRequest } from "./adapters/node/request";
+import { getRequest } from "@better-call/node";
 import { toResponse } from "./to-response";
 
 describe("router", () => {
@@ -216,7 +216,9 @@ describe("router", () => {
 			destroyed: false,
 		};
 		const req = getRequest({ base, request: fakeReq });
-		expect(new URL(req.url).href).toBe("http://localhost:3000/api/auth/callback");
+		expect(new URL(req.url).href).toBe(
+			"http://localhost:3000/api/auth/callback",
+		);
 	});
 
 	it("node adapter getRequest should fall back to url when baseUrl is missing", async () => {
@@ -265,7 +267,9 @@ describe("error handling", () => {
 		);
 
 		let errorCaught = false;
-		const customResponse = new Response("Custom error response", { status: 418 });
+		const customResponse = new Response("Custom error response", {
+			status: 418,
+		});
 
 		const router = createRouter(
 			{ endpoint },
@@ -295,7 +299,9 @@ describe("error handling", () => {
 		);
 
 		let errorCaught = false;
-		const apiError = new APIError("BAD_REQUEST", { message: "Custom API error" });
+		const apiError = new APIError("BAD_REQUEST", {
+			message: "Custom API error",
+		});
 
 		const router = createRouter(
 			{ endpoint },
@@ -379,7 +385,9 @@ describe("error handling", () => {
 	});
 
 	it("should handle APIError directly when no onError is provided", async () => {
-		const apiError = new APIError("NOT_FOUND", { message: "Resource not found" });
+		const apiError = new APIError("NOT_FOUND", {
+			message: "Resource not found",
+		});
 		const endpoint = createEndpoint(
 			"/",
 			{
