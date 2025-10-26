@@ -46,7 +46,10 @@ export async function getBody(request: Request) {
 		return blob;
 	}
 
-	if (contentType.includes("application/stream") || request.body instanceof ReadableStream) {
+	if (
+		contentType.includes("application/stream") ||
+		request.body instanceof ReadableStream
+	) {
 		return request.body;
 	}
 

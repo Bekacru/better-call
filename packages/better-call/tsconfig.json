@@ -1,17 +1,17 @@
 {
-	"extends": "../../tsconfig.base.json",
-	"compilerOptions": {
-		"lib": ["esnext", "dom", "dom.iterable"],
-	},
-	"references": [
-		{
-			"path": "../core/tsconfig.json"
-		},
-		{
-			"path": "../node/tsconfig.json"
-		},
-		{
-			"path": "../client/tsconfig.json"
-		}
-	]
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["esnext", "dom", "dom.iterable"]
+  },
+  "references": [
+    {
+      "path": "../core/tsconfig.json"
+    },
+    {
+      "path": "../node/tsconfig.json"
+    },
+    {
+      "path": "../client/tsconfig.json"
+    }
+  ]
 }

@@ -1,18 +1,11 @@
-import {
-	createEndpoint,
-	type Endpoint,
-	type EndpointContext,
-	type EndpointOptions,
-} from "./endpoint";
+import { type EndpointContext, type EndpointOptions } from "./endpoint";
 import {
 	createInternalContext,
-	type InferBody,
 	type InferBodyInput,
 	type InferHeaders,
 	type InferHeadersInput,
 	type InferMiddlewareBody,
 	type InferMiddlewareQuery,
-	type InferQuery,
 	type InferQueryInput,
 	type InferRequest,
 	type InferRequestInput,
@@ -25,7 +18,10 @@ export interface MiddlewareOptions extends Omit<EndpointOptions, "method"> {}
 
 export type MiddlewareResponse = null | void | undefined | Record<string, any>;
 
-export type MiddlewareContext<Options extends MiddlewareOptions, Context = {}> = EndpointContext<
+export type MiddlewareContext<
+	Options extends MiddlewareOptions,
+	Context = {},
+> = EndpointContext<
 	string,
 	Options & {
 		method: "*";
@@ -132,15 +128,21 @@ export type MiddlewareContext<Options extends MiddlewareOptions, Context = {}> =
 export function createMiddleware<Options extends MiddlewareOptions, R>(
 	options: Options,
 	handler: (context: MiddlewareContext<Options>) => Promise<R>,
-): <InputCtx extends MiddlewareInputContext<Options>>(inputContext: InputCtx) => Promise<R>;
+): <InputCtx extends MiddlewareInputContext<Options>>(
+	inputContext: InputCtx,
+) => Promise<R>;
 export function createMiddleware<Options extends MiddlewareOptions, R>(
 	handler: (context: MiddlewareContext<Options>) => Promise<R>,
-): <InputCtx extends MiddlewareInputContext<Options>>(inputContext: InputCtx) => Promise<R>;
+): <InputCtx extends MiddlewareInputContext<Options>>(
+	inputContext: InputCtx,
+) => Promise<R>;
 export function createMiddleware(optionsOrHandler: any, handler?: any) {
 	const internalHandler = async (inputCtx: InputContext<any, any>) => {
 		const context = inputCtx as InputContext<any, any>;
-		const _handler = typeof optionsOrHandler === "function" ? optionsOrHandler : handler;
-		const options = typeof optionsOrHandler === "function" ? {} : optionsOrHandler;
+		const _handler =
+			typeof optionsOrHandler === "function" ? optionsOrHandler : handler;
+		const options =
+			typeof optionsOrHandler === "function" ? {} : optionsOrHandler;
 		const internalContext = await createInternalContext(context, {
 			options,
 			path: "/",
@@ -158,18 +160,20 @@ export function createMiddleware(optionsOrHandler: any, handler?: any) {
 				}
 			: response;
 	};
-	internalHandler.options = typeof optionsOrHandler === "function" ? {} : optionsOrHandler;
+	internalHandler.options =
+		typeof optionsOrHandler === "function" ? {} : optionsOrHandler;
 	return internalHandler;
 }
 
-export type MiddlewareInputContext<Options extends MiddlewareOptions> = InferBodyInput<Options> &
-	InferQueryInput<Options> &
-	InferRequestInput<Options> &
-	InferHeadersInput<Options> & {
-		asResponse?: boolean;
-		returnHeaders?: boolean;
-		use?: Middleware[];
-	};
+export type MiddlewareInputContext<Options extends MiddlewareOptions> =
+	InferBodyInput<Options> &
+		InferQueryInput<Options> &
+		InferRequestInput<Options> &
+		InferHeadersInput<Options> & {
+			asResponse?: boolean;
+			returnHeaders?: boolean;
+			use?: Middleware[];
+		};
 
 export type Middleware<
 	Options extends MiddlewareOptions = MiddlewareOptions,

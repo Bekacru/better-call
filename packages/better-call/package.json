@@ -1,86 +1,86 @@
 {
-    "name": "better-call",
-    "version": "1.0.25-beta.3",
-    "description": "a tiny web framework for typescript",
-    "type": "module",
-    "repository": {
-      "type": "git",
-      "url": "https://github.com/Bekacru/better-call",
-      "path": "packages/better-call"
-    },
-    "publishConfig": {
-      "access": "public"
-    },
-    "scripts": {
-      "test": "vitest",
-      "typecheck": "tsc --project tsconfig.json",
-      "build": "tsdown",
-      "dev": "tsdown --watch",
-      "clean": "rm -rf ./node_modules"
-    },
-    "devDependencies": {
-      "@better-call/core": "workspace:^",
-      "@better-call/node": "workspace:^",
-      "@better-call/client": "workspace:^",
-      "tsdown": "catalog:",
-      "typescript": "catalog:"
-    },
-    "dependencies": {
-      "@better-call/core": "workspace:^",
-      "@better-call/node": "workspace:^",
-      "@better-call/client": "workspace:^"
-    },
-    "main": "./dist/index.js",
-    "module": "./dist/index.js",
-    "exports": {
-      ".": {
-        "better-call-dev-source": "../core/src/index.ts",
-        "import": {
-          "types": "./dist/index.d.ts",
-          "default": "./dist/index.js"
-        },
-        "require": {
-          "types": "./dist/index.d.cts",
-          "default": "./dist/index.cjs"
-        }
+  "name": "better-call",
+  "version": "1.0.25-beta.3",
+  "description": "a tiny web framework for typescript",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Bekacru/better-call",
+    "path": "packages/better-call"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "vitest",
+    "typecheck": "tsc --project tsconfig.json",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "clean": "rm -rf ./node_modules"
+  },
+  "devDependencies": {
+    "@better-call/core": "workspace:^",
+    "@better-call/node": "workspace:^",
+    "@better-call/client": "workspace:^",
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  },
+  "dependencies": {
+    "@better-call/core": "workspace:^",
+    "@better-call/node": "workspace:^",
+    "@better-call/client": "workspace:^"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "better-call-dev-source": "../core/src/index.ts",
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       },
-      "./client": {
-        "better-call-dev-source": "../client/src/index.ts",
-        "import": {
-          "types": "./dist/client.d.ts",
-          "default": "./dist/client.js"
-        },
-        "require": {
-          "types": "./dist/client.d.cts",
-          "default": "./dist/client.cjs"
-        }
-      },
-      "./node": {
-        "better-call-dev-source": "../node/src/index.ts",
-        "import": {
-          "types": "./dist/adapters/node.d.ts",
-          "default": "./dist/adapters/node.js"
-        },
-        "require": {
-          "types": "./dist/adapters/node.d.cts",
-          "default": "./dist/adapters/node.cjs"
-        }
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
       }
     },
-    "typesVersions": {
-        "*": {
-            "*": [
-                "./dist/index.d.ts"
-            ],
-            "client": [
-                "./dist/client.d.ts"
-            ],
-            "node": [
-                "./dist/adapters/node.d.ts"
-            ]
-        }
+    "./client": {
+      "better-call-dev-source": "../client/src/index.ts",
+      "import": {
+        "types": "./dist/client.d.ts",
+        "default": "./dist/client.js"
+      },
+      "require": {
+        "types": "./dist/client.d.cts",
+        "default": "./dist/client.cjs"
+      }
     },
-    "files": [
-      "dist"
-    ]
+    "./node": {
+      "better-call-dev-source": "../node/src/index.ts",
+      "import": {
+        "types": "./dist/adapters/node.d.ts",
+        "default": "./dist/adapters/node.js"
+      },
+      "require": {
+        "types": "./dist/adapters/node.d.cts",
+        "default": "./dist/adapters/node.cjs"
+      }
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "./dist/index.d.ts"
+      ],
+      "client": [
+        "./dist/client.d.ts"
+      ],
+      "node": [
+        "./dist/adapters/node.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist"
+  ]
 }

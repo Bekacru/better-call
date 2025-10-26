@@ -10,7 +10,9 @@ function get_raw_body(req: IncomingMessage, body_size_limit?: number) {
 
 	// check if no request body
 	if (
-		(req.httpVersionMajor === 1 && isNaN(content_length) && h["transfer-encoding"] == null) ||
+		(req.httpVersionMajor === 1 &&
+			isNaN(content_length) &&
+			h["transfer-encoding"] == null) ||
 		content_length === 0
 	) {
 		return null;
@@ -143,7 +145,9 @@ export async function setResponse(res: ServerResponse, response: Response) {
 			res.setHeader(
 				key,
 				key === "set-cookie"
-					? set_cookie_parser.splitCookiesString(response.headers.get(key) as string)
+					? set_cookie_parser.splitCookiesString(
+							response.headers.get(key) as string,
+						)
 					: value,
 			);
 		} catch (error) {

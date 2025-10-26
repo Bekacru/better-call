@@ -71,7 +71,10 @@ export async function runValidation(
 	};
 }
 
-export function fromError(error: readonly StandardSchemaV1.Issue[], validating: string) {
+export function fromError(
+	error: readonly StandardSchemaV1.Issue[],
+	validating: string,
+) {
 	const errorMessages: string[] = [];
 
 	for (const issue of error) {

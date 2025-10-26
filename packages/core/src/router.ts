@@ -1,4 +1,9 @@
-import { addRoute, createRouter as createRou3Router, findAllRoutes, findRoute } from "rou3";
+import {
+	addRoute,
+	createRouter as createRou3Router,
+	findAllRoutes,
+	findRoute,
+} from "rou3";
 import { type Endpoint, createEndpoint } from "./endpoint";
 import type { Middleware } from "./middleware";
 import { generator, getHTML } from "./openapi";
@@ -71,7 +76,10 @@ export interface RouterConfig {
 	};
 }
 
-export const createRouter = <E extends Record<string, Endpoint>, Config extends RouterConfig>(
+export const createRouter = <
+	E extends Record<string, Endpoint>,
+	Config extends RouterConfig,
+>(
 	endpoints: E,
 	config?: Config,
 ) => {
@@ -165,11 +173,15 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 			path,
 			method: request.method as "GET",
 			headers: request.headers,
-			params: route.params ? (JSON.parse(JSON.stringify(route.params)) as any) : {},
+			params: route.params
+				? (JSON.parse(JSON.stringify(route.params)) as any)
+				: {},
 			request: request,
 			body: handler.options.disableBody
 				? undefined
-				: await getBody(handler.options.cloneRequest ? request.clone() : request),
+				: await getBody(
+						handler.options.cloneRequest ? request.clone() : request,
+					),
 			query,
 			_flag: "router" as const,
 			asResponse: true,

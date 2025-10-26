@@ -1,3 +1,5 @@
+// TODO: cleanup
+
 /**
  * Inspired by nanostores/query
  *
