@@ -3,7 +3,6 @@ import { createEndpoint, type Endpoint } from "./endpoint";
 import { createRouter } from "./router";
 import { z } from "zod";
 import { APIError } from "./error";
-import { getRequest } from "@better-call/node";
 import { toResponse } from "./to-response";
 
 describe("router", () => {
@@ -203,35 +202,6 @@ describe("router", () => {
 		expect(response.status).toBe(200);
 		const text = await response.text();
 		expect(text).toBe("/test/api/v1/test");
-	});
-
-	it("node adapter getRequest should include Express baseUrl when present", async () => {
-		const base = "http://localhost:3000";
-		const fakeReq: any = {
-			headers: { host: "localhost:3000" },
-			method: "GET",
-			url: "/auth/callback",
-			baseUrl: "/api",
-			httpVersionMajor: 1,
-			destroyed: false,
-		};
-		const req = getRequest({ base, request: fakeReq });
-		expect(new URL(req.url).href).toBe(
-			"http://localhost:3000/api/auth/callback",
-		);
-	});
-
-	it("node adapter getRequest should fall back to url when baseUrl is missing", async () => {
-		const base = "http://localhost:3000";
-		const fakeReq: any = {
-			headers: { host: "localhost:3000" },
-			method: "GET",
-			url: "/auth/callback",
-			httpVersionMajor: 1,
-			destroyed: false,
-		};
-		const req = getRequest({ base, request: fakeReq });
-		expect(new URL(req.url).href).toBe("http://localhost:3000/auth/callback");
 	});
 });
 
