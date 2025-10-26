@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, assert } from "vitest";
 import { createEndpoint, type Endpoint } from "./endpoint";
 import { createRouter } from "./router";
 import { z } from "zod";
@@ -396,4 +396,40 @@ describe("error handling", () => {
 		const body = await response.json();
 		expect(body.message).toBe("Resource not found");
 	});
+});
+
+describe("extend", () => {
+	it("should extend the router with new endpoints", async () => {
+		const initialEndpoint = createEndpoint("/initial", { method: "GET" }, async () => ({}));
+		const router = createRouter({ initialEndpoint });
+		assert.ok(router.endpoints.initialEndpoint.path === "/initial");
+
+		const dynamicEndpoint = createEndpoint(
+			"/dynamic_added",
+			{
+				method: "POST",
+			},
+			async (c) => {
+				return { message: "dynamically added", body: c.body };
+			},
+		);
+
+		const extendedRouter = router.extend({ dynamicEndpoint });
+		assert.ok(extendedRouter.endpoints.initialEndpoint.path === "/initial");
+		assert.ok(extendedRouter.endpoints.dynamicEndpoint.path === "/dynamic_added");
+
+		const dynamicRequest = new Request("http://localhost/dynamic_added", {
+			method: "POST",
+			body: JSON.stringify({ test: "data" }),
+			headers: {
+				"Content-Type": "application/json",
+			},
+		});
+		const dynamicResponse = await extendedRouter.handler(dynamicRequest);
+		expect(dynamicResponse.status).toBe(200);
+		const jsonResponse = await dynamicResponse.json();
+		expect(jsonResponse.message).toBe("dynamically added");
+		expect(jsonResponse.body).toEqual({ test: "data" });
+	});
+
 });
