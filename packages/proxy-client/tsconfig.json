@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["esnext", "dom", "dom.iterable"]
+  },
+  "references": [
+    {
+      "path": "../core/tsconfig.json"
+    }
+  ]
+}

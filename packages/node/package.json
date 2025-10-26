@@ -1,0 +1,65 @@
+{
+  "name": "@better-call/node",
+  "version": "1.0.25-beta.3",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Bekacru/better-call",
+    "path": "packages/node"
+  },
+  "keywords": [],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "test": "vitest",
+    "typecheck": "tsc --project tsconfig.json"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "better-rpc-dev-source": "./src/index.ts",
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "./dist/index.d.ts"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "@better-call/core": "workspace:*"
+  },
+  "dependencies": {
+    "set-cookie-parser": "^2.7.1"
+  },
+  "devDependencies": {
+    "@better-call/core": "workspace:*",
+    "@types/body-parser": "^1.19.6",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.9.1",
+    "@types/set-cookie-parser": "^2.4.10",
+    "@types/supertest": "^6.0.3",
+    "body-parser": "^2.2.0",
+    "express": "^5.1.0",
+    "supertest": "^7.1.4",
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  },
+  "files": [
+    "dist"
+  ]
+}

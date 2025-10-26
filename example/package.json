@@ -1,0 +1,19 @@
+{
+  "name": "example",
+  "private": true,
+  "scripts": {
+    "serve": "bun --hot ./hello.ts"
+  },
+  "dependencies": {
+    "zod": "catalog:",
+    "@better-call/core": "workspace:*",
+    "better-call": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "catalog:"
+  },
+  "files": [
+    "dist"
+  ]
+}
