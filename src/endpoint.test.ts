@@ -403,7 +403,7 @@ describe("response", () => {
 			}
 		});
 	});
-	
+
 	describe("setStatus", () => {
 		it("should provide access to the response status on a plain object", async () => {
 			const endpoint = createEndpoint(
@@ -463,7 +463,7 @@ describe("response", () => {
 			});
 			expect(response.status).toBe(201);
 			expect(response.response).toMatchObject({
-				test: "response"
+				test: "response",
 			});
 		});
 
@@ -484,7 +484,7 @@ describe("response", () => {
 			expect(response.status).toBe(201);
 			expect(response.headers).toBeInstanceOf(Headers);
 			expect(await response.json()).toMatchObject({
-				test: "response"
+				test: "response",
 			});
 		});
 
@@ -503,7 +503,7 @@ describe("response", () => {
 			expect(response.status).toBe(200);
 			expect(response.headers).toBeInstanceOf(Headers);
 			expect(await response.json()).toMatchObject({
-				test: "response"
+				test: "response",
 			});
 		});
 	});
