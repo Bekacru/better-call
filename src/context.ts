@@ -166,6 +166,7 @@ export type InputContext<
 	InferHeadersInput<Options> & {
 		asResponse?: boolean;
 		returnHeaders?: boolean;
+		returnStatus?: boolean;
 		use?: Middleware[];
 	};
 
@@ -180,6 +181,8 @@ export const createInternalContext = async (
 	},
 ) => {
 	const headers = new Headers();
+	let responseStatus: Status | undefined = undefined;
+
 	const { data, error } = await runValidation(options, context);
 	if (error) {
 		throw new APIError(400, {
@@ -197,6 +200,7 @@ export const createInternalContext = async (
 				: new Headers();
 	const requestCookies = requestHeaders.get("cookie");
 	const parsedCookies = requestCookies ? parseCookies(requestCookies) : undefined;
+
 	const internalContext = {
 		...context,
 		body: data.body,
@@ -275,6 +279,9 @@ export const createInternalContext = async (
 		) => {
 			return new APIError(status, body, headers);
 		},
+		setStatus: (status: Status) => {
+			responseStatus = status;
+		},
 		json: (
 			json: Record<string, any>,
 			routerResponse?:
@@ -296,6 +303,9 @@ export const createInternalContext = async (
 			};
 		},
 		responseHeaders: headers,
+		get responseStatus() {
+			return responseStatus;
+		},
 	};
 	//if context was shimmed through the input we want to apply it
 	for (const middleware of options.use || []) {

@@ -403,6 +403,110 @@ describe("response", () => {
 			}
 		});
 	});
+	
+	describe("setStatus", () => {
+		it("should provide access to the response status on a plain object", async () => {
+			const endpoint = createEndpoint(
+				"/path",
+				{
+					method: "POST",
+				},
+				async (ctx) => {
+					ctx.setStatus(201);
+					return { test: "response" };
+				},
+			);
+			const response = await endpoint({
+				returnStatus: true,
+			});
+			expect(response.status).toBe(201);
+			expect(response.response).toMatchObject({
+				test: "response",
+			});
+		});
+
+		it("should provide access to the response status and headers on a plain object", async () => {
+			const endpoint = createEndpoint(
+				"/path",
+				{
+					method: "POST",
+				},
+				async (ctx) => {
+					ctx.setStatus(201);
+					return { test: "response" };
+				},
+			);
+			const response = await endpoint({
+				returnStatus: true,
+				returnHeaders: true,
+			});
+			expect(response.status).toBe(201);
+			expect(response.headers).toBeInstanceOf(Headers);
+			expect(response.response).toMatchObject({
+				test: "response",
+			});
+		});
+
+		it("should provide access to the response status and headers on ctx.json()", async () => {
+			const endpoint = createEndpoint(
+				"/path",
+				{
+					method: "POST",
+				},
+				async (ctx) => {
+					ctx.setStatus(201);
+					return ctx.json({ test: "response" });
+				},
+			);
+			const response = await endpoint({
+				returnStatus: true,
+			});
+			expect(response.status).toBe(201);
+			expect(response.response).toMatchObject({
+				test: "response"
+			});
+		});
+
+		it("should provide access to the response status and headers on a plain object (as response)", async () => {
+			const endpoint = createEndpoint(
+				"/path",
+				{
+					method: "POST",
+				},
+				async (ctx) => {
+					ctx.setStatus(201);
+					return { test: "response" };
+				},
+			);
+			const response = await endpoint({
+				asResponse: true,
+			});
+			expect(response.status).toBe(201);
+			expect(response.headers).toBeInstanceOf(Headers);
+			expect(await response.json()).toMatchObject({
+				test: "response"
+			});
+		});
+
+		it("should provide access to the response status and headers on a response object", async () => {
+			const endpoint = createEndpoint(
+				"/path",
+				{
+					method: "POST",
+				},
+				async (ctx) => {
+					ctx.setStatus(201); // ignored
+					return Response.json({ test: "response" });
+				},
+			);
+			const response = await endpoint();
+			expect(response.status).toBe(200);
+			expect(response.headers).toBeInstanceOf(Headers);
+			expect(await response.json()).toMatchObject({
+				test: "response"
+			});
+		});
+	});
 
 	describe("json", () => {
 		it("should return a js object response on direct call", async () => {
