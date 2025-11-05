@@ -78,7 +78,27 @@ const items = await client("/item", {
 
 ### Returning non 200 responses
 
-To return a non 200 response, you will need to throw Better Call's `APIError` error. If the endpoint is called as a function, the error will be thrown but if it's mounted to a router, the error will be converted to a response object with the correct status code and headers.
+There are several supported ways to a non 200 response:
+
+You can use the `ctx.setStatus(status)` helper to change the default status code of a successful response:
+
+```ts
+const createItem = createEndpoint("/item", {
+    method: "POST",
+    body: z.object({
+        id: z.string()
+    })
+}, async (ctx) => {
+    ctx.setStatus(201);
+    return {
+        item: {
+            id: ctx.body.id
+        }
+    }
+})
+```
+
+Sometimes, you want to respond with an error, in those cases you will need to throw Better Call's `APIError` error. If the endpoint is called as a function, the error will be thrown but if it's mounted to a router, the error will be converted to a response object with the correct status code and headers.
 
 ```ts
 const createItem = createEndpoint("/item", {
@@ -119,6 +139,23 @@ const createItem = createEndpoint("/item", {
             id: ctx.body.id
         }
     }
+})
+```
+
+Finally, you can return a new `Response` object. In this case, the `ctx.setStatus()` call will be ignored, as the `Response` will have completely control over the final status code:
+
+```ts
+const createItem = createEndpoint("/item", {
+    method: "POST",
+    body: z.object({
+        id: z.string()
+    })
+}, async (ctx) => {
+    return Response.json({
+        item: {
+            id: ctx.body.id
+        }
+    }, { status: 201 });
 })
 ```
 

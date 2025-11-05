@@ -254,6 +254,10 @@ export type EndpointContext<Path extends string, Options extends EndpointOptions
 	 */
 	setHeader: (key: string, value: string) => void;
 	/**
+	 * Set the response status code
+	 */
+	setStatus: (status: Status) => void;
+	/**
 	 * Get header
 	 *
 	 * If it's called outside of a request it will just return null
@@ -363,20 +367,52 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 		throw new BetterCallError("Body is not allowed with GET or HEAD methods");
 	}
 	type Context = InputContext<Path, Options>;
+
+	type ResultType<
+		AsResponse extends boolean,
+		ReturnHeaders extends boolean,
+		ReturnStatus extends boolean,
+	> = AsResponse extends true
+		? Response
+		: ReturnHeaders extends true
+			? ReturnStatus extends true
+				? {
+						headers: Headers;
+						status: number;
+						response: Awaited<R>;
+					}
+				: {
+						headers: Headers;
+						response: Awaited<R>;
+					}
+			: ReturnStatus extends true
+				? {
+						status: number;
+						response: Awaited<R>;
+					}
+				: Awaited<R>;
+
 	const internalHandler = async <
 		AsResponse extends boolean = false,
 		ReturnHeaders extends boolean = false,
+		ReturnStatus extends boolean = false,
 	>(
 		...inputCtx: HasRequiredKeys<Context> extends true
-			? [Context & { asResponse?: AsResponse; returnHeaders?: ReturnHeaders }]
-			: [(Context & { asResponse?: AsResponse; returnHeaders?: ReturnHeaders })?]
-	): Promise<
-		AsResponse extends true
-			? Response
-			: ReturnHeaders extends true
-				? { headers: Headers; response: Awaited<R> }
-				: Awaited<R>
-	> => {
+			? [
+					Context & {
+						asResponse?: AsResponse;
+						returnHeaders?: ReturnHeaders;
+						returnStatus?: ReturnStatus;
+					},
+				]
+			: [
+					(Context & {
+						asResponse?: AsResponse;
+						returnHeaders?: ReturnHeaders;
+						returnStatus?: ReturnStatus;
+					})?,
+				]
+	): Promise<ResultType<AsResponse, ReturnHeaders, ReturnStatus>> => {
 		const context = (inputCtx[0] || {}) as InputContext<any, any>;
 		const internalContext = await createInternalContext(context, {
 			options,
@@ -395,24 +431,29 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 			throw e;
 		});
 		const headers = internalContext.responseHeaders;
-		type ResultType = AsResponse extends true
-			? Response
-			: ReturnHeaders extends true
-				? { headers: Headers; response: Awaited<R> }
-				: Awaited<R>;
+		const status = internalContext.responseStatus;
 
 		return (
 			context.asResponse
 				? toResponse(response, {
 						headers,
+						status,
 					})
 				: context.returnHeaders
-					? {
-							headers,
-							response,
-						}
-					: response
-		) as ResultType;
+					? context.returnStatus
+						? {
+								headers,
+								response,
+								status,
+							}
+						: {
+								headers,
+								response,
+							}
+					: context.returnStatus
+						? { response, status }
+						: response
+		) as ResultType<AsResponse, ReturnHeaders, ReturnStatus>;
 	};
 	internalHandler.options = options;
 	internalHandler.path = path;
@@ -437,14 +478,34 @@ createEndpoint.create = <E extends { use?: Middleware[] }>(opts?: E) => {
 };
 
 export type StrictEndpoint<Path extends string, Options extends EndpointOptions, R = any> = {
+	// asResponse cases
 	(context: InputContext<Path, Options> & { asResponse: true }): Promise<Response>;
+
+	// returnHeaders & returnStatus cases
 	(
-		context: InputContext<Path, Options> & { asResponse: false; returnHeaders?: false },
-	): Promise<R>;
+		context: InputContext<Path, Options> & { returnHeaders: true; returnStatus: true },
+	): Promise<{ headers: Headers; status: number; response: Awaited<R> }>;
 	(
-		context: InputContext<Path, Options> & { asResponse?: false; returnHeaders: true },
+		context: InputContext<Path, Options> & { returnHeaders: true; returnStatus: false },
 	): Promise<{ headers: Headers; response: Awaited<R> }>;
+	(
+		context: InputContext<Path, Options> & { returnHeaders: false; returnStatus: true },
+	): Promise<{ status: number; response: Awaited<R> }>;
+	(
+		context: InputContext<Path, Options> & { returnHeaders: false; returnStatus: false },
+	): Promise<R>;
+
+	// individual flag cases
+	(
+		context: InputContext<Path, Options> & { returnHeaders: true },
+	): Promise<{ headers: Headers; response: Awaited<R> }>;
+	(
+		context: InputContext<Path, Options> & { returnStatus: true },
+	): Promise<{ status: number; response: Awaited<R> }>;
+
+	// default case
 	(context?: InputContext<Path, Options>): Promise<R>;
+
 	options: Options;
 	path: Path;
 };
