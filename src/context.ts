@@ -168,6 +168,7 @@ export type InputContext<
 		returnHeaders?: boolean;
 		returnStatus?: boolean;
 		use?: Middleware[];
+		path?: string;
 	};
 
 export const createInternalContext = async (
@@ -190,22 +191,22 @@ export const createInternalContext = async (
 			code: "VALIDATION_ERROR",
 		});
 	}
-	const requestHeaders: Headers =
+	const requestHeaders: Headers | null =
 		"headers" in context
 			? context.headers instanceof Headers
 				? context.headers
 				: new Headers(context.headers)
 			: "request" in context && context.request instanceof Request
 				? context.request.headers
-				: new Headers();
-	const requestCookies = requestHeaders.get("cookie");
+				: null;
+	const requestCookies = requestHeaders?.get("cookie");
 	const parsedCookies = requestCookies ? parseCookies(requestCookies) : undefined;
 
 	const internalContext = {
 		...context,
 		body: data.body,
 		query: data.query,
-		path: path,
+		path: context.path || path,
 		context: "context" in context && context.context ? context.context : {},
 		returned: undefined as any,
 		headers: context?.headers,
