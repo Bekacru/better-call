@@ -231,6 +231,22 @@ describe("router", () => {
 		const req = getRequest({ base, request: fakeReq });
 		expect(new URL(req.url).href).toBe("http://localhost:3000/auth/callback");
 	});
+	it("should preserve basePath when missing in proxied request", async () => {
+		const endpoint = createEndpoint(
+			"/api/auth/get-session",
+			{
+				method: "GET",
+			},
+			async (c) => {
+				return c.path;
+			},
+		);
+		const router = createRouter({ endpoint }, { basePath: "/other-app" });
+		const response = await router.handler(new Request("http://localhost/api/auth/get-session"));
+		expect(response.status).toBe(200);
+		const text = await response.text();
+		expect(text).toBe("/other-app/api/auth/get-session");
+	});
 });
 
 describe("route middleware", () => {
