@@ -1,5 +1,5 @@
 import type { EndpointOptions } from "./endpoint";
-import { _statusCode, APIError, type Status } from "./error";
+import { statusCodes, APIError, type Status } from "./error";
 import type {
 	InferParamPath,
 	InferParamWildCard,
@@ -269,7 +269,7 @@ export const createInternalContext = async (
 			return new APIError("FOUND", undefined, headers);
 		},
 		error: (
-			status: keyof typeof _statusCode | Status,
+			status: keyof typeof statusCodes | Status,
 			body?:
 				| {
 						message?: string;
