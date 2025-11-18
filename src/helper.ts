@@ -45,3 +45,28 @@ export type InferParamWildCard<Path> = Path extends
 		: Path extends `${infer _Start}/${infer Rest}`
 			? InferParamWildCard<Rest>
 			: {};
+
+export type InferResultType<
+	AsResponse extends boolean,
+	ReturnHeaders extends boolean,
+	ReturnStatus extends boolean,
+	R,
+> = AsResponse extends true
+	? Response
+	: ReturnHeaders extends true
+		? ReturnStatus extends true
+			? {
+					headers: Headers;
+					status: number;
+					response: Awaited<R>;
+				}
+			: {
+					headers: Headers;
+					response: Awaited<R>;
+				}
+		: ReturnStatus extends true
+			? {
+					status: number;
+					response: Awaited<R>;
+				}
+			: Awaited<R>;

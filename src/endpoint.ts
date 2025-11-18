@@ -1,4 +1,4 @@
-import type { HasRequiredKeys, Prettify } from "./helper";
+import type { HasRequiredKeys, InferResultType, Prettify } from "./helper";
 import { toResponse } from "./to-response";
 import type { Middleware } from "./middleware";
 import {
@@ -368,52 +368,18 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 	}
 	type Context = InputContext<Path, Options>;
 
-	type ResultType<
-		AsResponse extends boolean,
-		ReturnHeaders extends boolean,
-		ReturnStatus extends boolean,
-	> = AsResponse extends true
-		? Response
-		: ReturnHeaders extends true
-			? ReturnStatus extends true
-				? {
-						headers: Headers;
-						status: number;
-						response: Awaited<R>;
-					}
-				: {
-						headers: Headers;
-						response: Awaited<R>;
-					}
-			: ReturnStatus extends true
-				? {
-						status: number;
-						response: Awaited<R>;
-					}
-				: Awaited<R>;
-
 	const internalHandler = async <
 		AsResponse extends boolean = false,
 		ReturnHeaders extends boolean = false,
 		ReturnStatus extends boolean = false,
 	>(
-		...inputCtx: HasRequiredKeys<Context> extends true
-			? [
-					Context & {
-						asResponse?: AsResponse;
-						returnHeaders?: ReturnHeaders;
-						returnStatus?: ReturnStatus;
-					},
-				]
-			: [
-					(Context & {
-						asResponse?: AsResponse;
-						returnHeaders?: ReturnHeaders;
-						returnStatus?: ReturnStatus;
-					})?,
-				]
-	): Promise<ResultType<AsResponse, ReturnHeaders, ReturnStatus>> => {
-		const context = (inputCtx[0] || {}) as InputContext<any, any>;
+		input?: Context & {
+			asResponse?: AsResponse;
+			returnHeaders?: ReturnHeaders;
+			returnStatus?: ReturnStatus;
+		},
+	): Promise<InferResultType<AsResponse, ReturnHeaders, ReturnStatus, R>> => {
+		const context = (input ?? {}) as InputContext<any, any>;
 		const internalContext = await createInternalContext(context, {
 			options,
 			path,
@@ -453,7 +419,7 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 					: context.returnStatus
 						? { response, status }
 						: response
-		) as ResultType<AsResponse, ReturnHeaders, ReturnStatus>;
+		) as InferResultType<AsResponse, ReturnHeaders, ReturnStatus, R>;
 	};
 	internalHandler.options = options;
 	internalHandler.path = path;
