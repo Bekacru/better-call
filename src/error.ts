@@ -69,7 +69,7 @@ export function makeErrorForHideStackFrame<B extends new (...args: any[]) => Err
 	return HideStackFramesError as any;
 }
 
-export const _statusCode = {
+export const statusCodes = {
 	OK: 200,
 	CREATED: 201,
 	ACCEPTED: 202,
@@ -189,7 +189,7 @@ export type Status =
 
 class InternalAPIError extends Error {
 	constructor(
-		public status: keyof typeof _statusCode | Status = "INTERNAL_SERVER_ERROR",
+		public status: keyof typeof statusCodes | Status = "INTERNAL_SERVER_ERROR",
 		public body:
 			| ({
 					message?: string;
@@ -198,7 +198,7 @@ class InternalAPIError extends Error {
 			  } & Record<string, any>)
 			| undefined = undefined,
 		public headers: HeadersInit = {},
-		public statusCode = typeof status === "number" ? status : _statusCode[status],
+		public statusCode = typeof status === "number" ? status : statusCodes[status],
 	) {
 		super(
 			body?.message,

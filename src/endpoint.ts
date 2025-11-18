@@ -14,7 +14,7 @@ import {
 	type Method,
 } from "./context";
 import type { CookieOptions, CookiePrefixOptions } from "./cookies";
-import { type APIError, type _statusCode, type Status, BetterCallError } from "./error";
+import { type APIError, type statusCodes, type Status, BetterCallError } from "./error";
 import type { OpenAPIParameter, OpenAPISchemaType } from "./openapi";
 import type { StandardSchemaV1 } from "./standard-schema";
 import { isAPIError } from "./utils";
@@ -349,7 +349,7 @@ export type EndpointContext<Path extends string, Options extends EndpointOptions
 	 * Return error
 	 */
 	error: (
-		status: keyof typeof _statusCode | Status,
+		status: keyof typeof statusCodes | Status,
 		body?: {
 			message?: string;
 			code?: string;
