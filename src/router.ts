@@ -100,11 +100,9 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 	const middlewareRouter = createRou3Router();
 
 	for (const endpoint of Object.values(endpoints)) {
-		if (!endpoint.options) {
+		if (!endpoint.options || endpoint.options?.metadata?.SERVER_ONLY) {
 			continue;
 		}
-		if (endpoint.options?.metadata?.SERVER_ONLY) continue;
-
 		const methods = Array.isArray(endpoint.options?.method)
 			? endpoint.options.method
 			: [endpoint.options?.method];
@@ -240,6 +238,15 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 			return res;
 		},
 		endpoints,
+
+		/**
+		 * Extend the router with new endpoints
+		 * @param newEndpoints new endpoints to extend the router with
+		 * @returns new router with additional endpoints
+		 */
+		extend: <NE extends Record<string, Endpoint>>(newEndpoints: NE) => {
+			return createRouter({ ...endpoints, ...newEndpoints } as E & NE, config);
+		},
 	};
 };
 
