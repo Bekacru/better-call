@@ -132,9 +132,9 @@ export interface EndpointBaseOptions {
 			query?: Record<string, any>;
 		};
 		/**
-		 * If enabled, endpoint won't be exposed over a router
+		 * If disabled, the endpoint won't be exposed as a method
 		 */
-		SERVER_ONLY?: boolean;
+		isRPC?: boolean;
 		/**
 		 * List of allowed media types (MIME types) for the endpoint
 		 *

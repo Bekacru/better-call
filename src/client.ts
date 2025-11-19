@@ -45,11 +45,13 @@ type WithRequired<T, K> = T & {
 	[P in K extends string ? K : never]-?: T[P extends keyof T ? P : never];
 };
 
-type WithoutServerOnly<T extends Record<string, Endpoint>> = {
-	[K in keyof T]: T[K] extends Endpoint<any, infer O>
-		? O extends { metadata: { SERVER_ONLY: true } }
+type InferClientRoutes<T extends Record<string, Endpoint>> = {
+	[K in keyof T]: T[K] extends Endpoint<infer P, infer O>
+		? P extends `virtual:${string}`
 			? never
-			: T[K]
+			: O extends { metadata: { isRPC: false } }
+				? never
+				: T[K]
 		: T[K];
 };
 
@@ -77,7 +79,7 @@ export type RequiredOptionKeys<
 
 export const createClient = <R extends Router | Router["endpoints"]>(options: ClientOptions) => {
 	const fetch = createFetch(options);
-	type API = WithoutServerOnly<
+	type API = InferClientRoutes<
 		R extends { endpoints: Record<string, Endpoint> } ? R["endpoints"] : R
 	>;
 	type Options = API extends {
