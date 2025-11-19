@@ -1,5 +1,5 @@
 import type { EndpointOptions } from "./endpoint";
-import { statusCodes, APIError, type Status } from "./error";
+import { type statusCodes, APIError, type Status } from "./error";
 import type {
 	InferParamPath,
 	InferParamWildCard,

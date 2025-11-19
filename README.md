@@ -231,6 +231,93 @@ const createItem = createEndpoint("/item", {
 })
 ```
 
+#### Allowed Media Types
+
+You can restrict which media types (MIME types) are allowed for request bodies using the `allowedMediaTypes` option. This can be configured at both the router level and the endpoint level, with endpoint-level configuration taking precedence.
+
+When a request is made with a disallowed media type, the endpoint will return a `415 Unsupported Media Type` error.
+
+**Router-level configuration:**
+
+```ts
+const router = createRouter({
+    createItem,
+    updateItem
+}, {
+    // All endpoints in this router will only accept JSON
+    allowedMediaTypes: ["application/json"]
+})
+```
+
+**Endpoint-level configuration:**
+
+```ts
+const uploadFile = createEndpoint("/upload", {
+    method: "POST",
+    metadata: {
+        // This endpoint will only accept form data
+        allowedMediaTypes: ["multipart/form-data"]
+    }
+}, async (ctx) => {
+    return { success: true }
+})
+```
+
+**Multiple media types:**
+
+```ts
+const createItem = createEndpoint("/item", {
+    method: "POST",
+    body: z.object({
+        id: z.string()
+    }),
+    metadata: {
+        // Accept both JSON and form-urlencoded
+        allowedMediaTypes: [
+            "application/json",
+            "application/x-www-form-urlencoded"
+        ]
+    }
+}, async (ctx) => {
+    return {
+        item: {
+            id: ctx.body.id
+        }
+    }
+})
+```
+
+**Endpoint overriding router:**
+
+```ts
+const router = createRouter({
+    createItem,
+    uploadFile
+}, {
+    // Default: only accept JSON
+    allowedMediaTypes: ["application/json"]
+})
+
+const uploadFile = createEndpoint("/upload", {
+    method: "POST",
+    metadata: {
+        // This endpoint overrides the router setting
+        allowedMediaTypes: ["multipart/form-data", "application/octet-stream"]
+    }
+}, async (ctx) => {
+    return { success: true }
+})
+```
+
+Common media types:
+- `application/json` - JSON data
+- `application/x-www-form-urlencoded` - Form data
+- `multipart/form-data` - File uploads
+- `text/plain` - Plain text
+- `application/octet-stream` - Binary data
+
+> **Note:** The validation is case-insensitive and handles charset parameters automatically (e.g., `application/json; charset=utf-8` will match `application/json`).
+
 #### Require Headers
 
 The `requireHeaders` option is used to require the request to have headers. If the request doesn't have headers, the endpoint will throw an error. This is only useful when you call the endpoint as a function.

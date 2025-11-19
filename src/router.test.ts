@@ -396,4 +396,279 @@ describe("error handling", () => {
 		const body = await response.json();
 		expect(body.message).toBe("Resource not found");
 	});
+
+	describe("allowedMediaTypes", () => {
+		it("should allow requests with allowed media type at router level", async () => {
+			const endpoint = createEndpoint(
+				"/post",
+				{
+					method: "POST",
+					body: z.object({
+						name: z.string(),
+					}),
+				},
+				async (c) => {
+					return c.body;
+				},
+			);
+
+			const router = createRouter(
+				{ endpoint },
+				{
+					allowedMediaTypes: ["application/json"],
+				},
+			);
+
+			const request = new Request("http://localhost/post", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ name: "test" }),
+			});
+
+			const response = await router.handler(request);
+			expect(response.status).toBe(200);
+			const body = await response.json();
+			expect(body.name).toBe("test");
+		});
+
+		it("should reject requests with disallowed media type at router level", async () => {
+			const endpoint = createEndpoint(
+				"/post",
+				{
+					method: "POST",
+					body: z.object({
+						name: z.string(),
+					}),
+				},
+				async (c) => {
+					return c.body;
+				},
+			);
+
+			const router = createRouter(
+				{ endpoint },
+				{
+					allowedMediaTypes: ["application/json"],
+				},
+			);
+
+			const request = new Request("http://localhost/post", {
+				method: "POST",
+				headers: {
+					"Content-Type": "text/plain",
+				},
+				body: "plain text",
+			});
+
+			const response = await router.handler(request);
+			expect(response.status).toBe(415);
+			const body = await response.json();
+			expect(body.code).toBe("UNSUPPORTED_MEDIA_TYPE");
+			expect(body.message).toContain("text/plain");
+			expect(body.message).toContain("application/json");
+		});
+
+		it("should allow endpoint-level allowedMediaTypes to override router-level", async () => {
+			const endpoint = createEndpoint(
+				"/post",
+				{
+					method: "POST",
+					body: z.object({
+						name: z.string(),
+					}),
+					metadata: {
+						allowedMediaTypes: ["application/x-www-form-urlencoded"],
+					},
+				},
+				async (c) => {
+					return c.body;
+				},
+			);
+
+			const router = createRouter(
+				{ endpoint },
+				{
+					allowedMediaTypes: ["application/json"],
+				},
+			);
+
+			// Should reject JSON (router-level) and accept form-urlencoded (endpoint-level)
+			const jsonRequest = new Request("http://localhost/post", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ name: "test" }),
+			});
+
+			const jsonResponse = await router.handler(jsonRequest);
+			expect(jsonResponse.status).toBe(415);
+
+			// Should accept form-urlencoded
+			const formData = new URLSearchParams();
+			formData.append("name", "test");
+			const formRequest = new Request("http://localhost/post", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/x-www-form-urlencoded",
+				},
+				body: formData.toString(),
+			});
+
+			const formResponse = await router.handler(formRequest);
+			expect(formResponse.status).toBe(200);
+		});
+
+		it("should handle multiple allowed media types", async () => {
+			const endpoint = createEndpoint(
+				"/post",
+				{
+					method: "POST",
+					body: z.object({
+						name: z.string(),
+					}),
+				},
+				async (c) => {
+					return c.body;
+				},
+			);
+
+			const router = createRouter(
+				{ endpoint },
+				{
+					allowedMediaTypes: ["application/json", "application/x-www-form-urlencoded"],
+				},
+			);
+
+			// Test JSON
+			const jsonRequest = new Request("http://localhost/post", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ name: "test" }),
+			});
+
+			const jsonResponse = await router.handler(jsonRequest);
+			expect(jsonResponse.status).toBe(200);
+
+			// Test form-urlencoded
+			const formData = new URLSearchParams();
+			formData.append("name", "test");
+			const formRequest = new Request("http://localhost/post", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/x-www-form-urlencoded",
+				},
+				body: formData.toString(),
+			});
+
+			const formResponse = await router.handler(formRequest);
+			expect(formResponse.status).toBe(200);
+
+			// Test disallowed type
+			const textRequest = new Request("http://localhost/post", {
+				method: "POST",
+				headers: {
+					"Content-Type": "text/plain",
+				},
+				body: "plain text",
+			});
+
+			const textResponse = await router.handler(textRequest);
+			expect(textResponse.status).toBe(415);
+		});
+
+		it("should handle content-type with charset parameter", async () => {
+			const endpoint = createEndpoint(
+				"/post",
+				{
+					method: "POST",
+					body: z.object({
+						name: z.string(),
+					}),
+				},
+				async (c) => {
+					return c.body;
+				},
+			);
+
+			const router = createRouter(
+				{ endpoint },
+				{
+					allowedMediaTypes: ["application/json"],
+				},
+			);
+
+			const request = new Request("http://localhost/post", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json; charset=utf-8",
+				},
+				body: JSON.stringify({ name: "test" }),
+			});
+
+			const response = await router.handler(request);
+			expect(response.status).toBe(200);
+			const body = await response.json();
+			expect(body.name).toBe("test");
+		});
+
+		it("should not validate content-type when no body is present", async () => {
+			const endpoint = createEndpoint(
+				"/get",
+				{
+					method: "GET",
+				},
+				async () => {
+					return { message: "success" };
+				},
+			);
+
+			const router = createRouter(
+				{ endpoint },
+				{
+					allowedMediaTypes: ["application/json"],
+				},
+			);
+
+			const request = new Request("http://localhost/get", {
+				method: "GET",
+			});
+
+			const response = await router.handler(request);
+			expect(response.status).toBe(200);
+		});
+
+		it("should work without allowedMediaTypes configured", async () => {
+			const endpoint = createEndpoint(
+				"/post",
+				{
+					method: "POST",
+					body: z.object({
+						name: z.string(),
+					}),
+				},
+				async (c) => {
+					return c.body;
+				},
+			);
+
+			const router = createRouter({ endpoint });
+
+			// Should accept any content type
+			const request = new Request("http://localhost/post", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ name: "test" }),
+			});
+
+			const response = await router.handler(request);
+			expect(response.status).toBe(200);
+		});
+	});
 });

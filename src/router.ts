@@ -28,6 +28,20 @@ export interface RouterConfig {
 	 */
 	onRequest?: (req: Request) => any | Promise<any>;
 	/**
+	 * List of allowed media types (MIME types) for the router
+	 *
+	 * if provided, only the media types in the list will be allowed to be passed in the body.
+	 *
+	 * If an endpoint has allowed media types, it will override the router's allowed media types.
+	 *
+	 * @example
+	 * ```ts
+	 * const router = createRouter({
+	 * 		allowedMediaTypes: ["application/json", "application/x-www-form-urlencoded"],
+	 * 	})
+	 */
+	allowedMediaTypes?: string[];
+	/**
 	 * Open API route configuration
 	 */
 	openapi?: {
@@ -161,22 +175,28 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 		});
 
 		const handler = route.data as Endpoint;
-		const context = {
-			path,
-			method: request.method as "GET",
-			headers: request.headers,
-			params: route.params ? (JSON.parse(JSON.stringify(route.params)) as any) : {},
-			request: request,
-			body: handler.options.disableBody
-				? undefined
-				: await getBody(handler.options.cloneRequest ? request.clone() : request),
-			query,
-			_flag: "router" as const,
-			asResponse: true,
-			context: config?.routerContext,
-		};
 
 		try {
+			// Determine which allowedMediaTypes to use: endpoint-level overrides router-level
+			const allowedMediaTypes =
+				handler.options.metadata?.allowedMediaTypes || config?.allowedMediaTypes;
+			const context = {
+				path,
+				method: request.method as "GET",
+				headers: request.headers,
+				params: route.params ? (JSON.parse(JSON.stringify(route.params)) as any) : {},
+				request: request,
+				body: handler.options.disableBody
+					? undefined
+					: await getBody(
+							handler.options.cloneRequest ? request.clone() : request,
+							allowedMediaTypes,
+						),
+				query,
+				_flag: "router" as const,
+				asResponse: true,
+				context: config?.routerContext,
+			};
 			const middlewareRoutes = findAllRoutes(middlewareRouter, "*", path);
 			if (middlewareRoutes?.length) {
 				for (const { data: middleware, params } of middlewareRoutes) {
