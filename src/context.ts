@@ -184,36 +184,6 @@ export const createInternalContext = async (
 	const headers = new Headers();
 	let responseStatus: Status | undefined = undefined;
 
-	// Parse body from request if not already provided
-	if (context.request && !context.body && !options.disableBody) {
-		const { getBody } = await import("./utils");
-		const allowedContentTypes = options.metadata?.allowedContentTypes;
-		context.body = await getBody(context.request, allowedContentTypes);
-	} else if (context.request && options.metadata?.allowedContentTypes) {
-		// Validate content-type if allowedContentTypes is provided and request has a body
-		const allowedContentTypes = options.metadata.allowedContentTypes;
-		if (allowedContentTypes.length > 0) {
-			const contentType = context.request.headers.get("content-type") || "";
-			if (contentType && context.request.body) {
-				const isAllowed = allowedContentTypes.some((allowed) => {
-					const normalizedContentType = contentType.toLowerCase().split(";")[0].trim();
-					const normalizedAllowed = allowed.toLowerCase().trim();
-					return (
-						normalizedContentType === normalizedAllowed ||
-						normalizedContentType.includes(normalizedAllowed)
-					);
-				});
-
-				if (!isAllowed) {
-					throw new APIError(415, {
-						message: `Content-Type "${contentType}" is not allowed. Allowed types: ${allowedContentTypes.join(", ")}`,
-						code: "UNSUPPORTED_MEDIA_TYPE",
-					});
-				}
-			}
-		}
-	}
-
 	const { data, error } = await runValidation(options, context);
 	if (error) {
 		throw new APIError(400, {

@@ -397,8 +397,8 @@ describe("error handling", () => {
 		expect(body.message).toBe("Resource not found");
 	});
 
-	describe("allowedContentTypes", () => {
-		it("should allow requests with allowed content-type at router level", async () => {
+	describe("allowedMediaTypes", () => {
+		it("should allow requests with allowed media type at router level", async () => {
 			const endpoint = createEndpoint(
 				"/post",
 				{
@@ -415,7 +415,7 @@ describe("error handling", () => {
 			const router = createRouter(
 				{ endpoint },
 				{
-					allowedContentTypes: ["application/json"],
+					allowedMediaTypes: ["application/json"],
 				},
 			);
 
@@ -433,7 +433,7 @@ describe("error handling", () => {
 			expect(body.name).toBe("test");
 		});
 
-		it("should reject requests with disallowed content-type at router level", async () => {
+		it("should reject requests with disallowed media type at router level", async () => {
 			const endpoint = createEndpoint(
 				"/post",
 				{
@@ -450,7 +450,7 @@ describe("error handling", () => {
 			const router = createRouter(
 				{ endpoint },
 				{
-					allowedContentTypes: ["application/json"],
+					allowedMediaTypes: ["application/json"],
 				},
 			);
 
@@ -470,7 +470,7 @@ describe("error handling", () => {
 			expect(body.message).toContain("application/json");
 		});
 
-		it("should allow endpoint-level allowedContentTypes to override router-level", async () => {
+		it("should allow endpoint-level allowedMediaTypes to override router-level", async () => {
 			const endpoint = createEndpoint(
 				"/post",
 				{
@@ -479,7 +479,7 @@ describe("error handling", () => {
 						name: z.string(),
 					}),
 					metadata: {
-						allowedContentTypes: ["application/x-www-form-urlencoded"],
+						allowedMediaTypes: ["application/x-www-form-urlencoded"],
 					},
 				},
 				async (c) => {
@@ -490,7 +490,7 @@ describe("error handling", () => {
 			const router = createRouter(
 				{ endpoint },
 				{
-					allowedContentTypes: ["application/json"],
+					allowedMediaTypes: ["application/json"],
 				},
 			);
 
@@ -521,7 +521,7 @@ describe("error handling", () => {
 			expect(formResponse.status).toBe(200);
 		});
 
-		it("should handle multiple allowed content types", async () => {
+		it("should handle multiple allowed media types", async () => {
 			const endpoint = createEndpoint(
 				"/post",
 				{
@@ -538,7 +538,7 @@ describe("error handling", () => {
 			const router = createRouter(
 				{ endpoint },
 				{
-					allowedContentTypes: ["application/json", "application/x-www-form-urlencoded"],
+					allowedMediaTypes: ["application/json", "application/x-www-form-urlencoded"],
 				},
 			);
 
@@ -598,7 +598,7 @@ describe("error handling", () => {
 			const router = createRouter(
 				{ endpoint },
 				{
-					allowedContentTypes: ["application/json"],
+					allowedMediaTypes: ["application/json"],
 				},
 			);
 
@@ -630,7 +630,7 @@ describe("error handling", () => {
 			const router = createRouter(
 				{ endpoint },
 				{
-					allowedContentTypes: ["application/json"],
+					allowedMediaTypes: ["application/json"],
 				},
 			);
 
@@ -642,7 +642,7 @@ describe("error handling", () => {
 			expect(response.status).toBe(200);
 		});
 
-		it("should work without allowedContentTypes configured", async () => {
+		it("should work without allowedMediaTypes configured", async () => {
 			const endpoint = createEndpoint(
 				"/post",
 				{

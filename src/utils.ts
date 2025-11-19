@@ -1,6 +1,6 @@
 import { APIError } from "./error";
 
-export async function getBody(request: Request, allowedContentTypes?: string[]) {
+export async function getBody(request: Request, allowedMediaTypes?: string[]) {
 	const contentType = request.headers.get("content-type") || "";
 	const normalizedContentType = contentType.toLowerCase();
 
@@ -8,9 +8,9 @@ export async function getBody(request: Request, allowedContentTypes?: string[]) 
 		return undefined;
 	}
 
-	// Validate content-type if allowedContentTypes is provided
-	if (allowedContentTypes && allowedContentTypes.length > 0) {
-		const isAllowed = allowedContentTypes.some((allowed) => {
+	// Validate content-type if allowedMediaTypes is provided
+	if (allowedMediaTypes && allowedMediaTypes.length > 0) {
+		const isAllowed = allowedMediaTypes.some((allowed) => {
 			// Normalize both content types for comparison
 			const normalizedContentTypeBase = normalizedContentType.split(";")[0].trim();
 			const normalizedAllowed = allowed.toLowerCase().trim();
@@ -22,7 +22,7 @@ export async function getBody(request: Request, allowedContentTypes?: string[]) 
 
 		if (!isAllowed) {
 			throw new APIError(415, {
-				message: `Content-Type "${contentType}" is not allowed. Allowed types: ${allowedContentTypes.join(", ")}`,
+				message: `Content-Type "${contentType}" is not allowed. Allowed types: ${allowedMediaTypes.join(", ")}`,
 				code: "UNSUPPORTED_MEDIA_TYPE",
 			});
 		}
@@ -67,7 +67,10 @@ export async function getBody(request: Request, allowedContentTypes?: string[]) 
 		return blob;
 	}
 
-	if (normalizedContentType.includes("application/stream") || request.body instanceof ReadableStream) {
+	if (
+		normalizedContentType.includes("application/stream") ||
+		request.body instanceof ReadableStream
+	) {
 		return request.body;
 	}
 

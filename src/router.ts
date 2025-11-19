@@ -28,19 +28,19 @@ export interface RouterConfig {
 	 */
 	onRequest?: (req: Request) => any | Promise<any>;
 	/**
-	 * List of allowed content types for the router
+	 * List of allowed media types (MIME types) for the router
 	 *
-	 * if provided, only the content types in the list will be allowed to be passed in the body.
+	 * if provided, only the media types in the list will be allowed to be passed in the body.
 	 *
-	 * If an endpoint has an allowed content types, it will override the router's allowed content types.
+	 * If an endpoint has allowed media types, it will override the router's allowed media types.
 	 *
 	 * @example
 	 * ```ts
 	 * const router = createRouter({
-	 * 		allowedContentTypes: ["application/json", "application/x-www-form-urlencoded"],
+	 * 		allowedMediaTypes: ["application/json", "application/x-www-form-urlencoded"],
 	 * 	})
 	 */
-	allowedContentTypes?: string[];
+	allowedMediaTypes?: string[];
 	/**
 	 * Open API route configuration
 	 */
@@ -177,9 +177,9 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 		const handler = route.data as Endpoint;
 
 		try {
-			// Determine which allowedContentTypes to use: endpoint-level overrides router-level
-			const allowedContentTypes =
-				handler.options.metadata?.allowedContentTypes || config?.allowedContentTypes;
+			// Determine which allowedMediaTypes to use: endpoint-level overrides router-level
+			const allowedMediaTypes =
+				handler.options.metadata?.allowedMediaTypes || config?.allowedMediaTypes;
 			const context = {
 				path,
 				method: request.method as "GET",
@@ -190,7 +190,7 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 					? undefined
 					: await getBody(
 							handler.options.cloneRequest ? request.clone() : request,
-							allowedContentTypes,
+							allowedMediaTypes,
 						),
 				query,
 				_flag: "router" as const,
