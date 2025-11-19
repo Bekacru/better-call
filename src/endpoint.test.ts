@@ -815,4 +815,221 @@ describe("onAPIError", () => {
 		expect(error).toBeDefined();
 		expect(error?.status).toBe("UNAUTHORIZED");
 	});
+
+	describe("allowedContentTypes", () => {
+		it("should allow requests with allowed content-type", async () => {
+			const endpoint = createEndpoint(
+				"/post",
+				{
+					method: "POST",
+					body: z.object({
+						name: z.string(),
+					}),
+					metadata: {
+						allowedContentTypes: ["application/json"],
+					},
+				},
+				async (c) => {
+					return c.body;
+				},
+			);
+
+			const request = new Request("http://localhost/post", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ name: "test" }),
+			});
+
+			const result = await endpoint({ request });
+			expect(result.name).toBe("test");
+		});
+
+		it("should reject requests with disallowed content-type", async () => {
+			const endpoint = createEndpoint(
+				"/post",
+				{
+					method: "POST",
+					body: z.object({
+						name: z.string(),
+					}),
+					metadata: {
+						allowedContentTypes: ["application/json"],
+					},
+				},
+				async (c) => {
+					return c.body;
+				},
+			);
+
+			const request = new Request("http://localhost/post", {
+				method: "POST",
+				headers: {
+					"Content-Type": "text/plain",
+				},
+				body: "plain text",
+			});
+
+			await expect(endpoint({ request })).rejects.toThrow();
+			try {
+				await endpoint({ request });
+			} catch (error: any) {
+				expect(error.status).toBe(415);
+				expect(error.body.code).toBe("UNSUPPORTED_MEDIA_TYPE");
+				expect(error.body.message).toContain("text/plain");
+				expect(error.body.message).toContain("application/json");
+			}
+		});
+
+		it("should handle multiple allowed content types", async () => {
+			const endpoint = createEndpoint(
+				"/post",
+				{
+					method: "POST",
+					body: z.object({
+						name: z.string(),
+					}),
+					metadata: {
+						allowedContentTypes: ["application/json", "application/x-www-form-urlencoded"],
+					},
+				},
+				async (c) => {
+					return c.body;
+				},
+			);
+
+			// Test JSON
+			const jsonRequest = new Request("http://localhost/post", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ name: "test" }),
+			});
+
+			const jsonResult = await endpoint({ request: jsonRequest });
+			expect(jsonResult.name).toBe("test");
+
+			// Test form-urlencoded
+			const formData = new URLSearchParams();
+			formData.append("name", "test");
+			const formRequest = new Request("http://localhost/post", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/x-www-form-urlencoded",
+				},
+				body: formData.toString(),
+			});
+
+			const formResult = await endpoint({ request: formRequest });
+			expect(formResult.name).toBe("test");
+		});
+
+		it("should handle content-type with charset parameter", async () => {
+			const endpoint = createEndpoint(
+				"/post",
+				{
+					method: "POST",
+					body: z.object({
+						name: z.string(),
+					}),
+					metadata: {
+						allowedContentTypes: ["application/json"],
+					},
+				},
+				async (c) => {
+					return c.body;
+				},
+			);
+
+			const request = new Request("http://localhost/post", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json; charset=utf-8",
+				},
+				body: JSON.stringify({ name: "test" }),
+			});
+
+			const result = await endpoint({ request });
+			expect(result.name).toBe("test");
+		});
+
+		it("should not validate content-type when no body is present", async () => {
+			const endpoint = createEndpoint(
+				"/get",
+				{
+					method: "GET",
+					metadata: {
+						allowedContentTypes: ["application/json"],
+					},
+				},
+				async () => {
+					return { message: "success" };
+				},
+			);
+
+			const request = new Request("http://localhost/get", {
+				method: "GET",
+			});
+
+			const result = await endpoint({ request });
+			expect(result.message).toBe("success");
+		});
+
+		it("should work without allowedContentTypes configured", async () => {
+			const endpoint = createEndpoint(
+				"/post",
+				{
+					method: "POST",
+					body: z.object({
+						name: z.string(),
+					}),
+				},
+				async (c) => {
+					return c.body;
+				},
+			);
+
+			const request = new Request("http://localhost/post", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ name: "test" }),
+			});
+
+			const result = await endpoint({ request });
+			expect(result.name).toBe("test");
+		});
+
+		it("should validate content-type case-insensitively", async () => {
+			const endpoint = createEndpoint(
+				"/post",
+				{
+					method: "POST",
+					body: z.object({
+						name: z.string(),
+					}),
+					metadata: {
+						allowedContentTypes: ["application/json"],
+					},
+				},
+				async (c) => {
+					return c.body;
+				},
+			);
+
+			const request = new Request("http://localhost/post", {
+				method: "POST",
+				headers: {
+					"Content-Type": "APPLICATION/JSON",
+				},
+				body: JSON.stringify({ name: "test" }),
+			});
+
+			const result = await endpoint({ request });
+			expect(result.name).toBe("test");
+		});
+	});
 });

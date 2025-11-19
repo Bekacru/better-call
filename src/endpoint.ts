@@ -136,6 +136,22 @@ export interface EndpointBaseOptions {
 		 */
 		SERVER_ONLY?: boolean;
 		/**
+		 * List of allowed content types for the endpoint
+		 *
+		 * if provided, only the content types in the list will be allowed to be passed in the body
+		 *
+		 * @example
+		 * ```ts
+		 * const endpoint = createEndpoint("/path", {
+		 * 		method: "POST",
+		 * 		allowedContentTypes: ["application/json", "application/x-www-form-urlencoded"],
+		 * 	}, async(ctx)=>{
+		 * 		const body = ctx.body
+		 * 	})
+		 * ```
+		 */
+		allowedContentTypes?: string[];
+		/**
 		 * Extra metadata
 		 */
 		[key: string]: any;
