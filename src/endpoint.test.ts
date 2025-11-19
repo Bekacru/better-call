@@ -385,6 +385,24 @@ describe("types", async () => {
 	});
 });
 
+describe("virtual endpoints", () => {
+	it("should work for path-less endpoints", async () => {
+		for (const value of [1, "hello", true]) {
+			const endpoint = createEndpoint(
+				{
+					method: "POST",
+				},
+				async (ctx) => {
+					expect(ctx.path).toBe("virtual:");
+					return value;
+				},
+			);
+			const response = await endpoint();
+			expect(response).toBe(value);
+		}
+	});
+});
+
 describe("response", () => {
 	describe("flat", () => {
 		it("should return primitive values", async () => {

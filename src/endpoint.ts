@@ -133,8 +133,19 @@ export interface EndpointBaseOptions {
 		};
 		/**
 		 * If enabled, endpoint won't be exposed over a router
+		 * @deprecated Use path-less endpoints instead
 		 */
 		SERVER_ONLY?: boolean;
+		/**
+		 * Defines the places where the endpoint will be available
+		 *
+		 * Possible options:
+		 * - `rpc` - the endpoint is exposed to the router, can be invoked directly and is available to the client
+		 * - `server` - the endpoint is exposed to the router, can be invoked directly, but is not available to the client
+		 * - `http` - the endpoint is only exposed to the router
+		 * @default "rpc"
+		 */
+		scope?: "rpc" | "server" | "http";
 		/**
 		 * List of allowed media types (MIME types) for the endpoint
 		 *
@@ -374,11 +385,32 @@ export type EndpointContext<Path extends string, Options extends EndpointOptions
 	) => APIError;
 };
 
-export const createEndpoint = <Path extends string, Options extends EndpointOptions, R>(
+type EndpointHandler<Path extends string, Options extends EndpointOptions, R> = (
+	context: EndpointContext<Path, Options>,
+) => Promise<R>;
+
+export function createEndpoint<Path extends string, Options extends EndpointOptions, R>(
 	path: Path,
 	options: Options,
-	handler: (context: EndpointContext<Path, Options>) => Promise<R>,
-): StrictEndpoint<Path, Options, R> => {
+	handler: EndpointHandler<Path, Options, R>,
+): StrictEndpoint<Path, Options, R>;
+
+export function createEndpoint<Options extends EndpointOptions, R>(
+	options: Options,
+	handler: EndpointHandler<never, Options, R>,
+): StrictEndpoint<never, Options, R>;
+
+export function createEndpoint<Path extends string, Options extends EndpointOptions, R>(
+	pathOrOptions: Path | Options,
+	handlerOrOptions: EndpointHandler<Path, Options, R> | Options,
+	handlerOrNever?: any,
+): StrictEndpoint<Path, Options, R> {
+	const path: string | undefined = typeof pathOrOptions === "string" ? pathOrOptions : undefined;
+	const options: Options =
+		typeof handlerOrOptions === "object" ? handlerOrOptions : (pathOrOptions as Options);
+	const handler: EndpointHandler<Path, Options, R> =
+		typeof handlerOrOptions === "function" ? handlerOrOptions : handlerOrNever;
+
 	if ((options.method === "GET" || options.method === "HEAD") && options.body) {
 		throw new BetterCallError("Body is not allowed with GET or HEAD methods");
 	}
@@ -474,7 +506,7 @@ export const createEndpoint = <Path extends string, Options extends EndpointOpti
 	internalHandler.options = options;
 	internalHandler.path = path;
 	return internalHandler as unknown as StrictEndpoint<Path, Options, R>;
-};
+}
 
 createEndpoint.create = <E extends { use?: Middleware[] }>(opts?: E) => {
 	return <Path extends string, Opts extends EndpointOptions, R extends Promise<any>>(

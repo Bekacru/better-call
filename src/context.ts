@@ -178,7 +178,7 @@ export const createInternalContext = async (
 		path,
 	}: {
 		options: EndpointOptions;
-		path: string;
+		path?: string;
 	},
 ) => {
 	const headers = new Headers();
@@ -206,7 +206,7 @@ export const createInternalContext = async (
 		...context,
 		body: data.body,
 		query: data.query,
-		path: context.path || path,
+		path: context.path || path || "virtual:",
 		context: "context" in context && context.context ? context.context : {},
 		returned: undefined as any,
 		headers: context?.headers,
