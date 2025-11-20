@@ -132,6 +132,11 @@ export interface EndpointBaseOptions {
 			query?: Record<string, any>;
 		};
 		/**
+		 * If enabled, endpoint won't be exposed over a router
+		 * @deprecated Use virtual endpoints instead
+		 */
+		SERVER_ONLY?: boolean;
+		/**
 		 * If disabled, the endpoint won't be exposed as a method
 		 */
 		isRPC?: boolean;

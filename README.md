@@ -414,12 +414,12 @@ Behind the scenes, the router uses [rou3](https://github.com/unjs/rou3) to match
 
 #### Virtual endpoints
 
-You can create virtual endpoints by prefixing your paths with `virtual:`. Virtual endpoints do not get exposed for routing, do not generate Open API docs and cannot be inferred through the [RPC client](#rpc-client).
+You can create virtual endpoints by using the `virtual:` protocol. Virtual endpoints do not get exposed for routing, do not generate Open API docs and cannot be inferred through the [RPC client](#rpc-client).
 
 ```ts
 import { createEndpoint, createRouter } from "better-call";
 
-const endpoint = createEndpoint("virtual:/item", {
+const endpoint = createEndpoint("virtual:", {
     method: "GET",
 }, async (ctx) => {
    return "ok";

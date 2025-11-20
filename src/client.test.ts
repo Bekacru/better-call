@@ -218,10 +218,21 @@ describe("client", () => {
 	});
 
 	it("should not infer client types for virtual and non-rpc endpoints", async () => {
-		const endpointServerOnly = createEndpoint(
-			"virtual:/test-server-only",
+		const endpointVirtual = createEndpoint(
+			"virtual:",
 			{
 				method: "GET",
+			},
+			async () => "",
+		);
+
+		const endpointServerOnly = createEndpoint(
+			"/test-server-only",
+			{
+				method: "GET",
+				metadata: {
+					SERVER_ONLY: true,
+				},
 			},
 			async () => "",
 		);
@@ -239,6 +250,7 @@ describe("client", () => {
 
 		const router = createRouter({
 			endpoint,
+			endpointVirtual,
 			endpointServerOnly,
 			endpointNonAction,
 		});

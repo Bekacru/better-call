@@ -49,7 +49,7 @@ type InferClientRoutes<T extends Record<string, Endpoint>> = {
 	[K in keyof T]: T[K] extends Endpoint<infer P, infer O>
 		? P extends `virtual:${string}`
 			? never
-			: O extends { metadata: { isRPC: false } }
+			: O extends { metadata: { isRPC: false } } | { metadata: { SERVER_ONLY: true } }
 				? never
 				: T[K]
 		: T[K];

@@ -117,7 +117,8 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 		if (!endpoint.options) {
 			continue;
 		}
-		if (endpoint.path.startsWith("virtual:")) continue;
+		if (endpoint.path.startsWith("virtual:") || endpoint.options?.metadata?.SERVER_ONLY)
+			continue;
 
 		const methods = Array.isArray(endpoint.options?.method)
 			? endpoint.options.method

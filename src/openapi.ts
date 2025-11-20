@@ -277,7 +277,7 @@ export async function generator(
 
 	Object.entries(endpoints).forEach(([_, value]) => {
 		const options = value.options as EndpointOptions;
-		if (value.path.startsWith("virtual:")) return;
+		if (value.path.startsWith("virtual:") || options?.metadata?.SERVER_ONLY) return;
 		if (options.method === "GET") {
 			paths[value.path] = {
 				get: {
