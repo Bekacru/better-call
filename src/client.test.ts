@@ -226,6 +226,14 @@ describe("client", () => {
 			async () => "",
 		);
 
+		const endpointVirtualWithPath = createEndpoint(
+			"virtual:/some-path",
+			{
+				method: "GET",
+			},
+			async () => "",
+		);
+
 		const endpointServerOnly = createEndpoint(
 			"/test-server-only",
 			{
@@ -237,7 +245,7 @@ describe("client", () => {
 			async () => "",
 		);
 
-		const endpointNonAction = createEndpoint(
+		const endpointNonRPC = createEndpoint(
 			"/test-non-action",
 			{
 				method: "GET",
@@ -251,8 +259,9 @@ describe("client", () => {
 		const router = createRouter({
 			endpoint,
 			endpointVirtual,
+			endpointVirtualWitPath: endpointVirtualWithPath,
 			endpointServerOnly,
-			endpointNonAction,
+			endpointNonAction: endpointNonRPC,
 		});
 
 		const client = createClient<typeof router>({
