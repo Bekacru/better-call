@@ -7,6 +7,7 @@ describe("infer param", () => {
 		expectTypeOf<InferParamPath<"/">>().toEqualTypeOf<{}>();
 		expectTypeOf<InferParamWildCard<"/">>().toEqualTypeOf<{}>();
 		expectTypeOf<InferParam<"/">>().toEqualTypeOf<Record<string, any> | undefined>();
+		expectTypeOf<InferParam<never>>().toEqualTypeOf<Record<string, any> | undefined>();
 	});
 	it("static path", () => {
 		expectTypeOf<InferParamPath<"/static/path">>().toEqualTypeOf<{}>();
