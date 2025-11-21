@@ -114,7 +114,7 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 	const middlewareRouter = createRou3Router();
 
 	for (const endpoint of Object.values(endpoints)) {
-		if (!endpoint.options) {
+		if (!endpoint.options || !endpoint.path) {
 			continue;
 		}
 		if (endpoint.options?.metadata?.SERVER_ONLY) continue;

@@ -25,6 +25,80 @@ describe("router", () => {
 		const text = await response.text();
 		expect(text).toBe("hello world");
 	});
+	it("should be able to route server or http scoped endpoints", async () => {
+		const endpointServerScoped = createEndpoint(
+			"/test-server-scoped",
+			{
+				method: "GET",
+				metadata: {
+					scope: "server",
+				},
+			},
+			async () => {
+				return "hello world";
+			},
+		);
+		const endpointHTTPScoped = createEndpoint(
+			"/test-http-scoped",
+			{
+				method: "GET",
+				metadata: {
+					scope: "http",
+				},
+			},
+			async () => {
+				return "hello world";
+			},
+		);
+		const router = createRouter({
+			endpointServerScoped,
+			endpointHTTPScoped,
+		});
+
+		const endpointServerScopedResponse = await router.handler(
+			new Request("http://localhost:3000/test-server-scoped"),
+		);
+		expect(endpointServerScopedResponse.status).toBe(200);
+
+		const endpointHTTPScopedResponse = await router.handler(
+			new Request("http://localhost:3000/test-http-scoped"),
+		);
+		expect(endpointHTTPScopedResponse.status).toBe(200);
+	});
+	it("should not route virtual endpoints", async () => {
+		const endpointVirtual = createEndpoint(
+			{
+				method: "GET",
+			},
+			async () => {
+				return "hello world";
+			},
+		);
+		const endpointServerOnly = createEndpoint(
+			"/test-server-only",
+			{
+				method: "GET",
+				metadata: {
+					SERVER_ONLY: true,
+				},
+			},
+			async () => {
+				return "hello world";
+			},
+		);
+		const router = createRouter({
+			endpointVirtual,
+			endpointServerOnly,
+		});
+
+		const endpointVirtualResponse = await router.handler(new Request("http://localhost:3000"));
+		expect(endpointVirtualResponse.status).toBe(404);
+
+		const endpointServerOnlyResponse = await router.handler(
+			new Request("http://localhost:3000/test-server-only"),
+		);
+		expect(endpointServerOnlyResponse.status).toBe(404);
+	});
 	it("should be able to router properly", async () => {
 		const routes: {
 			path: string;

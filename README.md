@@ -412,6 +412,60 @@ Bun.serve({
 
 Behind the scenes, the router uses [rou3](https://github.com/unjs/rou3) to match the endpoints and invoke the correct endpoint. You can look at the [rou3 documentation](https://github.com/unjs/rou3) for more information.
 
+#### Virtual endpoints
+
+You can create virtual endpoints by completely omitting the `path`. Virtual endpoints do not get exposed for routing, do not generate OpenAPI docs and cannot be inferred through the [RPC client](#rpc-client), but they can still be invoked directly:
+
+```ts
+import { createEndpoint, createRouter } from "better-call";
+
+const endpoint = createEndpoint({
+    method: "GET",
+}, async (ctx) => {
+   return "ok";
+})
+
+const response = await endpoint(); // this works
+
+const router = createRouter({ endpoint })
+
+Bun.serve({
+    fetch: router.handler // endpoint won't be routed through the router handler
+});
+
+```
+
+#### Scoped endpoints
+
+You can also create endpoints that are exposed for routing, but that cannot be inferred through the client by using the `metadata.scope` option:
+
+- `rpc` - the endpoint is exposed to the router, can be invoked directly and is available to the [RPC client](#rpc-client)
+- `server` - the endpoint is exposed to the router, can be invoked directly, but is not available to the client
+- `http` - the endpoint is only exposed to the router
+
+```ts
+import { createEndpoint, createRouter } from "better-call";
+
+const endpoint = createEndpoint("/item", {
+    method: "GET",
+    metadata: {
+        scope: "server"
+    },
+}, async (ctx) => {
+   return "ok";
+})
+
+const response = await endpoint(); // this works
+
+const router = createRouter({
+    endpoint
+})
+
+Bun.serve({
+    fetch: router.handler // endpoint won't be routed through the router handler
+})
+```
+
 #### Router Options
 
 **routerMiddleware:**

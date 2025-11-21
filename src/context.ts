@@ -104,21 +104,21 @@ export type InferInputMethod<
 			method: Method;
 		};
 
-export type InferParam<Path extends string> = IsEmptyObject<
-	InferParamPath<Path> & InferParamWildCard<Path>
-> extends true
+export type InferParam<Path extends string> = [Path] extends [never]
 	? Record<string, any> | undefined
-	: Prettify<InferParamPath<Path> & InferParamWildCard<Path>>;
+	: IsEmptyObject<InferParamPath<Path> & InferParamWildCard<Path>> extends true
+		? Record<string, any> | undefined
+		: Prettify<InferParamPath<Path> & InferParamWildCard<Path>>;
 
-export type InferParamInput<Path extends string> = IsEmptyObject<
-	InferParamPath<Path> & InferParamWildCard<Path>
-> extends true
-	? {
-			params?: Record<string, any>;
-		}
-	: {
-			params: Prettify<InferParamPath<Path> & InferParamWildCard<Path>>;
-		};
+export type InferParamInput<Path extends string> = [Path] extends [never]
+	? { params?: Record<string, any> }
+	: IsEmptyObject<InferParamPath<Path> & InferParamWildCard<Path>> extends true
+		? {
+				params?: Record<string, any>;
+			}
+		: {
+				params: Prettify<InferParamPath<Path> & InferParamWildCard<Path>>;
+			};
 
 export type InferRequest<Option extends EndpointOptions | MiddlewareOptions> =
 	Option["requireRequest"] extends true ? Request : Request | undefined;
@@ -178,7 +178,7 @@ export const createInternalContext = async (
 		path,
 	}: {
 		options: EndpointOptions;
-		path: string;
+		path?: string;
 	},
 ) => {
 	const headers = new Headers();
@@ -206,7 +206,7 @@ export const createInternalContext = async (
 		...context,
 		body: data.body,
 		query: data.query,
-		path: context.path || path,
+		path: context.path || path || "virtual:",
 		context: "context" in context && context.context ? context.context : {},
 		returned: undefined as any,
 		headers: context?.headers,

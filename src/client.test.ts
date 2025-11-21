@@ -217,6 +217,65 @@ describe("client", () => {
 		expectTypeOf<Parameters<typeof client>[0]>().toMatchTypeOf<"@post/test">();
 	});
 
+	it("should not infer client types for virtual and non-rpc scoped endpoints", async () => {
+		const endpointVirtual = createEndpoint(
+			{
+				method: "GET",
+			},
+			async () => "",
+		);
+
+		const endpointServerOnly = createEndpoint(
+			"/test-server-only",
+			{
+				method: "GET",
+				metadata: {
+					SERVER_ONLY: true,
+				},
+			},
+			async () => "",
+		);
+
+		const endpointServerScoped = createEndpoint(
+			"/test-server-scoped",
+			{
+				method: "GET",
+				metadata: {
+					scope: "server",
+				},
+			},
+			async () => "",
+		);
+
+		const endpointHTTPScoped = createEndpoint(
+			"/test-http-scoped",
+			{
+				method: "GET",
+				metadata: {
+					scope: "http",
+				},
+			},
+			async () => "",
+		);
+
+		const router = createRouter({
+			endpoint,
+			endpointVirtual,
+			endpointServerOnly,
+			endpointHTTPScoped,
+			endpointServerScoped,
+		});
+
+		const client = createClient<typeof router>({
+			baseURL: "http://localhost:3000",
+			customFetchImpl: async (url, init) => {
+				return new Response(null);
+			},
+		});
+
+		expectTypeOf<Parameters<typeof client>[0]>().toExtend<"@post/test">();
+	});
+
 	it("should not require an empty object", async () => {
 		const router = createRouter({
 			endpoint: createEndpoint(
