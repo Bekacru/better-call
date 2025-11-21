@@ -549,6 +549,31 @@ describe("response", () => {
 			});
 			expect(response.status).toBe(201);
 		});
+
+		it("should return a correct header asResponse", async () => {
+			const endpoint = createEndpoint(
+				"/path",
+				{
+					method: "POST",
+					status: 201,
+				},
+				async (ctx) => {
+					ctx.setHeader("X-Custom-Header", "hello world");
+					return ctx.json({ test: "response" });
+				},
+			);
+
+			const response = await endpoint({
+				asResponse: true,
+			});
+
+			const json = await response.json();
+			expect(json).toStrictEqual({
+				test: "response",
+			});
+			const headers = response.headers.get("X-Custom-Header");
+			expect(headers).toBe("hello world");
+		});
 	});
 
 	it("should return a js object response (asResponse)", async () => {
