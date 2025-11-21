@@ -21,6 +21,12 @@ export async function getBody(request: Request, allowedMediaTypes?: string[]) {
 		});
 
 		if (!isAllowed) {
+			if (!normalizedContentType) {
+				throw new APIError(415, {
+					message: `Content-Type is required. Allowed types: ${allowedMediaTypes.join(", ")}`,
+					code: "UNSUPPORTED_MEDIA_TYPE",
+				});
+			}
 			throw new APIError(415, {
 				message: `Content-Type "${contentType}" is not allowed. Allowed types: ${allowedMediaTypes.join(", ")}`,
 				code: "UNSUPPORTED_MEDIA_TYPE",
