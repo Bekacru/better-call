@@ -88,12 +88,25 @@ export function toResponse(data?: any, init?: ResponseInit): Response {
 		if (routerResponse instanceof Response) {
 			return routerResponse;
 		}
-		const headers = new Headers({
-			...routerResponse?.headers,
-			...data.headers,
-			...init?.headers,
-			"Content-Type": "application/json",
-		});
+		const headers = new Headers();
+		if (routerResponse?.headers) {
+			const headers = new Headers(routerResponse.headers);
+			for (const [key, value] of headers.entries()) {
+				headers.set(key, value);
+			}
+		}
+		if (data.headers) {
+			for (const [key, value] of new Headers(data.headers).entries()) {
+				headers.set(key, value);
+			}
+		}
+		if (init?.headers) {
+			for (const [key, value] of new Headers(init.headers).entries()) {
+				headers.set(key, value);
+			}
+		}
+
+		headers.set("Content-Type", "application/json");
 		return new Response(JSON.stringify(body), {
 			...routerResponse,
 			headers,
