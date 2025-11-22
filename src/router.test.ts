@@ -50,9 +50,22 @@ describe("router", () => {
 				return "hello world";
 			},
 		);
+		const endpointNonAction = createEndpoint(
+			"/test-non-action",
+			{
+				method: "GET",
+				metadata: {
+					isAction: false,
+				},
+			},
+			async () => {
+				return "hello world";
+			},
+		);
 		const router = createRouter({
 			endpointServerScoped,
 			endpointHTTPScoped,
+			endpointNonAction,
 		});
 
 		const endpointServerScopedResponse = await router.handler(
@@ -64,6 +77,11 @@ describe("router", () => {
 			new Request("http://localhost:3000/test-http-scoped"),
 		);
 		expect(endpointHTTPScopedResponse.status).toBe(200);
+
+		const endpointNonActionResponse = await router.handler(
+			new Request("http://localhost:3000/test-non-action"),
+		);
+		expect(endpointNonActionResponse.status).toBe(200);
 	});
 	it("should not route virtual endpoints", async () => {
 		const endpointVirtual = createEndpoint(

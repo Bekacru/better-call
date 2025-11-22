@@ -225,6 +225,17 @@ describe("client", () => {
 			async () => "",
 		);
 
+		const endpointNonAction = createEndpoint(
+			"/test-non-action",
+			{
+				method: "GET",
+				metadata: {
+					isAction: false,
+				},
+			},
+			async () => "",
+		);
+
 		const endpointServerOnly = createEndpoint(
 			"/test-server-only",
 			{
@@ -264,6 +275,7 @@ describe("client", () => {
 			endpointServerOnly,
 			endpointHTTPScoped,
 			endpointServerScoped,
+			endpointNonAction,
 		});
 
 		const client = createClient<typeof router>({

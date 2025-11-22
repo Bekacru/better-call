@@ -51,6 +51,7 @@ type InferClientRoutes<T extends Record<string, Endpoint>> = {
 				| { metadata: { scope: "http" } }
 				| { metadata: { scope: "server" } }
 				| { metadata: { SERVER_ONLY: true } }
+				| { metadata: { isAction: false } }
 			? never
 			: T[K]
 		: T[K];

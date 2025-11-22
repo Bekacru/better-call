@@ -137,6 +137,11 @@ export interface EndpointBaseOptions {
 		 */
 		SERVER_ONLY?: boolean;
 		/**
+		 * If enabled, endpoint won't be exposed as an action to the client
+		 * @deprecated Use path-less endpoints instead
+		 */
+		isAction?: boolean;
+		/**
 		 * Defines the places where the endpoint will be available
 		 *
 		 * Possible options:
