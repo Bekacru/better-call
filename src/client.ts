@@ -115,3 +115,5 @@ export const createClient = <R extends Router | Router["endpoints"]>(options: Cl
 		})) as any;
 	};
 };
+
+export { type EndpointDefinition, declareEndpoint } from "./shared";
