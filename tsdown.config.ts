@@ -6,6 +6,7 @@ export default defineConfig({
 		client: "src/client.ts",
 		node: "src/adapters/node/index.ts",
 	},
+	external: ["zod"],
 	dts: true,
 	sourcemap: true,
 	format: ["esm", "cjs"],

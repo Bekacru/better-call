@@ -40,14 +40,21 @@
     "type-fest": "^4.23.0",
     "typescript": "^5.6.0-beta",
     "valibot": "1.0.0-beta.15",
-    "vitest": "^3.1.1",
-    "zod": "^4.0.1"
+    "vitest": "^3.1.1"
   },
   "dependencies": {
     "@better-auth/utils": "^0.3.0",
     "@better-fetch/fetch": "^1.1.4",
     "rou3": "^0.5.1",
     "set-cookie-parser": "^2.7.1"
+  },
+  "peerDependencies": {
+    "zod": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "zod": {
+      "optional": true
+    }
   },
   "exports": {
     ".": {
