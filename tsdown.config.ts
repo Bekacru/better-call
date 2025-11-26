@@ -8,6 +8,7 @@ export default defineConfig({
 	},
 	external: ["zod"],
 	dts: true,
+	hash: false,
 	sourcemap: true,
 	format: ["esm", "cjs"],
 	target: "es2022",
