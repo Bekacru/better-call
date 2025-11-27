@@ -762,5 +762,40 @@ describe("error handling", () => {
 			const response = await router.handler(request);
 			expect(response.status).toBe(200);
 		});
+
+		it("should work with JSON structured suffixes", async () => {
+			// See https://datatracker.ietf.org/doc/html/rfc6839#section-3.1
+
+			const endpoint = createEndpoint(
+				"/post",
+				{
+					method: "POST",
+					body: z.object({
+						name: z.string(),
+					}),
+				},
+				async (c) => {
+					return c.body;
+				},
+			);
+
+			const router = createRouter(
+				{ endpoint },
+				{
+					allowedMediaTypes: ["application/scim+json"],
+				},
+			);
+
+			const request = new Request("http://localhost/post", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/scim+json",
+				},
+				body: JSON.stringify({ name: "test" }),
+			});
+
+			const response = await router.handler(request);
+			expect(response.status).toBe(200);
+		});
 	});
 });
