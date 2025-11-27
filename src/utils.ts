@@ -1,5 +1,7 @@
 import { APIError } from "./error";
 
+export const jsonContentTypeRegex = /^application\/([a-z0-9.+-]*\+)?json/i;
+
 export async function getBody(request: Request, allowedMediaTypes?: string[]) {
 	const contentType = request.headers.get("content-type") || "";
 	const normalizedContentType = contentType.toLowerCase();
@@ -34,7 +36,7 @@ export async function getBody(request: Request, allowedMediaTypes?: string[]) {
 		}
 	}
 
-	if (normalizedContentType.includes("application/json")) {
+	if (jsonContentTypeRegex.test(normalizedContentType)) {
 		return await request.json();
 	}
 
