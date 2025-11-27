@@ -312,13 +312,13 @@ export type EndpointContext<Path extends string, Options extends EndpointOptions
 	 * @param key - The key of the cookie
 	 * @param secret - The secret of the signed cookie
 	 * @param prefix - The prefix of the cookie between `__Secure-` and `__Host-`
-	 * @returns
+	 * @returns - The value of the cookie or null if the cookie is not found or false if the signature is invalid
 	 */
 	getSignedCookie: (
 		key: string,
 		secret: string,
 		prefix?: CookiePrefixOptions,
-	) => Promise<string | null>;
+	) => Promise<string | null | false>;
 	/**
 	 * Set a cookie value in the response
 	 *
