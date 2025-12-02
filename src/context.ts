@@ -1,5 +1,5 @@
 import type { EndpointOptions } from "./endpoint";
-import { _statusCode, APIError, ValidationError, type Status } from "./error";
+import { type statusCodes, _statusCode, APIError, ValidationError, type Status } from "./error";
 import type {
 	InferParamPath,
 	InferParamWildCard,
@@ -7,7 +7,7 @@ import type {
 	Prettify,
 	UnionToIntersection,
 } from "./helper";
-import type { Middleware, MiddlewareOptions } from "./middleware";
+import type { Middleware, MiddlewareContext, MiddlewareOptions } from "./middleware";
 import { runValidation } from "./validator";
 import {
 	getCookieKey,
@@ -104,21 +104,21 @@ export type InferInputMethod<
 			method: Method;
 		};
 
-export type InferParam<Path extends string> = IsEmptyObject<
-	InferParamPath<Path> & InferParamWildCard<Path>
-> extends true
+export type InferParam<Path extends string> = [Path] extends [never]
 	? Record<string, any> | undefined
-	: Prettify<InferParamPath<Path> & InferParamWildCard<Path>>;
+	: IsEmptyObject<InferParamPath<Path> & InferParamWildCard<Path>> extends true
+		? Record<string, any> | undefined
+		: Prettify<InferParamPath<Path> & InferParamWildCard<Path>>;
 
-export type InferParamInput<Path extends string> = IsEmptyObject<
-	InferParamPath<Path> & InferParamWildCard<Path>
-> extends true
-	? {
-			params?: Record<string, any>;
-		}
-	: {
-			params: Prettify<InferParamPath<Path> & InferParamWildCard<Path>>;
-		};
+export type InferParamInput<Path extends string> = [Path] extends [never]
+	? { params?: Record<string, any> }
+	: IsEmptyObject<InferParamPath<Path> & InferParamWildCard<Path>> extends true
+		? {
+				params?: Record<string, any>;
+			}
+		: {
+				params: Prettify<InferParamPath<Path> & InferParamWildCard<Path>>;
+			};
 
 export type InferRequest<Option extends EndpointOptions | MiddlewareOptions> =
 	Option["requireRequest"] extends true ? Request : Request | undefined;
@@ -166,6 +166,7 @@ export type InputContext<
 	InferHeadersInput<Options> & {
 		asResponse?: boolean;
 		returnHeaders?: boolean;
+		returnStatus?: boolean;
 		use?: Middleware[];
 		path?: string;
 	};
@@ -177,10 +178,12 @@ export const createInternalContext = async (
 		path,
 	}: {
 		options: EndpointOptions;
-		path: string;
+		path?: string;
 	},
 ) => {
 	const headers = new Headers();
+	let responseStatus: Status | undefined = undefined;
+
 	const { data, error } = await runValidation(options, context);
 	if (error) {
 		throw new ValidationError(error.message, error.issues);
@@ -195,11 +198,12 @@ export const createInternalContext = async (
 				: null;
 	const requestCookies = requestHeaders?.get("cookie");
 	const parsedCookies = requestCookies ? parseCookies(requestCookies) : undefined;
+
 	const internalContext = {
 		...context,
 		body: data.body,
 		query: data.query,
-		path: context.path || path,
+		path: context.path || path || "virtual:",
 		context: "context" in context && context.context ? context.context : {},
 		returned: undefined as any,
 		headers: context?.headers,
@@ -262,7 +266,7 @@ export const createInternalContext = async (
 			return new APIError("FOUND", undefined, headers);
 		},
 		error: (
-			status: keyof typeof _statusCode | Status,
+			status: keyof typeof statusCodes | Status,
 			body?:
 				| {
 						message?: string;
@@ -272,6 +276,9 @@ export const createInternalContext = async (
 			headers?: HeadersInit,
 		) => {
 			return new APIError(status, body, headers);
+		},
+		setStatus: (status: Status) => {
+			responseStatus = status;
 		},
 		json: (
 			json: Record<string, any>,
@@ -294,6 +301,9 @@ export const createInternalContext = async (
 			};
 		},
 		responseHeaders: headers,
+		get responseStatus() {
+			return responseStatus;
+		},
 	};
 	//if context was shimmed through the input we want to apply it
 	for (const middleware of options.use || []) {

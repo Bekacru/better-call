@@ -1,17 +1,46 @@
 import { APIError } from "./error";
 
-export async function getBody(request: Request) {
+export const jsonContentTypeRegex = /^application\/([a-z0-9.+-]*\+)?json/i;
+
+export async function getBody(request: Request, allowedMediaTypes?: string[]) {
 	const contentType = request.headers.get("content-type") || "";
+	const normalizedContentType = contentType.toLowerCase();
 
 	if (!request.body) {
 		return undefined;
 	}
 
-	if (contentType.includes("application/json")) {
+	// Validate content-type if allowedMediaTypes is provided
+	if (allowedMediaTypes && allowedMediaTypes.length > 0) {
+		const isAllowed = allowedMediaTypes.some((allowed) => {
+			// Normalize both content types for comparison
+			const normalizedContentTypeBase = normalizedContentType.split(";")[0].trim();
+			const normalizedAllowed = allowed.toLowerCase().trim();
+			return (
+				normalizedContentTypeBase === normalizedAllowed ||
+				normalizedContentTypeBase.includes(normalizedAllowed)
+			);
+		});
+
+		if (!isAllowed) {
+			if (!normalizedContentType) {
+				throw new APIError(415, {
+					message: `Content-Type is required. Allowed types: ${allowedMediaTypes.join(", ")}`,
+					code: "UNSUPPORTED_MEDIA_TYPE",
+				});
+			}
+			throw new APIError(415, {
+				message: `Content-Type "${contentType}" is not allowed. Allowed types: ${allowedMediaTypes.join(", ")}`,
+				code: "UNSUPPORTED_MEDIA_TYPE",
+			});
+		}
+	}
+
+	if (jsonContentTypeRegex.test(normalizedContentType)) {
 		return await request.json();
 	}
 
-	if (contentType.includes("application/x-www-form-urlencoded")) {
+	if (normalizedContentType.includes("application/x-www-form-urlencoded")) {
 		const formData = await request.formData();
 		const result: Record<string, string> = {};
 		formData.forEach((value, key) => {
@@ -20,7 +49,7 @@ export async function getBody(request: Request) {
 		return result;
 	}
 
-	if (contentType.includes("multipart/form-data")) {
+	if (normalizedContentType.includes("multipart/form-data")) {
 		const formData = await request.formData();
 		const result: Record<string, any> = {};
 		formData.forEach((value, key) => {
@@ -29,24 +58,27 @@ export async function getBody(request: Request) {
 		return result;
 	}
 
-	if (contentType.includes("text/plain")) {
+	if (normalizedContentType.includes("text/plain")) {
 		return await request.text();
 	}
 
-	if (contentType.includes("application/octet-stream")) {
+	if (normalizedContentType.includes("application/octet-stream")) {
 		return await request.arrayBuffer();
 	}
 
 	if (
-		contentType.includes("application/pdf") ||
-		contentType.includes("image/") ||
-		contentType.includes("video/")
+		normalizedContentType.includes("application/pdf") ||
+		normalizedContentType.includes("image/") ||
+		normalizedContentType.includes("video/")
 	) {
 		const blob = await request.blob();
 		return blob;
 	}
 
-	if (contentType.includes("application/stream") || request.body instanceof ReadableStream) {
+	if (
+		normalizedContentType.includes("application/stream") ||
+		request.body instanceof ReadableStream
+	) {
 		return request.body;
 	}
 

@@ -9,15 +9,27 @@ type HasRequired<
 		query?: any;
 		params?: any;
 	},
-> = HasRequiredKeys<T> extends true
-	? HasRequiredKeys<T["body"]> extends false
-		? HasRequiredKeys<T["query"]> extends false
-			? HasRequiredKeys<T["params"]> extends false
-				? false
-				: true
-			: true
-		: true
-	: true;
+> = T["body"] extends object
+	? HasRequiredKeys<T["body"]> extends true
+		? true
+		: T["query"] extends object
+			? HasRequiredKeys<T["query"]> extends true
+				? true
+				: T["params"] extends object
+					? HasRequiredKeys<T["params"]>
+					: false
+			: T["params"] extends object
+				? HasRequiredKeys<T["params"]>
+				: false
+	: T["query"] extends object
+		? HasRequiredKeys<T["query"]> extends true
+			? true
+			: T["params"] extends object
+				? HasRequiredKeys<T["params"]>
+				: false
+		: T["params"] extends object
+			? HasRequiredKeys<T["params"]>
+			: false;
 
 type InferContext<T> = T extends (ctx: infer Ctx) => any
 	? Ctx extends object
@@ -33,9 +45,13 @@ type WithRequired<T, K> = T & {
 	[P in K extends string ? K : never]-?: T[P extends keyof T ? P : never];
 };
 
-type WithoutServerOnly<T extends Record<string, Endpoint>> = {
+type InferClientRoutes<T extends Record<string, Endpoint>> = {
 	[K in keyof T]: T[K] extends Endpoint<any, infer O>
-		? O extends { metadata: { SERVER_ONLY: true } }
+		? O extends
+				| { metadata: { scope: "http" } }
+				| { metadata: { scope: "server" } }
+				| { metadata: { SERVER_ONLY: true } }
+				| { metadata: { isAction: false } }
 			? never
 			: T[K]
 		: T[K];
@@ -65,7 +81,7 @@ export type RequiredOptionKeys<
 
 export const createClient = <R extends Router | Router["endpoints"]>(options: ClientOptions) => {
 	const fetch = createFetch(options);
-	type API = WithoutServerOnly<
+	type API = InferClientRoutes<
 		R extends { endpoints: Record<string, Endpoint> } ? R["endpoints"] : R
 	>;
 	type Options = API extends {

@@ -1,9 +1,9 @@
-import { createRouter as createRou3Router, addRoute, findRoute, findAllRoutes } from "rou3";
-import { createEndpoint, type Endpoint } from "./endpoint";
-import { generator, getHTML } from "./openapi";
+import { addRoute, createRouter as createRou3Router, findAllRoutes, findRoute } from "rou3";
+import { type Endpoint, createEndpoint } from "./endpoint";
 import type { Middleware } from "./middleware";
-import { getBody, isAPIError } from "./utils";
+import { generator, getHTML } from "./openapi";
 import { toResponse } from "./to-response";
+import { getBody, isAPIError } from "./utils";
 
 export interface RouterConfig {
 	throwError?: boolean;
@@ -27,6 +27,20 @@ export interface RouterConfig {
 	 * A callback to run before any request
 	 */
 	onRequest?: (req: Request) => any | Promise<any>;
+	/**
+	 * List of allowed media types (MIME types) for the router
+	 *
+	 * if provided, only the media types in the list will be allowed to be passed in the body.
+	 *
+	 * If an endpoint has allowed media types, it will override the router's allowed media types.
+	 *
+	 * @example
+	 * ```ts
+	 * const router = createRouter({
+	 * 		allowedMediaTypes: ["application/json", "application/x-www-form-urlencoded"],
+	 * 	})
+	 */
+	allowedMediaTypes?: string[];
 	/**
 	 * Open API route configuration
 	 */
@@ -100,7 +114,7 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 	const middlewareRouter = createRou3Router();
 
 	for (const endpoint of Object.values(endpoints)) {
-		if (!endpoint.options) {
+		if (!endpoint.options || !endpoint.path) {
 			continue;
 		}
 		if (endpoint.options?.metadata?.SERVER_ONLY) continue;
@@ -161,22 +175,28 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 		});
 
 		const handler = route.data as Endpoint;
-		const context = {
-			path,
-			method: request.method as "GET",
-			headers: request.headers,
-			params: route.params ? (JSON.parse(JSON.stringify(route.params)) as any) : {},
-			request: request,
-			body: handler.options.disableBody
-				? undefined
-				: await getBody(handler.options.cloneRequest ? request.clone() : request),
-			query,
-			_flag: "router" as const,
-			asResponse: true,
-			context: config?.routerContext,
-		};
 
 		try {
+			// Determine which allowedMediaTypes to use: endpoint-level overrides router-level
+			const allowedMediaTypes =
+				handler.options.metadata?.allowedMediaTypes || config?.allowedMediaTypes;
+			const context = {
+				path,
+				method: request.method as "GET",
+				headers: request.headers,
+				params: route.params ? (JSON.parse(JSON.stringify(route.params)) as any) : {},
+				request: request,
+				body: handler.options.disableBody
+					? undefined
+					: await getBody(
+							handler.options.cloneRequest ? request.clone() : request,
+							allowedMediaTypes,
+						),
+				query,
+				_flag: "router" as const,
+				asResponse: true,
+				context: config?.routerContext,
+			};
 			const middlewareRoutes = findAllRoutes(middlewareRouter, "*", path);
 			if (middlewareRoutes?.length) {
 				for (const { data: middleware, params } of middlewareRoutes) {
@@ -193,9 +213,30 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 			const response = (await handler(context)) as Response;
 			return response;
 		} catch (error) {
+			if (config?.onError) {
+				try {
+					const errorResponse = await config.onError(error);
+
+					if (errorResponse instanceof Response) {
+						return toResponse(errorResponse);
+					}
+				} catch (error) {
+					if (isAPIError(error)) {
+						return toResponse(error);
+					}
+
+					throw error;
+				}
+			}
+
+			if (config?.throwError) {
+				throw error;
+			}
+
 			if (isAPIError(error)) {
 				return toResponse(error);
 			}
+
 			console.error(`# SERVER_ERROR: `, error);
 			return new Response(null, {
 				status: 500,

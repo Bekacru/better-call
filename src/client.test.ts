@@ -2,7 +2,7 @@ import { describe, expect, expectTypeOf, it } from "vitest";
 import { createClient } from "../src/client";
 import { z } from "zod";
 import { createEndpoint } from "./endpoint";
-import { createRouter } from "./router";
+import { createRouter, type Router } from "./router";
 import { createMiddleware } from "./middleware";
 
 describe("client", () => {
@@ -215,5 +215,108 @@ describe("client", () => {
 			baseURL: "http://localhost:3000",
 		});
 		expectTypeOf<Parameters<typeof client>[0]>().toMatchTypeOf<"@post/test">();
+	});
+
+	it("should not infer client types for virtual and non-rpc scoped endpoints", async () => {
+		const endpointVirtual = createEndpoint(
+			{
+				method: "GET",
+			},
+			async () => "",
+		);
+
+		const endpointNonAction = createEndpoint(
+			"/test-non-action",
+			{
+				method: "GET",
+				metadata: {
+					isAction: false,
+				},
+			},
+			async () => "",
+		);
+
+		const endpointServerOnly = createEndpoint(
+			"/test-server-only",
+			{
+				method: "GET",
+				metadata: {
+					SERVER_ONLY: true,
+				},
+			},
+			async () => "",
+		);
+
+		const endpointServerScoped = createEndpoint(
+			"/test-server-scoped",
+			{
+				method: "GET",
+				metadata: {
+					scope: "server",
+				},
+			},
+			async () => "",
+		);
+
+		const endpointHTTPScoped = createEndpoint(
+			"/test-http-scoped",
+			{
+				method: "GET",
+				metadata: {
+					scope: "http",
+				},
+			},
+			async () => "",
+		);
+
+		const router = createRouter({
+			endpoint,
+			endpointVirtual,
+			endpointServerOnly,
+			endpointHTTPScoped,
+			endpointServerScoped,
+			endpointNonAction,
+		});
+
+		const client = createClient<typeof router>({
+			baseURL: "http://localhost:3000",
+			customFetchImpl: async (url, init) => {
+				return new Response(null);
+			},
+		});
+
+		expectTypeOf<Parameters<typeof client>[0]>().toExtend<"@post/test">();
+	});
+
+	it("should not require an empty object", async () => {
+		const router = createRouter({
+			endpoint: createEndpoint(
+				"/test",
+				{
+					method: "POST",
+				},
+				async (ctx) => {
+					return { status: 200, body: { hello: "world" } };
+				},
+			),
+			getEndpoint: createEndpoint(
+				"/test2",
+				{
+					method: "GET",
+				},
+				async (ctx) => {
+					return { status: 200, body: { hello: "world" } };
+				},
+			),
+		});
+		const client = createClient<typeof router>({
+			baseURL: "http://localhost:3000",
+			customFetchImpl: async (url, init) => {
+				return new Response(null);
+			},
+		});
+		expectTypeOf<Parameters<typeof client>[0]>().toExtend<"@post/test" | "/test2">();
+		client("@post/test");
+		client("/test2");
 	});
 });

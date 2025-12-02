@@ -78,7 +78,27 @@ const items = await client("/item", {
 
 ### Returning non 200 responses
 
-To return a non 200 response, you will need to throw Better Call's `APIError` error. If the endpoint is called as a function, the error will be thrown but if it's mounted to a router, the error will be converted to a response object with the correct status code and headers.
+There are several supported ways to a non 200 response:
+
+You can use the `ctx.setStatus(status)` helper to change the default status code of a successful response:
+
+```ts
+const createItem = createEndpoint("/item", {
+    method: "POST",
+    body: z.object({
+        id: z.string()
+    })
+}, async (ctx) => {
+    ctx.setStatus(201);
+    return {
+        item: {
+            id: ctx.body.id
+        }
+    }
+})
+```
+
+Sometimes, you want to respond with an error, in those cases you will need to throw Better Call's `APIError` error. If the endpoint is called as a function, the error will be thrown but if it's mounted to a router, the error will be converted to a response object with the correct status code and headers.
 
 ```ts
 const createItem = createEndpoint("/item", {
@@ -119,6 +139,23 @@ const createItem = createEndpoint("/item", {
             id: ctx.body.id
         }
     }
+})
+```
+
+Finally, you can return a new `Response` object. In this case, the `ctx.setStatus()` call will be ignored, as the `Response` will have completely control over the final status code:
+
+```ts
+const createItem = createEndpoint("/item", {
+    method: "POST",
+    body: z.object({
+        id: z.string()
+    })
+}, async (ctx) => {
+    return Response.json({
+        item: {
+            id: ctx.body.id
+        }
+    }, { status: 201 });
 })
 ```
 
@@ -193,6 +230,93 @@ const createItem = createEndpoint("/item", {
     }
 })
 ```
+
+#### Allowed Media Types
+
+You can restrict which media types (MIME types) are allowed for request bodies using the `allowedMediaTypes` option. This can be configured at both the router level and the endpoint level, with endpoint-level configuration taking precedence.
+
+When a request is made with a disallowed media type, the endpoint will return a `415 Unsupported Media Type` error.
+
+**Router-level configuration:**
+
+```ts
+const router = createRouter({
+    createItem,
+    updateItem
+}, {
+    // All endpoints in this router will only accept JSON
+    allowedMediaTypes: ["application/json"]
+})
+```
+
+**Endpoint-level configuration:**
+
+```ts
+const uploadFile = createEndpoint("/upload", {
+    method: "POST",
+    metadata: {
+        // This endpoint will only accept form data
+        allowedMediaTypes: ["multipart/form-data"]
+    }
+}, async (ctx) => {
+    return { success: true }
+})
+```
+
+**Multiple media types:**
+
+```ts
+const createItem = createEndpoint("/item", {
+    method: "POST",
+    body: z.object({
+        id: z.string()
+    }),
+    metadata: {
+        // Accept both JSON and form-urlencoded
+        allowedMediaTypes: [
+            "application/json",
+            "application/x-www-form-urlencoded"
+        ]
+    }
+}, async (ctx) => {
+    return {
+        item: {
+            id: ctx.body.id
+        }
+    }
+})
+```
+
+**Endpoint overriding router:**
+
+```ts
+const router = createRouter({
+    createItem,
+    uploadFile
+}, {
+    // Default: only accept JSON
+    allowedMediaTypes: ["application/json"]
+})
+
+const uploadFile = createEndpoint("/upload", {
+    method: "POST",
+    metadata: {
+        // This endpoint overrides the router setting
+        allowedMediaTypes: ["multipart/form-data", "application/octet-stream"]
+    }
+}, async (ctx) => {
+    return { success: true }
+})
+```
+
+Common media types:
+- `application/json` - JSON data
+- `application/x-www-form-urlencoded` - Form data
+- `multipart/form-data` - File uploads
+- `text/plain` - Plain text
+- `application/octet-stream` - Binary data
+
+> **Note:** The validation is case-insensitive and handles charset parameters automatically (e.g., `application/json; charset=utf-8` will match `application/json`).
 
 #### Require Headers
 
@@ -288,6 +412,60 @@ Bun.serve({
 
 Behind the scenes, the router uses [rou3](https://github.com/unjs/rou3) to match the endpoints and invoke the correct endpoint. You can look at the [rou3 documentation](https://github.com/unjs/rou3) for more information.
 
+#### Virtual endpoints
+
+You can create virtual endpoints by completely omitting the `path`. Virtual endpoints do not get exposed for routing, do not generate OpenAPI docs and cannot be inferred through the [RPC client](#rpc-client), but they can still be invoked directly:
+
+```ts
+import { createEndpoint, createRouter } from "better-call";
+
+const endpoint = createEndpoint({
+    method: "GET",
+}, async (ctx) => {
+   return "ok";
+})
+
+const response = await endpoint(); // this works
+
+const router = createRouter({ endpoint })
+
+Bun.serve({
+    fetch: router.handler // endpoint won't be routed through the router handler
+});
+
+```
+
+#### Scoped endpoints
+
+You can also create endpoints that are exposed for routing, but that cannot be inferred through the client by using the `metadata.scope` option:
+
+- `rpc` - the endpoint is exposed to the router, can be invoked directly and is available to the [RPC client](#rpc-client)
+- `server` - the endpoint is exposed to the router, can be invoked directly, but is not available to the client
+- `http` - the endpoint is only exposed to the router
+
+```ts
+import { createEndpoint, createRouter } from "better-call";
+
+const endpoint = createEndpoint("/item", {
+    method: "GET",
+    metadata: {
+        scope: "server"
+    },
+}, async (ctx) => {
+   return "ok";
+})
+
+const response = await endpoint(); // this works
+
+const router = createRouter({
+    endpoint
+})
+
+Bun.serve({
+    fetch: router.handler // endpoint won't be routed through the router handler
+})
+```
+
 #### Router Options
 
 **routerMiddleware:**
@@ -314,9 +492,48 @@ const router = createRouter({
 
 **basePath**: The base path for the router. All paths will be relative to this path.
 
-**onError**: The router will call this function if an error occurs in the middleware or the endpoint.
+**onError**: The router will call this function if an error occurs in the middleware or the endpoint. This function receives the error as a parameter and can return different types of values:
 
-**throwError**: If true, the router will throw an error if an error occurs in the middleware or the endpoint.
+- If it returns a `Response` object, the router will use it as the HTTP response.
+- If it throws a new error, the router will handle it based on its type (if it's an `APIError`, it will be converted to a response; otherwise, it will be re-thrown).
+- If it returns nothing (void), the router will proceed with default error handling (checking `throwError` setting).
+
+```ts
+const router = createRouter({
+    /**
+     * This error handler can be set as async function or not.
+     */
+    onError: async (error) => {
+        // Log the error
+        console.error("An error occurred:", error);
+        
+        // Return a custom response
+        return new Response(JSON.stringify({ message: "Something went wrong" }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" }
+        });
+    }
+});
+```
+
+**throwError**: If true, the router will throw an error if an error occurs in the middleware or the endpoint. If false (default), the router will handle errors internally. This setting is still relevant even when `onError` is provided, as it determines the behavior when:
+
+1. No `onError` handler is provided, or
+2. The `onError` handler returns void (doesn't return a Response or throw an error)
+
+- For `APIError` instances, it will convert them to appropriate HTTP responses.
+- For other errors, it will return a 500 Internal Server Error response.
+
+```ts
+const router = createRouter({
+    throwError: true, // Errors will be propagated to higher-level handlers
+    onError: (error) => {
+        // Log the error but let throwError handle it
+        console.error("An error occurred:", error);
+        // No return value, so throwError setting will determine behavior
+    }
+});
+```
 
 #### Node Adapter
 

@@ -1,7 +1,7 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { createEndpoint } from "./endpoint";
 import { z } from "zod";
-import { APIError } from "./error";
+import { APIError, BetterCallError } from "./error";
 import { createMiddleware } from "./middleware";
 import * as v from "valibot";
 
@@ -10,7 +10,7 @@ describe("validation", (it) => {
 		const endpoint = createEndpoint(
 			"/test",
 			{
-				method: "GET",
+				method: "POST",
 				body: v.object({
 					name: v.string(),
 				}),
@@ -56,7 +56,7 @@ describe("validation", (it) => {
 		const endpoint = createEndpoint(
 			"/test",
 			{
-				method: "GET",
+				method: "POST",
 				body: z.object({
 					name: z.string().transform((val) => `${val}-validated`),
 				}),
@@ -94,6 +94,24 @@ describe("validation", (it) => {
 		});
 		expect(response.name).toBe("test-validated");
 	});
+
+	it("should throw BetterCallError if body is not allowed with GET or HEAD", async () => {
+		expect(() =>
+			createEndpoint(
+				"/test",
+				//@ts-expect-error - body should not be allowed with GET or HEAD
+				{
+					method: "GET",
+					body: z.object({
+						name: z.string(),
+					}),
+				},
+				async (ctx) => {
+					return ctx.body;
+				},
+			),
+		).toThrowError(BetterCallError);
+	});
 });
 
 describe("types", async () => {
@@ -101,7 +119,7 @@ describe("types", async () => {
 		createEndpoint(
 			"/test",
 			{
-				method: "GET",
+				method: "POST",
 				body: z.object({
 					name: z.string(),
 				}),
@@ -114,7 +132,7 @@ describe("types", async () => {
 		createEndpoint(
 			"/test",
 			{
-				method: "GET",
+				method: "POST",
 				body: z.object({
 					name: z.string().optional(),
 				}),
@@ -127,7 +145,7 @@ describe("types", async () => {
 		createEndpoint(
 			"/test",
 			{
-				method: "GET",
+				method: "POST",
 				body: z
 					.object({
 						name: z.string(),
@@ -329,6 +347,60 @@ describe("types", async () => {
 		const objResponse1 = await endpoint1({ asResponse: true });
 		expectTypeOf(objResponse1).toEqualTypeOf<Response>();
 	});
+
+	it("shouldn't allow GET or HEAD with body", async () => {
+		try {
+			createEndpoint(
+				"/path",
+				//@ts-expect-error - body should not be allowed with GET or HEAD
+				{
+					method: "GET",
+					body: z.object({
+						name: z.string(),
+					}),
+				},
+				async (ctx) => {
+					return ctx.body;
+				},
+			);
+
+			createEndpoint(
+				"/path",
+				//@ts-expect-error - body should not be allowed with HEAD
+				{
+					method: "HEAD",
+					body: z.object({
+						name: z.string(),
+					}),
+				},
+				async (ctx) => {
+					throw ctx.error("BAD_REQUEST", {
+						message: "Body is not allowed with HEAD",
+					});
+				},
+			);
+		} catch (e) {
+			//should throw BetterCallError
+		}
+	});
+});
+
+describe("virtual endpoints", () => {
+	it("should work for path-less endpoints", async () => {
+		for (const value of [1, "hello", true]) {
+			const endpoint = createEndpoint(
+				{
+					method: "POST",
+				},
+				async (ctx) => {
+					expect(ctx.path).toBe("virtual:");
+					return value;
+				},
+			);
+			const response = await endpoint();
+			expect(response).toBe(value);
+		}
+	});
 });
 
 describe("response", () => {
@@ -347,6 +419,110 @@ describe("response", () => {
 				const response = await endpoint();
 				expect(response).toBe(value);
 			}
+		});
+	});
+
+	describe("setStatus", () => {
+		it("should provide access to the response status on a plain object", async () => {
+			const endpoint = createEndpoint(
+				"/path",
+				{
+					method: "POST",
+				},
+				async (ctx) => {
+					ctx.setStatus(201);
+					return { test: "response" };
+				},
+			);
+			const response = await endpoint({
+				returnStatus: true,
+			});
+			expect(response.status).toBe(201);
+			expect(response.response).toMatchObject({
+				test: "response",
+			});
+		});
+
+		it("should provide access to the response status and headers on a plain object", async () => {
+			const endpoint = createEndpoint(
+				"/path",
+				{
+					method: "POST",
+				},
+				async (ctx) => {
+					ctx.setStatus(201);
+					return { test: "response" };
+				},
+			);
+			const response = await endpoint({
+				returnStatus: true,
+				returnHeaders: true,
+			});
+			expect(response.status).toBe(201);
+			expect(response.headers).toBeInstanceOf(Headers);
+			expect(response.response).toMatchObject({
+				test: "response",
+			});
+		});
+
+		it("should provide access to the response status and headers on ctx.json()", async () => {
+			const endpoint = createEndpoint(
+				"/path",
+				{
+					method: "POST",
+				},
+				async (ctx) => {
+					ctx.setStatus(201);
+					return ctx.json({ test: "response" });
+				},
+			);
+			const response = await endpoint({
+				returnStatus: true,
+			});
+			expect(response.status).toBe(201);
+			expect(response.response).toMatchObject({
+				test: "response",
+			});
+		});
+
+		it("should provide access to the response status and headers on a plain object (as response)", async () => {
+			const endpoint = createEndpoint(
+				"/path",
+				{
+					method: "POST",
+				},
+				async (ctx) => {
+					ctx.setStatus(201);
+					return { test: "response" };
+				},
+			);
+			const response = await endpoint({
+				asResponse: true,
+			});
+			expect(response.status).toBe(201);
+			expect(response.headers).toBeInstanceOf(Headers);
+			expect(await response.json()).toMatchObject({
+				test: "response",
+			});
+		});
+
+		it("should provide access to the response status and headers on a response object", async () => {
+			const endpoint = createEndpoint(
+				"/path",
+				{
+					method: "POST",
+				},
+				async (ctx) => {
+					ctx.setStatus(201); // ignored
+					return Response.json({ test: "response" });
+				},
+			);
+			const response = await endpoint();
+			expect(response.status).toBe(200);
+			expect(response.headers).toBeInstanceOf(Headers);
+			expect(await response.json()).toMatchObject({
+				test: "response",
+			});
 		});
 	});
 
@@ -390,6 +566,31 @@ describe("response", () => {
 				test: "response",
 			});
 			expect(response.status).toBe(201);
+		});
+
+		it("should return a correct header asResponse", async () => {
+			const endpoint = createEndpoint(
+				"/path",
+				{
+					method: "POST",
+					status: 201,
+				},
+				async (ctx) => {
+					ctx.setHeader("X-Custom-Header", "hello world");
+					return ctx.json({ test: "response" });
+				},
+			);
+
+			const response = await endpoint({
+				asResponse: true,
+			});
+
+			const json = await response.json();
+			expect(json).toStrictEqual({
+				test: "response",
+			});
+			const headers = response.headers.get("X-Custom-Header");
+			expect(headers).toBe("hello world");
 		});
 	});
 

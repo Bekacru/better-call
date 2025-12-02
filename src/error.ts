@@ -55,18 +55,22 @@ export function makeErrorForHideStackFrame<B extends new (...args: any[]) => Err
 		get errorStack() {
 			return this.#hiddenStack;
 		}
-
-		// This is a workaround for wpt tests that expect that the error
-		// constructor has a `name` property of the base class.
-		get ["constructor"]() {
-			return clazz;
-		}
 	}
+
+	// This is a workaround for wpt tests that expect that the error
+	// constructor has a `name` property of the base class.
+	Object.defineProperty(HideStackFramesError.prototype, "constructor", {
+		get() {
+			return clazz;
+		},
+		enumerable: false,
+		configurable: true,
+	});
 
 	return HideStackFramesError as any;
 }
 
-export const _statusCode = {
+export const statusCodes = {
 	OK: 200,
 	CREATED: 201,
 	ACCEPTED: 202,
@@ -186,7 +190,7 @@ export type Status =
 
 class InternalAPIError extends Error {
 	constructor(
-		public status: keyof typeof _statusCode | Status = "INTERNAL_SERVER_ERROR",
+		public status: keyof typeof statusCodes | Status = "INTERNAL_SERVER_ERROR",
 		public body:
 			| ({
 					message?: string;
@@ -195,7 +199,7 @@ class InternalAPIError extends Error {
 			  } & Record<string, any>)
 			| undefined = undefined,
 		public headers: HeadersInit = {},
-		public statusCode = typeof status === "number" ? status : _statusCode[status],
+		public statusCode = typeof status === "number" ? status : statusCodes[status],
 	) {
 		super(
 			body?.message,
@@ -234,5 +238,13 @@ export class ValidationError extends InternalAPIError {
 		this.issues = issues;
 	}
 }
+
+export class BetterCallError extends Error {
+	constructor(message: string) {
+		super(message);
+		this.name = "BetterCallError";
+	}
+}
+
 export type APIError = InstanceType<typeof InternalAPIError>;
 export const APIError = makeErrorForHideStackFrame(InternalAPIError, Error);
