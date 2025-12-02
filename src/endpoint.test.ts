@@ -27,7 +27,7 @@ describe("validation", (it) => {
 				//@ts-expect-error
 				body: { name: 1 },
 			}),
-		).rejects.toThrowError("Invalid body parameters");
+		).rejects.toThrowError("[body.name] Invalid type: Expected string but received 1");
 	});
 
 	it("should validate query and throw validation error", async () => {
@@ -49,7 +49,7 @@ describe("validation", (it) => {
 				//@ts-expect-error
 				query: { name: 1 },
 			}),
-		).rejects.toThrowError(`Invalid query parameters`);
+		).rejects.toThrowError(`[query.name] Invalid type: Expected string but received 1`);
 	});
 
 	it("should validate the body and return the body", async () => {
@@ -750,6 +750,39 @@ describe("response", () => {
 			expect(body).toMatchObject({
 				message: "error message",
 			});
+		});
+
+		it("custom validation errors", async () => {
+			const endpoint = createEndpoint(
+				"/endpoint",
+				{
+					method: "POST",
+					body: z.string().min(1000),
+					onValidationError({ issues, message }) {
+						expect(typeof message).toBe("string");
+						expect(issues.length).toBeGreaterThan(0);
+						throw new APIError("I'M_A_TEAPOT", {
+							message: "Such a useful error status.",
+						});
+					},
+				},
+				async (c) => {
+					return c.json({
+						success: false, // Should never recieve this.
+					});
+				},
+			);
+			try {
+				const response = await endpoint({ body: "I'm less than 1000 characters" });
+				// This ensures that there is an error thrown.
+				expect(response).not.toBeCalled();
+			} catch (error) {
+				expect(error).toBeInstanceOf(APIError);
+				if (!(error instanceof APIError)) return;
+				// Ensure it's the validation error we defined.
+				expect(error.status).toBe("I'M_A_TEAPOT");
+				expect(error.message).toBe("Such a useful error status.");
+			}
 		});
 	});
 	describe("json", async () => {

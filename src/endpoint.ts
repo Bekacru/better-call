@@ -14,10 +14,10 @@ import {
 	type Method,
 } from "./context";
 import type { CookieOptions, CookiePrefixOptions } from "./cookies";
-import { type APIError, type statusCodes, type Status, BetterCallError } from "./error";
+import { APIError, ValidationError, type statusCodes, type Status, BetterCallError } from "./error";
 import type { OpenAPIParameter, OpenAPISchemaType } from "./openapi";
 import type { StandardSchemaV1 } from "./standard-schema";
-import { isAPIError } from "./utils";
+import { isAPIError, tryCatch } from "./utils";
 
 export interface EndpointBaseOptions {
 	/**
@@ -183,6 +183,14 @@ export interface EndpointBaseOptions {
 	 * @returns - The response to return
 	 */
 	onAPIError?: (e: APIError) => void | Promise<void>;
+	/**
+	 * A callback to run before a validation error is thrown
+	 * You can customize the validation error message by throwing your own APIError
+	 */
+	onValidationError?: ({
+		issues,
+		message,
+	}: { message: string; issues: readonly StandardSchemaV1.Issue[] }) => void | Promise<void>;
 }
 
 export type EndpointBodyMethodOptions =
@@ -467,10 +475,31 @@ export function createEndpoint<Path extends string, Options extends EndpointOpti
 				]
 	): Promise<ResultType<AsResponse, ReturnHeaders, ReturnStatus>> => {
 		const context = (inputCtx[0] || {}) as InputContext<any, any>;
-		const internalContext = await createInternalContext(context, {
-			options,
-			path,
-		});
+		const { data: internalContext, error: validationError } = await tryCatch(
+			createInternalContext(context, {
+				options,
+				path,
+			}),
+		);
+
+		if (validationError) {
+			// If it's not a validation error, we throw it
+			if (!(validationError instanceof ValidationError)) throw validationError;
+
+			// Check if the endpoint has a custom onValidationError callback
+			if (options.onValidationError) {
+				// This can possibly throw an APIError in order to customize the validation error message
+				await options.onValidationError({
+					message: validationError.message,
+					issues: validationError.issues,
+				});
+			}
+
+			throw new APIError(400, {
+				message: validationError.message,
+				code: "VALIDATION_ERROR",
+			});
+		}
 		const response = await handler(internalContext as any).catch(async (e) => {
 			if (isAPIError(e)) {
 				const onAPIError = options.onAPIError;

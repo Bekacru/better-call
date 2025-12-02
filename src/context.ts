@@ -1,5 +1,5 @@
 import type { EndpointOptions } from "./endpoint";
-import { type statusCodes, APIError, type Status } from "./error";
+import { type statusCodes, APIError, ValidationError, type Status } from "./error";
 import type {
 	InferParamPath,
 	InferParamWildCard,
@@ -154,7 +154,6 @@ export type InferMiddlewareBody<Options extends MiddlewareOptions> =
 export type InferMiddlewareQuery<Options extends MiddlewareOptions> =
 	Options["query"] extends StandardSchemaV1<infer T> ? T : Record<string, any> | undefined;
 
-type StrictKeys<T, U extends T = T> = Exclude<keyof U, keyof T> extends never ? U : never;
 export type InputContext<
 	Path extends string,
 	Options extends EndpointOptions,
@@ -186,10 +185,7 @@ export const createInternalContext = async (
 
 	const { data, error } = await runValidation(options, context);
 	if (error) {
-		throw new APIError(400, {
-			message: error.message,
-			code: "VALIDATION_ERROR",
-		});
+		throw new ValidationError(error.message, error.issues);
 	}
 	const requestHeaders: Headers | null =
 		"headers" in context

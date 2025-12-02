@@ -1,3 +1,4 @@
+import type { StandardSchemaV1 } from "./standard-schema";
 // https://github.com/nodejs/node/blob/360f7cc7867b43344aac00564286b895e15f21d7/lib/internal/errors.js#L246C1-L261C2
 function isErrorStackTraceLimitWritable() {
 	const desc = Object.getOwnPropertyDescriptor(Error, "stackTraceLimit");
@@ -221,6 +222,20 @@ class InternalAPIError extends Error {
 					...body,
 				}
 			: undefined;
+	}
+}
+
+export class ValidationError extends InternalAPIError {
+	constructor(
+		public message: string,
+		public issues: readonly StandardSchemaV1.Issue[],
+	) {
+		super(400, {
+			message: message,
+			code: "VALIDATION_ERROR",
+		});
+
+		this.issues = issues;
 	}
 }
 
