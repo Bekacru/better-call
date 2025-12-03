@@ -768,7 +768,7 @@ describe("response", () => {
 				},
 				async (c) => {
 					return c.json({
-						success: false, // Should never recieve this.
+						success: false, // Should never receive this.
 					});
 				},
 			);

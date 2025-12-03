@@ -60,11 +60,11 @@ describe("getRequest", () => {
 		expect(bodyText).toBe("Plain text body");
 	});
 
-	it("should handle Express subrouter with baseUrl", async () => {
+	it("should handle Express sub-router with baseUrl", async () => {
 		const socket = new Socket();
 		const req = new IncomingMessage(socket) as any;
 
-		// Simulate Express subrouter where baseUrl is the mount path
+		// Simulate Express sub-router where baseUrl is the mount path
 		req.baseUrl = "/api/v1";
 		req.url = "/users/123";
 		req.method = "GET";
@@ -122,7 +122,7 @@ describe("getRequest", () => {
 		const socket = new Socket();
 		const req = new IncomingMessage(socket) as any;
 
-		// Express subrouter with body parser
+		// Express sub-router with body parser
 		req.baseUrl = "/api";
 		req.url = "/webhook";
 		req.method = "POST";

@@ -86,7 +86,7 @@ describe("Express Integration with body-parser", () => {
 		expect(response.text).toBe("Received: Hello from Express");
 	});
 
-	it("should handle Express subrouter with body-parser", async () => {
+	it("should handle Express sub-router with body-parser", async () => {
 		// The endpoint should use the full path including the mount point
 		const apiEndpoint = createEndpoint(
 			"/api/v1/users",
@@ -108,22 +108,22 @@ describe("Express Integration with body-parser", () => {
 		const mainApp = express();
 		const apiRouter = express.Router();
 
-		// Apply body-parser to the subrouter
+		// Apply body-parser to the sub-router
 		apiRouter.use(bodyParser.json());
 		apiRouter.use(toNodeHandler(router.handler));
 
-		// Mount the subrouter at /api/v1
+		// Mount the sub-router at /api/v1
 		mainApp.use("/api/v1", apiRouter);
 
 		const response = await request(mainApp)
 			.post("/api/v1/users")
-			.send({ username: "testuser", email: "test@example.com" })
+			.send({ username: "test-user", email: "test@example.com" })
 			.set("Content-Type", "application/json")
 			.expect(200);
 
 		expect(response.body).toEqual({
 			created: true,
-			user: { username: "testuser", email: "test@example.com" },
+			user: { username: "test-user", email: "test@example.com" },
 		});
 	});
 

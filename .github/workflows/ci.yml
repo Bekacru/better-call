@@ -40,6 +40,9 @@ jobs:
 
             - name: Lint types
               run: pnpm lint:types
+
+            - name: Lint spell
+              run: pnpm lint:spell
             
             - name: Test
               run: pnpm test

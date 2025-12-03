@@ -15,6 +15,7 @@
   "scripts": {
     "test": "vitest",
     "lint": "biome format",
+    "lint:spell": "cspell .",
     "lint:dependencies": "knip --strict",
     "lint:package": "publint --strict .",
     "lint:types": "attw --profile node16 --pack .",
@@ -36,6 +37,7 @@
     "@types/supertest": "^6.0.3",
     "body-parser": "^2.2.0",
     "bumpp": "^9.4.1",
+    "cspell": "^9.4.0",
     "express": "^5.1.0",
     "knip": "^5.71.0",
     "publint": "^0.3.15",

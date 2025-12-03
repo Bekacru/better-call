@@ -95,7 +95,7 @@ export function getRequest({
 	bodySizeLimit?: number;
 	request: IncomingMessage;
 }) {
-	// In Express subrouters, `request.url` is relative to the mount path (e.g., '/auth/xxx'),
+	// In Express sub-routers, `request.url` is relative to the mount path (e.g., '/auth/xxx'),
 	// and `request.baseUrl` holds the mount path (e.g., '/api').
 	// Build the full path as baseUrl + url when available to preserve the full route.
 	const baseUrl = (request as any)?.baseUrl as string | undefined;
