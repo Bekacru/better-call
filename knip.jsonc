@@ -2,7 +2,7 @@
 	"$schema": "https://unpkg.com/knip@5/schema-jsonc.json",
 	"workspaces": {
 		".": {
-			"project": ["src/**/*.ts"],
+			"project": ["src/**/*.ts!"],
 			"ignoreDependencies": [
 				// implicit dependencies
 				"zod"
