@@ -1,6 +1,6 @@
 import { APIError } from "./error";
 
-export const jsonContentTypeRegex = /^application\/([a-z0-9.+-]*\+)?json/i;
+const jsonContentTypeRegex = /^application\/([a-z0-9.+-]*\+)?json/i;
 
 export async function getBody(request: Request, allowedMediaTypes?: string[]) {
 	const contentType = request.headers.get("content-type") || "";
@@ -107,7 +107,7 @@ type Failure<E> = {
 	error: E;
 };
 
-export type Result<T, E = Error> = Success<T> | Failure<E>;
+type Result<T, E = Error> = Success<T> | Failure<E>;
 
 export async function tryCatch<T, E = Error>(promise: Promise<T>): Promise<Result<T, E>> {
 	try {
