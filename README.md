@@ -1,6 +1,6 @@
 # Better Call
 
-Better call is a tiny web framework for creating endpoints that can be invoked as a normal function or mounted to a router to be served by any web standard compatible server (like Bun, node, nextjs, sveltekit...) and also includes a typed RPC client for typesafe client-side invocation of these endpoints.
+Better call is a tiny web framework for creating endpoints that can be invoked as a normal function or mounted to a router to be served by any web standard compatible server (like Bun, node, nextjs, sveltekit...) and also includes a typed RPC client for type-safe client-side invocation of these endpoints.
 
 Built for typescript and it comes with a very high performance router based on [rou3](https://github.com/unjs/rou3).
 
@@ -21,10 +21,11 @@ pnpm i zod
 The building blocks for better-call are endpoints. You can create an endpoint by calling `createEndpoint` and passing it a path, [options](#endpointoptions) and a handler that will be invoked when the endpoint is called.
 
 ```ts
-import { createEndpoint, createRouter } from "better-call"
+// endpoint.ts
+import { createEndpoint } from "better-call"
 import { z } from "zod"
 
-const createItem = createEndpoint("/item", {
+export const createItem = createEndpoint("/item", {
     method: "POST",
     body: z.object({
         id: z.string()
@@ -43,6 +44,8 @@ const item = await createItem({
         id: "123"
     }
 })
+
+console.log(item); // { item: { id: '123' } }
 ```
 
 OR you can mount the endpoint to a router and serve it with any web standard compatible server. 
@@ -50,7 +53,11 @@ OR you can mount the endpoint to a router and serve it with any web standard com
 > The example below uses [Bun](https://bun.sh/)
 
 ```ts
-const router = createRouter({
+// router.ts
+import { createRouter } from "better-call"
+import { createItem } from "./endpoint"
+
+export const router = createRouter({
     createItem
 })
 
@@ -62,101 +69,21 @@ Bun.serve({
 Then you can use the rpc client to call the endpoints on client.
 
 ```ts
-//client.ts
+// client.ts
 import type { router } from "./router" // import router type
-import { createClient } from "better-call/client";
+import { createClient } from "better-call/client"
 
 const client = createClient<typeof router>({
     baseURL: "http://localhost:3000"
-});
-const items = await client("/item", {
+})
+
+const item = await client("@post/item", {
     body: {
         id: "123"
     }
-});
-```
-
-### Returning non 200 responses
-
-There are several supported ways to a non 200 response:
-
-You can use the `ctx.setStatus(status)` helper to change the default status code of a successful response:
-
-```ts
-const createItem = createEndpoint("/item", {
-    method: "POST",
-    body: z.object({
-        id: z.string()
-    })
-}, async (ctx) => {
-    ctx.setStatus(201);
-    return {
-        item: {
-            id: ctx.body.id
-        }
-    }
 })
-```
 
-Sometimes, you want to respond with an error, in those cases you will need to throw Better Call's `APIError` error. If the endpoint is called as a function, the error will be thrown but if it's mounted to a router, the error will be converted to a response object with the correct status code and headers.
-
-```ts
-const createItem = createEndpoint("/item", {
-    method: "POST",
-    body: z.object({
-        id: z.string()
-    })
-}, async (ctx) => {
-    if(ctx.body.id === "123") {
-        throw ctx.error("Bad Request", {
-            message: "Id is not allowed"
-        })
-    }
-    return {
-        item: {
-            id: ctx.body.id
-        }
-    }
-})
-```
-
-You can also instead throw using a status code:
-
-```ts
-const createItem = createEndpoint("/item", {
-    method: "POST",
-    body: z.object({
-        id: z.string()
-    })
-}, async (ctx) => {
-    if(ctx.body.id === "123") {
-        throw ctx.error(400, {
-            message: "Id is not allowed"
-        })
-    }
-    return {
-        item: {
-            id: ctx.body.id
-        }
-    }
-})
-```
-
-Finally, you can return a new `Response` object. In this case, the `ctx.setStatus()` call will be ignored, as the `Response` will have completely control over the final status code:
-
-```ts
-const createItem = createEndpoint("/item", {
-    method: "POST",
-    body: z.object({
-        id: z.string()
-    })
-}, async (ctx) => {
-    return Response.json({
-        item: {
-            id: ctx.body.id
-        }
-    }, { status: 201 });
-})
+console.log(item) // { data: { item: { id: '123' } }, error: null }
 ```
 
 ### Endpoint
@@ -168,12 +95,12 @@ Endpoints are building blocks of better-call.
 The path is the URL path that the endpoint will respond to. It can be a direct path or a path with parameters and wildcards.
 
 ```ts
-//direct path
+// direct path
 const endpoint = createEndpoint("/item", {
     method: "GET",
 }, async (ctx) => {})
 
-//path with parameters
+// path with parameters
 const endpoint = createEndpoint("/item/:id", {
     method: "GET",
 }, async (ctx) => {
@@ -184,18 +111,18 @@ const endpoint = createEndpoint("/item/:id", {
     }
 })
 
-//path with wildcards
+// path with wildcards
 const endpoint = createEndpoint("/item/**:name", {
     method: "GET",  
 }, async (ctx) => {
-    //the name will be the remaining path
+    // the name will be the remaining path
     ctx.params.name
 })
 ```
 
 #### Body Schema
 
-The `body` option accepts a standard schema and will validate the request body. If the request body doesn't match the schema, the endpoint will throw an error. If it's mounted to a router, it'll return a 400 error.
+The `body` option accepts a standard schema and will validate the request body. If the request body doesn't match the schema, the endpoint will throw a validation error. If it's mounted to a router, it'll return a 400 error with the error details.
 
 ```ts
 const createItem = createEndpoint("/item", {
@@ -214,7 +141,7 @@ const createItem = createEndpoint("/item", {
 
 #### Query Schema
 
-The `query` option accepts a standard schema and will validate the request query. If the request query doesn't match the schema, the endpoint will throw an error. If it's mounted to a router, it'll return a 400 error.
+The `query` option accepts a standard schema and will validate the request query. If the request query doesn't match the schema, the endpoint will throw a validation error. If it's mounted to a router, it'll return a 400 error with the error details.
 
 ```ts
 const createItem = createEndpoint("/item", {
@@ -231,11 +158,27 @@ const createItem = createEndpoint("/item", {
 })
 ```
 
+#### Media types
+
+By default, all media types are accepted, but only a handful of them have a built-in support:
+
+- `application/json` and [custom json suffixes](https://datatracker.ietf.org/doc/html/rfc6839#section-3.1) are parsed as a JSON (plain) object
+- `application/x-www-form-urlencoded` and `multipart/form-data` are parsed as a [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object
+- `text/plain` is parsed as a plain string
+- `application/octet-stream` is parsed as an [`ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer)
+- `application/pdf`, `image/*` and `video/*` are parsed as [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob)
+- `application/stream` is parsed as [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream)
+- Any other media type that is not recognized, will be parsed as a plain string.
+
+Similarly, returning a supported type from a handler will properly serialize it with the correct `Content-Type` as specified above.
+
 #### Allowed Media Types
 
 You can restrict which media types (MIME types) are allowed for request bodies using the `allowedMediaTypes` option. This can be configured at both the router level and the endpoint level, with endpoint-level configuration taking precedence.
 
 When a request is made with a disallowed media type, the endpoint will return a `415 Unsupported Media Type` error.
+
+> *Note*: Please note that using this option won't add parsing support for new media types, it only restricts the media types that are already supported.
 
 **Router-level configuration:**
 
@@ -309,13 +252,6 @@ const uploadFile = createEndpoint("/upload", {
 })
 ```
 
-Common media types:
-- `application/json` - JSON data
-- `application/x-www-form-urlencoded` - Form data
-- `multipart/form-data` - File uploads
-- `text/plain` - Plain text
-- `application/octet-stream` - Binary data
-
 > **Note:** The validation is case-insensitive and handles charset parameters automatically (e.g., `application/json; charset=utf-8` will match `application/json`).
 
 #### Require Headers
@@ -361,13 +297,176 @@ createItem({
 
 ### Handler
 
-this is the function that will be invoked when the endpoint is called. It accepts a context object that contains the request, headers, body, query, params and other information. 
+This is the function that will be invoked when the endpoint is called. The signature is:
 
-It can return a response object, a string, a number, a boolean, an object or an array. 
+```ts
+const handler = async (ctx) => response;
+```
 
-It can also throw an error and if it throws APIError, it will be converted to a response object with the correct status code and headers.
+Where `ctx` is:
 
-- **Context**: the context object contains the request, headers, body, query, params and a helper function to set headers, cookies and get cookies. If there is a middleware, the context will be extended with the middleware context.
+- The context object containing the `request`, `headers`, `body`, `query`, `params` and a few helper functions. If there is a middleware, the context will be extended with the middleware context.
+
+And `response` is any supported response type:
+
+- a `Response` object
+- any javascript value: `string`, `number`, `boolean`, an `object` or an `array`
+- the return value of the `ctx.json()` helper
+
+Below, we document all the ways in which you can create a response in your handler:
+
+#### Returning a response
+
+You can use the `ctx.setStatus(status)` helper to change the default status code of a successful response:
+
+```ts
+const createItem = createEndpoint("/item", {
+    method: "POST",
+    body: z.object({
+        id: z.string()
+    })
+}, async (ctx) => {
+    ctx.setStatus(201);
+    return {
+        item: {
+            id: ctx.body.id
+        }
+    }
+})
+```
+
+Sometimes, you want to respond with an error, in those cases you will need to throw better-call's `APIError` error or use the `ctx.error()` helper, they both have the same signatures!
+If the endpoint is called as a function, the error will be thrown but if it's mounted to a router, the error will be converted to a response object with the correct status code and headers.
+
+```ts
+import { APIError } from "better-call"
+
+const createItem = createEndpoint("/item", {
+    method: "POST",
+    body: z.object({
+        id: z.string()
+    })
+}, async (ctx) => {
+    if (ctx.body.id === "123") {
+        throw ctx.error("BAD_REQUEST", {
+            message: "Id is not allowed"
+        })
+    }
+
+    if (ctx.body.id === "456") {
+        throw new APIError("BAD_REQUEST", {
+            message: "Id is not allowed"
+        })
+    }
+    return {
+        item: {
+            id: ctx.body.id
+        }
+    }
+})
+```
+
+You can also instead throw using a status code:
+
+```ts
+const createItem = createEndpoint("/item", {
+    method: "POST",
+    body: z.object({
+        id: z.string()
+    })
+}, async (ctx) => {
+    if (ctx.body.id === "123") {
+        throw ctx.error(400, {
+            message: "Id is not allowed"
+        })
+    }
+    return {
+        item: {
+            id: ctx.body.id
+        }
+    }
+})
+```
+
+You can also specify custom response headers:
+
+```ts
+const createItem = createEndpoint("/item", {
+    method: "POST",
+    body: z.object({
+        id: z.string()
+    })
+}, async (ctx) => {
+    if (ctx.body.id === "123") {
+        throw ctx.error(
+            400,
+            { message: "Id is not allowed" },
+            { "x-key": "value" } // custom response headers
+        );
+    }
+    return {
+        item: {
+            id: ctx.body.id
+        }
+    }
+})
+```
+
+Or create a redirection:
+
+```ts
+const createItem = createEndpoint("/item", {
+    method: "POST",
+    body: z.object({
+        id: z.string()
+    })
+}, async (ctx) => {
+    if (ctx.body.id === "123") {
+        throw ctx.redirect("/item/123");
+    }
+    return {
+        item: {
+            id: ctx.body.id
+        }
+    }
+})
+```
+
+Or use the `ctx.json()` to return any object:
+
+```ts
+const createItem = createEndpoint("/item", {
+    method: "POST",
+    body: z.object({
+        id: z.string()
+    })
+}, async (ctx) => {
+    return ctx.json({
+        item: {
+            id: ctx.body.id
+        }
+    })
+})
+```
+
+Finally, you can return a new `Response` object. In this case, the `ctx.setStatus()` call will be ignored, as the `Response` will have completely control over the final status code:
+
+```ts
+const createItem = createEndpoint("/item", {
+    method: "POST",
+    body: z.object({
+        id: z.string()
+    })
+}, async (ctx) => {
+    return Response.json({
+        item: {
+            id: ctx.body.id
+        }
+    }, { status: 201 });
+})
+```
+
+> **Note**: Please note that when using the `Response` API, your endpoint will not return the JSON object even if you use the `Response.json()` helper, you'll always get a `Response` as a result.
 
 ### Middleware
 
@@ -388,7 +487,7 @@ const endpoint = createEndpoint("/", {
     method: "GET",
     use: [middleware],
 }, async (ctx) => {
-   //this will be the context object returned by the middleware with the name property
+   // this will be the context object returned by the middleware with the name property
    ctx.context
 })
 ```
@@ -577,7 +676,7 @@ const items = await client("/item", {
 
 ### Headers and Cookies
 
-If you return a response object from an endpoint, the headers and cookies will be set on the response object. But You can  set headers and cookies for the context object.
+If you return a response object from an endpoint, the headers and cookies will be set on the response object. But You can set headers and cookies for the context object.
 
 ```ts
 const createItem = createEndpoint("/item", {
@@ -614,7 +713,7 @@ const createItem = createEndpoint("/item", {
 })
 ```
 
-> other than normal cookies the ctx object also exposes signed cookies.
+> **Note**: The context object also exposes and allows you to interact with signed cookies via the `ctx.getSignedCookie()` and `ctx.setSignedCookie()` helpers.
 
 ### Endpoint Creator
 
