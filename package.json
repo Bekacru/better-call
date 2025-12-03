@@ -34,7 +34,6 @@
     "@types/express": "^5.0.3",
     "@types/set-cookie-parser": "^2.4.10",
     "@types/supertest": "^6.0.3",
-    "arktype": "^2.0.0",
     "body-parser": "^2.2.0",
     "bumpp": "^9.4.1",
     "express": "^5.1.0",
@@ -42,7 +41,6 @@
     "publint": "^0.3.15",
     "supertest": "^7.1.4",
     "tsdown": "^0.15.7",
-    "type-fest": "^4.23.0",
     "typescript": "^5.6.0-beta",
     "valibot": "1.0.0-beta.15",
     "vitest": "^3.1.1"
