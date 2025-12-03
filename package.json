@@ -17,7 +17,7 @@
     "lint": "biome format",
     "lint:dependencies": "knip --strict",
     "lint:package": "publint --strict .",
-    "lint:types": "attw --pack .",
+    "lint:types": "attw --profile node16 --pack .",
     "lint:fix": "biome format --fix",
     "format": "biome format --write",
     "typecheck": "tsc --noEmit",
@@ -27,7 +27,7 @@
     "serve": "bun --hot example/hello.ts"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "^0.16.4",
+    "@arethetypeswrong/cli": "^0.18.2",
     "@biomejs/biome": "^1.8.3",
     "@types/body-parser": "^1.19.6",
     "@types/bun": "latest",
