@@ -31,6 +31,15 @@ jobs:
             
             - name: Lint
               run: pnpm lint
+
+            - name: Lint dependencies
+              run: pnpm lint:dependencies
+
+            - name: Lint package
+              run: pnpm lint:package
+
+            - name: Lint types
+              run: pnpm lint:types
             
             - name: Test
               run: pnpm test
