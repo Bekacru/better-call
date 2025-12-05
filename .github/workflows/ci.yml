@@ -45,7 +45,7 @@ jobs:
               run: pnpm lint:spell
             
             - name: Test
-              run: pnpm test
+              run: pnpm coverage
 
             - name: Typecheck
               run: pnpm typecheck
