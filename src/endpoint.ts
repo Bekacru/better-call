@@ -427,6 +427,10 @@ export function createEndpoint<Path extends string, Options extends EndpointOpti
 	if ((options.method === "GET" || options.method === "HEAD") && options.body) {
 		throw new BetterCallError("Body is not allowed with GET or HEAD methods");
 	}
+
+	if (path && /\/{2,}/.test(path)) {
+		throw new BetterCallError("Path cannot contain consecutive slashes");
+	}
 	type Context = InputContext<Path, Options>;
 
 	type ResultType<

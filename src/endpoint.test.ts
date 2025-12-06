@@ -112,6 +112,44 @@ describe("validation", (it) => {
 			),
 		).toThrowError(BetterCallError);
 	});
+
+	it("should throw BetterCallError if path contains consecutive slashes", async () => {
+		expect(() =>
+			createEndpoint(
+				"/test//path",
+				{
+					method: "GET",
+				},
+				async () => {
+					return "hello";
+				},
+			),
+		).toThrowError(BetterCallError);
+
+		expect(() =>
+			createEndpoint(
+				"//test",
+				{
+					method: "GET",
+				},
+				async () => {
+					return "hello";
+				},
+			),
+		).toThrowError(BetterCallError);
+
+		expect(() =>
+			createEndpoint(
+				"/test///nested",
+				{
+					method: "GET",
+				},
+				async () => {
+					return "hello";
+				},
+			),
+		).toThrowError(BetterCallError);
+	});
 });
 
 describe("types", async () => {
