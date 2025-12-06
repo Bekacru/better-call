@@ -1,0 +1,20 @@
+{
+	"$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+	"useGitignore": true,
+	"words": [
+		// misspelled
+		"clazz",
+
+		// third party libraries
+		"attw",
+		"bumpp",
+
+		// auth words
+		"scim",
+
+		// proper names
+		"Bereket",
+		"Engida"
+	],
+	"ignorePaths": ["dist", "pnpm-lock.yaml"]
+}

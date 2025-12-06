@@ -10,6 +10,6 @@
 		"enabled": false
 	},
 	"files": {
-		"ignore": ["dist", ".next", ".svelte-kit", "package.json", ".contentlayer", "coverage"]
+		"ignore": ["dist", ".next", ".svelte-kit", "package.json", "coverage"]
 	}
 }
