@@ -141,10 +141,6 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 			url.pathname = url.pathname.slice(config.basePath.length);
 		}
 		const path = url.pathname;
-		
-		if (!path?.length) {
-			return new Response(null, { status: 404, statusText: "Not Found" });
-		}
 
 		const route = findRoute(router, request.method, path);
 		if (!route?.data) {
