@@ -42,6 +42,12 @@ export interface RouterConfig {
 	 */
 	allowedMediaTypes?: string[];
 	/**
+	 * Skip trailing slashes
+	 *
+	 * @default false
+	 */
+	skipTrailingSlashes?: boolean;
+	/**
 	 * Open API route configuration
 	 */
 	openapi?: {
@@ -136,30 +142,44 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 
 	const processRequest = async (request: Request) => {
 		const url = new URL(request.url);
-		const path = config?.basePath
-			? url.pathname
-					.split(config.basePath)
-					.reduce((acc, curr, index) => {
-						if (index !== 0) {
-							if (index > 1) {
-								acc.push(`${config.basePath}${curr}`);
-							} else {
-								acc.push(curr);
+		const pathname = url.pathname;
+		const path =
+			config?.basePath && config.basePath !== "/"
+				? pathname
+						.split(config.basePath)
+						.reduce((acc, curr, index) => {
+							if (index !== 0) {
+								if (index > 1) {
+									acc.push(`${config.basePath}${curr}`);
+								} else {
+									acc.push(curr);
+								}
 							}
-						}
-						return acc;
-					}, [] as string[])
-					.join("")
-			: url.pathname;
-
+							return acc;
+						}, [] as string[])
+						.join("")
+				: url.pathname;
 		if (!path?.length) {
 			return new Response(null, { status: 404, statusText: "Not Found" });
 		}
 
-		const route = findRoute(router, request.method, path);
-		if (!route?.data) {
+		// Reject paths with consecutive slashes
+		if (/\/{2,}/.test(path)) {
 			return new Response(null, { status: 404, statusText: "Not Found" });
 		}
+
+		const route = findRoute(router, request.method, path) as {
+			data: Endpoint & { path: string };
+			params: Record<string, string>;
+		};
+		const hasTrailingSlash = path.endsWith("/");
+		const routeHasTrailingSlash = route?.data?.path?.endsWith("/");
+
+		// If the path has a trailing slash and the route doesn't have a trailing slash and skipTrailingSlashes is not set, return 404
+		if (hasTrailingSlash !== routeHasTrailingSlash && !config?.skipTrailingSlashes) {
+			return new Response(null, { status: 404, statusText: "Not Found" });
+		}
+		if (!route?.data) return new Response(null, { status: 404, statusText: "Not Found" });
 
 		const query: Record<string, string | string[]> = {};
 		url.searchParams.forEach((value, key) => {
