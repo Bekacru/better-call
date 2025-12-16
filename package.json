@@ -9,9 +9,9 @@
   },
   "copyright": "Copyright (C) 2025 Bereket Engida",
   "license": "MIT",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "scripts": {
     "test": "vitest",
     "coverage": "vitest run --coverage",
@@ -66,44 +66,20 @@
   },
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
-      }
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
     },
     "./client": {
-      "import": {
-        "types": "./dist/client.d.ts",
-        "default": "./dist/client.js"
-      },
-      "require": {
-        "types": "./dist/client.d.cts",
-        "default": "./dist/client.cjs"
-      }
+      "types": "./dist/client.d.mts",
+      "default": "./dist/client.mjs"
     },
     "./error": {
-      "import": {
-        "types": "./dist/error.d.ts",
-        "default": "./dist/error.js"
-      },
-      "require": {
-        "types": "./dist/error.d.cts",
-        "default": "./dist/error.cjs"
-      }
+      "types": "./dist/error.d.mts",
+      "default": "./dist/error.mjs"
     },
     "./node": {
-      "import": {
-        "types": "./dist/node.d.ts",
-        "default": "./dist/node.js"
-      },
-      "require": {
-        "types": "./dist/node.d.cts",
-        "default": "./dist/node.cjs"
-      }
+      "types": "./dist/node.d.mts",
+      "default": "./dist/node.mjs"
     }
   },
   "files": [

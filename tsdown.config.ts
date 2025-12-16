@@ -7,10 +7,9 @@ export default defineConfig({
 		error: "src/error.ts",
 		node: "src/adapters/node/index.ts",
 	},
-	external: ["zod"],
 	dts: true,
-	hash: false,
 	sourcemap: true,
-	format: ["esm", "cjs"],
+	format: "esm",
+	unbundle: true,
 	target: "es2022",
 });
