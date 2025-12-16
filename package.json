@@ -45,8 +45,8 @@
     "knip": "^5.71.0",
     "publint": "^0.3.15",
     "supertest": "^7.1.4",
-    "tsdown": "^0.15.7",
-    "typescript": "^5.6.0-beta",
+    "tsdown": "^0.18.0",
+    "typescript": "^5.9.3",
     "valibot": "1.0.0-beta.15",
     "vitest": "^3.1.1"
   },
