@@ -111,3 +111,5 @@ export const createClient = <R extends Router | Router["endpoints"]>(options: Cl
 		})) as any;
 	};
 };
+
+export * from "./error";
