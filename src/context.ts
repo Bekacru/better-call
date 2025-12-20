@@ -92,7 +92,7 @@ export type InferMethod<Options extends EndpointOptions> = Options["method"] ext
 export type InferInputMethod<
 	Options extends EndpointOptions,
 	Method = Options["method"] extends Array<any>
-		? Options["method"][number]
+		? Options["method"][number] | undefined
 		: Options["method"] extends "*"
 			? HTTPMethod
 			: Options["method"] | undefined,
@@ -208,7 +208,13 @@ export const createInternalContext = async (
 		headers: context?.headers,
 		request: context?.request,
 		params: "params" in context ? context.params : undefined,
-		method: context.method,
+		method:
+			context.method ??
+			(Array.isArray(options.method)
+				? options.method[0]
+				: options.method === "*"
+					? "GET"
+					: options.method),
 		setHeader: (key: string, value: string) => {
 			headers.set(key, value);
 		},

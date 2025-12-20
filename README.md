@@ -158,6 +158,41 @@ const createItem = createEndpoint("/item", {
 })
 ```
 
+#### Method
+
+You can specify a single HTTP method or an array of methods for an endpoint.
+
+```ts
+// Single method
+const getItem = createEndpoint("/item", {
+    method: "GET",
+}, async (ctx) => {
+    return { item: "data" }
+})
+
+// Multiple methods
+const itemEndpoint = createEndpoint("/item", {
+    method: ["GET", "POST"],
+}, async (ctx) => {
+    if (ctx.method === "POST") {
+        // handle POST - create/update
+        return { created: true }
+    }
+    // handle GET - read only
+    return { item: "data" }
+})
+```
+
+When calling an endpoint with multiple methods directly (not through HTTP), the `method` parameter is **optional** and defaults to the **first method** in the array:
+
+```ts
+// Defaults to "GET" (first in array)
+const result = await itemEndpoint({ headers })
+
+// Explicitly specify POST
+const result = await itemEndpoint({ headers, method: "POST" })
+```
+
 #### Media types
 
 By default, all media types are accepted, but only a handful of them have a built-in support:

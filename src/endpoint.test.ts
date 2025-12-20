@@ -354,8 +354,11 @@ describe("types", async () => {
 				expectTypeOf(ctx.method).toEqualTypeOf<"POST" | "GET">();
 			},
 		);
-		//@ts-expect-error - method should be required
+		// method should be optional for array methods (defaults to first method)
 		endpoint({});
+		// but you can still explicitly specify a method
+		endpoint({ method: "POST" });
+		endpoint({ method: "GET" });
 		const wildCardMethodEndpoint = createEndpoint(
 			"/test",
 			{
@@ -367,7 +370,7 @@ describe("types", async () => {
 				>();
 			},
 		);
-		//@ts-expect-error -
+		//@ts-expect-error - wildcard method should still require explicit method
 		wildCardMethodEndpoint({});
 	});
 	it("response", async () => {
