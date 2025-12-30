@@ -3,7 +3,7 @@ import { type Endpoint, createEndpoint } from "./endpoint";
 import type { Middleware } from "./middleware";
 import { generator, getHTML } from "./openapi";
 import { toResponse } from "./to-response";
-import { getBody, isAPIError } from "./utils";
+import { getBody, isAPIError, isRequest } from "./utils";
 
 export interface RouterConfig {
 	throwError?: boolean;
@@ -271,7 +271,7 @@ export const createRouter = <E extends Record<string, Endpoint>, Config extends 
 			if (onReq instanceof Response) {
 				return onReq;
 			}
-			const req = onReq instanceof Request ? onReq : request;
+			const req = isRequest(onReq) ? onReq : request;
 			const res = await processRequest(req);
 			const onRes = await config?.onResponse?.(res);
 			if (onRes instanceof Response) {

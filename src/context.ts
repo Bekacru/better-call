@@ -19,6 +19,7 @@ import {
 } from "./cookies";
 import { getCryptoKey, verifySignature } from "./crypto";
 import type { StandardSchemaV1 } from "./standard-schema";
+import { isRequest } from "./utils";
 
 export type HTTPMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 export type Method = HTTPMethod | "*";
@@ -192,7 +193,7 @@ export const createInternalContext = async (
 			? context.headers instanceof Headers
 				? context.headers
 				: new Headers(context.headers)
-			: "request" in context && context.request instanceof Request
+			: "request" in context && isRequest(context.request)
 				? context.request.headers
 				: null;
 	const requestCookies = requestHeaders?.get("cookie");
