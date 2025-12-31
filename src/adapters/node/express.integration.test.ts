@@ -244,3 +244,73 @@ describe("Express Integration with body-parser", () => {
 		expect(response.body.bodyContent).toEqual({ test: "data" });
 	});
 });
+
+describe("Express Integration routing", () => {
+	it("routes correctly when mounted at a sub-router root path", async () => {
+		// The endpoint will use the root of the sub-router mount point
+		const middlewareEndpoint = createEndpoint(
+			"/api/test",
+			{
+				method: "POST",
+			},
+			async ({ body }) => {
+				return {
+					bodyReceived: body !== null && body !== undefined,
+					bodyContent: body,
+				};
+			},
+		);
+
+		const router = createRouter({
+			middlewareEndpoint,
+		});
+
+		const testApp = express();
+		const testRouter = express.Router();
+
+		testRouter.use(toNodeHandler(router.handler));
+
+		// Mount the sub-router at /api/test
+		testApp.use("/api/test", testRouter);
+
+		const response = await request(testApp)
+			.post("/api/test")
+			.send(JSON.stringify({ test: "data" }))
+			.set("Content-Type", "application/json")
+			.expect(200);
+
+		expect(response.body.bodyReceived).toBe(true);
+		expect(response.body.bodyContent).toEqual({ test: "data" });
+	});
+
+	it("routes correctly when mounted via a wildcard middleware", async () => {
+		const middlewareEndpoint = createEndpoint(
+			"/api/auth/sign-in/social",
+			{
+				method: "POST",
+			},
+			async ({ body }) => {
+				return {
+					bodyReceived: body !== null && body !== undefined,
+					bodyContent: body,
+				};
+			},
+		);
+
+		const router = createRouter({
+			middlewareEndpoint,
+		});
+
+		const testApp = express();
+		testApp.use("/api/auth/*path", toNodeHandler(router.handler));
+
+		const response = await request(testApp)
+			.post("/api/auth/sign-in/social")
+			.send(JSON.stringify({ test: "data" }))
+			.set("Content-Type", "application/json")
+			.expect(200);
+
+		expect(response.body.bodyReceived).toBe(true);
+		expect(response.body.bodyContent).toEqual({ test: "data" });
+	});
+});
