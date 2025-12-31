@@ -86,6 +86,32 @@ function get_raw_body(req: IncomingMessage, body_size_limit?: number) {
 	});
 }
 
+function constructRelativeUrl(req: IncomingMessage & { baseUrl?: string; originalUrl?: string }) {
+	const baseUrl = req.baseUrl;
+	const originalUrl = req.originalUrl;
+
+	if (!baseUrl || !originalUrl) {
+		// In express.js sub-routers `req.url` is relative to the mount
+		// path (e.g., '/auth/xxx'), and `req.baseUrl` will hold the mount
+		// path (e.g., '/api'). Build the full path as baseUrl + url when
+		// available to preserve the full route. For application level routes
+		// baseUrl will be an empty string
+		return baseUrl ? baseUrl + req.url : req.url;
+	}
+
+	if (baseUrl + req.url === originalUrl) {
+		return baseUrl + req.url;
+	}
+
+	// For certain subroutes or when mounting wildcard middlewares in express
+	// it is possible `baseUrl + req.url` will result in a url constructed
+	// which has a trailing forward slash the original url did not have.
+	// Checking the `req.originalUrl` path ending can prevent this issue.
+
+	const originalPathEnding = originalUrl.split("?")[0].at(-1);
+	return originalPathEnding === "/" ? baseUrl + req.url : baseUrl;
+}
+
 export function getRequest({
 	request,
 	base,
@@ -95,12 +121,6 @@ export function getRequest({
 	bodySizeLimit?: number;
 	request: IncomingMessage;
 }) {
-	// In Express sub-routers, `request.url` is relative to the mount path (e.g., '/auth/xxx'),
-	// and `request.baseUrl` holds the mount path (e.g., '/api').
-	// Build the full path as baseUrl + url when available to preserve the full route.
-	const baseUrl = (request as any)?.baseUrl as string | undefined;
-	const fullPath = baseUrl ? baseUrl + request.url : request.url;
-
 	// Check if body has already been parsed by Express middleware
 	const maybeConsumedReq = request as any;
 	let body = undefined;
@@ -128,7 +148,7 @@ export function getRequest({
 		}
 	}
 
-	return new Request(base + fullPath, {
+	return new Request(base + constructRelativeUrl(request), {
 		// @ts-expect-error
 		duplex: "half",
 		method: request.method,
