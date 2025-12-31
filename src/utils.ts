@@ -117,3 +117,12 @@ export async function tryCatch<T, E = Error>(promise: Promise<T>): Promise<Resul
 		return { data: null, error: error as E };
 	}
 }
+
+/**
+ * Check if an object is a `Request`
+ * - `instanceof`: works for native Request instances
+ * - `toString`: handles where instanceof check fails but the object is still a valid Request
+ */
+export function isRequest(obj: unknown): obj is Request {
+	return obj instanceof Request || Object.prototype.toString.call(obj) === "[object Request]";
+}
