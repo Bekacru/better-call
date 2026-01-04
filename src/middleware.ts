@@ -168,6 +168,7 @@ export type MiddlewareInputContext<Options extends MiddlewareOptions> = InferBod
 	InferHeadersInput<Options> & {
 		asResponse?: boolean;
 		returnHeaders?: boolean;
+		path?: string;
 		use?: Middleware[];
 	};
 
