@@ -38,7 +38,7 @@ type InferContext<T> = T extends (ctx: infer Ctx) => any
 	: never;
 
 export interface ClientOptions extends BetterFetchOption {
-	baseURL: string;
+	baseURL?: string;
 }
 
 type WithRequired<T, K> = T & {
@@ -79,8 +79,8 @@ export type RequiredOptionKeys<
 				params: true;
 			});
 
-export const createClient = <R extends Router | Router["endpoints"]>(options: ClientOptions) => {
-	const fetch = createFetch(options);
+export const createClient = <R extends Router | Router["endpoints"]>(options?: ClientOptions) => {
+	const fetch = createFetch(options ?? {});
 	type API = InferClientRoutes<
 		R extends { endpoints: Record<string, Endpoint> } ? R["endpoints"] : R
 	>;
