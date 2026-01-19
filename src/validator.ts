@@ -7,6 +7,7 @@ type ValidationResponse =
 			data: {
 				body: any;
 				query: any;
+				params: any;
 			};
 			error: null;
 	  }
@@ -19,7 +20,7 @@ type ValidationResponse =
 	  };
 
 /**
- * Runs validation on body and query
+ * Runs validation on body, query, and params
  * @returns error and data object
  */
 export async function runValidation(
@@ -29,9 +30,11 @@ export async function runValidation(
 	let request = {
 		body: context.body,
 		query: context.query,
+		params: context.params,
 	} as {
 		body: any;
 		query: any;
+		params: any;
 	};
 	if (options.body) {
 		const result = await options.body["~standard"].validate(context.body);
@@ -54,6 +57,18 @@ export async function runValidation(
 		}
 		request.query = result.value;
 	}
+
+	if (options.params) {
+		const result = await options.params["~standard"].validate(context.params);
+		if (result.issues) {
+			return {
+				data: null,
+				error: fromError(result.issues, "params"),
+			};
+		}
+		request.params = result.value;
+	}
+
 	if (options.requireHeaders && !context.headers) {
 		return {
 			data: null,

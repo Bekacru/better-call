@@ -7,7 +7,7 @@ import type {
 	Prettify,
 	UnionToIntersection,
 } from "./helper";
-import type { Middleware, MiddlewareContext, MiddlewareOptions } from "./middleware";
+import type { Middleware, MiddlewareOptions } from "./middleware";
 import { runValidation } from "./validator";
 import {
 	getCookieKey,
@@ -105,21 +105,33 @@ export type InferInputMethod<
 			method: Method;
 		};
 
-export type InferParam<Path extends string> = [Path] extends [never]
-	? Record<string, any> | undefined
-	: IsEmptyObject<InferParamPath<Path> & InferParamWildCard<Path>> extends true
+export type InferParam<
+	Path extends string,
+	Options extends EndpointOptions | MiddlewareOptions = EndpointOptions,
+> = Options["params"] extends StandardSchemaV1
+	? StandardSchemaV1.InferOutput<Options["params"]>
+	: [Path] extends [never]
 		? Record<string, any> | undefined
-		: Prettify<InferParamPath<Path> & InferParamWildCard<Path>>;
+		: IsEmptyObject<InferParamPath<Path> & InferParamWildCard<Path>> extends true
+			? Record<string, any> | undefined
+			: Prettify<InferParamPath<Path> & InferParamWildCard<Path>>;
 
-export type InferParamInput<Path extends string> = [Path] extends [never]
-	? { params?: Record<string, any> }
-	: IsEmptyObject<InferParamPath<Path> & InferParamWildCard<Path>> extends true
-		? {
-				params?: Record<string, any>;
-			}
-		: {
-				params: Prettify<InferParamPath<Path> & InferParamWildCard<Path>>;
-			};
+export type InferParamInput<
+	Path extends string,
+	Options extends EndpointOptions | MiddlewareOptions = EndpointOptions,
+> = Options["params"] extends StandardSchemaV1
+	? undefined extends StandardSchemaV1.InferInput<Options["params"]>
+		? { params?: StandardSchemaV1.InferInput<Options["params"]> }
+		: { params: StandardSchemaV1.InferInput<Options["params"]> }
+	: [Path] extends [never]
+		? { params?: Record<string, any> }
+		: IsEmptyObject<InferParamPath<Path> & InferParamWildCard<Path>> extends true
+			? {
+					params?: Record<string, any>;
+				}
+			: {
+					params: Prettify<InferParamPath<Path> & InferParamWildCard<Path>>;
+				};
 
 export type InferRequest<Option extends EndpointOptions | MiddlewareOptions> =
 	Option["requireRequest"] extends true ? Request : Request | undefined;
@@ -161,7 +173,7 @@ export type InputContext<
 > = InferBodyInput<Options> &
 	InferInputMethod<Options> &
 	InferQueryInput<Options> &
-	InferParamInput<Path> &
+	InferParamInput<Path, Options> &
 	InferRequestInput<Options> &
 	InferHeadersInput<Options> & {
 		asResponse?: boolean;

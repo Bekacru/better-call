@@ -25,6 +25,10 @@ export interface EndpointBaseOptions {
 	 */
 	query?: StandardSchemaV1;
 	/**
+	 * Params Schema
+	 */
+	params?: StandardSchemaV1;
+	/**
 	 * Error Schema
 	 */
 	error?: StandardSchemaV1;
@@ -272,7 +276,7 @@ export type EndpointContext<Path extends string, Options extends EndpointOptions
 	 * params will be `{ _: "1" }` where `_` is the wildcard key. If the wildcard
 	 * is named like `/user/**:name` then the params will be `{ name: string }`
 	 */
-	params: InferParam<Path>;
+	params: InferParam<Path, Options>;
 	/**
 	 * Request object
 	 *
