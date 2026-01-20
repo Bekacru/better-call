@@ -20,6 +20,8 @@ import {
 	type InputContext,
 } from "./context";
 import type { Prettify } from "./helper";
+import { isAPIError } from "./utils";
+import { kAPIErrorHeaderSymbol } from "./error";
 
 export interface MiddlewareOptions extends Omit<EndpointOptions, "method"> {}
 
@@ -149,14 +151,28 @@ export function createMiddleware(optionsOrHandler: any, handler?: any) {
 		if (!_handler) {
 			throw new Error("handler must be defined");
 		}
-		const response = await _handler(internalContext as any);
-		const headers = internalContext.responseHeaders;
-		return context.returnHeaders
-			? {
-					headers,
-					response,
-				}
-			: response;
+		try {
+			const response = await _handler(internalContext as any);
+			const headers = internalContext.responseHeaders;
+			return context.returnHeaders
+				? {
+						headers,
+						response,
+					}
+				: response;
+		} catch (e) {
+			// fixme(alex): this is workaround that set-cookie headers are not accessible when error is thrown from middleware
+			if (isAPIError(e)) {
+				Object.defineProperty(e, kAPIErrorHeaderSymbol, {
+					enumerable: false,
+					configurable: false,
+					get() {
+						return internalContext.responseHeaders;
+					},
+				});
+			}
+			throw e;
+		}
 	};
 	internalHandler.options = typeof optionsOrHandler === "function" ? {} : optionsOrHandler;
 	return internalHandler;
