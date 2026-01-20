@@ -1,6 +1,7 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { createMiddleware } from "./middleware";
 import { createEndpoint } from "./endpoint";
+import { APIError, kAPIErrorHeaderSymbol } from "./error";
 
 describe("type", () => {
 	it("should infer middleware returned type", async () => {
@@ -158,5 +159,20 @@ describe("creator", () => {
 			hello: "world",
 			test: "payload",
 		});
+	});
+
+	it("should get header set in middleware when error is thrown", async () => {
+		const middleware = createMiddleware(async (ctx) => {
+			ctx.setHeader("X-Test", "test");
+			throw new APIError("BAD_REQUEST");
+		});
+
+		await expect(middleware({})).rejects.toThrowError(APIError);
+		await expect(
+			middleware({}).catch((e: any) => {
+				const headers = e[kAPIErrorHeaderSymbol] as Headers;
+				expect(headers.get("X-Test")).toBe("test");
+			}),
+		).resolves.toBeUndefined();
 	});
 });

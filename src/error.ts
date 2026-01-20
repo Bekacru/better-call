@@ -246,5 +246,7 @@ export class BetterCallError extends Error {
 	}
 }
 
+export const kAPIErrorHeaderSymbol = Symbol.for("better-call:api-error-headers");
+
 export type APIError = InstanceType<typeof InternalAPIError>;
 export const APIError = makeErrorForHideStackFrame(InternalAPIError, Error);
