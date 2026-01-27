@@ -153,6 +153,7 @@ export async function setResponse(res: ServerResponse, response: Response) {
 		}
 	}
 
+	res.statusCode = response.status;
 	res.writeHead(response.status);
 
 	if (!response.body) {
