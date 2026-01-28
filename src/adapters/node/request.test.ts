@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { getRequest } from "./request";
-import { IncomingMessage } from "node:http";
+import { getRequest, setResponse } from "./request";
+import { IncomingMessage, ServerResponse } from "node:http";
 import { Socket } from "node:net";
 
 describe("getRequest", () => {
@@ -242,5 +242,39 @@ describe("getRequest", () => {
 
 		// Body should be null for GET requests even if req.body exists
 		expect(request.body).toBeNull();
+	});
+});
+
+describe("setResponse", () => {
+	it("should set res.statusCode before writeHead for middleware compatibility", async () => {
+		// Regression test for https://github.com/better-auth/better-auth/issues/7035
+		// Some frameworks/middleware read res.statusCode before writeHead is called.
+		// We need to ensure statusCode is set early so loggers see the correct status.
+		const socket = new Socket();
+		const req = new IncomingMessage(socket);
+		const res = new ServerResponse(req);
+
+		let statusCodeBeforeWriteHead: number | undefined;
+
+		// Intercept writeHead to capture statusCode at that moment
+		const originalWriteHead = res.writeHead.bind(res);
+		res.writeHead = vi.fn().mockImplementation((status: number) => {
+			statusCodeBeforeWriteHead = res.statusCode;
+			return originalWriteHead(status);
+		});
+
+		res.write = vi.fn().mockReturnValue(true);
+		res.end = vi.fn().mockReturnValue(res);
+
+		const webResponse = new Response(JSON.stringify({ error: "Bad Request" }), {
+			status: 400,
+			headers: { "Content-Type": "application/json" },
+		});
+
+		await setResponse(res, webResponse);
+
+		// statusCode should already be 400 BEFORE writeHead is called
+		expect(statusCodeBeforeWriteHead).toBe(400);
+		expect(res.statusCode).toBe(400);
 	});
 });
